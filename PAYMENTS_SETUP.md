@@ -96,3 +96,10 @@ Quick checklist to switch the live site on (Cloudflare dashboard):
    instead of `DATABASE_URL`.
 3. Redeploy. Until these variables exist, checkout pages show an
    "addresses are being configured" notice instead of any address.
+
+## 6. Go-live log
+
+- 2026-10-23: All variables confirmed saved in the Cloudflare dashboard
+  (Production), with `DATABASE_URL`, `ADMIN_SECRET`, `GITHUB_TOKEN` and
+  `ETHERSCAN_API_KEY` stored as encrypted secrets. This entry also serves
+  as the deployment trigger that applies them.
