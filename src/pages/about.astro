@@ -1,62 +1,341 @@
 ---
-import Layout from '../layouts/BlogPost.astro';
+import BaseHead from '../components/BaseHead.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+
+const title = 'About YouTube CPM Bot';
+const description =
+	'Learn about YouTube CPM Bot, its purpose, CPM and RPM insights, estimated earnings calculations, and tools for YouTube creators.';
 ---
 
-<Layout
-	title="About Me"
-	description="Lorem ipsum dolor sit amet"
-	pubDate={new Date('August 08 2021')}
-	heroImage="/blog-placeholder-about.jpg"
->
-	<p>
-		Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut
-		labore et dolore magna aliqua. Vitae ultricies leo integer malesuada nunc vel risus commodo
-		viverra. Adipiscing enim eu turpis egestas pretium. Euismod elementum nisi quis eleifend quam
-		adipiscing. In hac habitasse platea dictumst vestibulum. Sagittis purus sit amet volutpat. Netus
-		et malesuada fames ac turpis egestas. Eget magna fermentum iaculis eu non diam phasellus
-		vestibulum lorem. Varius sit amet mattis vulputate enim. Habitasse platea dictumst quisque
-		sagittis. Integer quis auctor elit sed vulputate mi. Dictumst quisque sagittis purus sit amet.
-	</p>
+<!doctype html>
+<html lang="en">
+	<head>
+		<BaseHead title={title} description={description} image="/blog-placeholder-about.jpg" />
+		<style>
+			/* About page only — uses the site's existing design tokens
+			   (--accent, --gray, --black, --box-shadow) and Atkinson font.
+			   No global styles are changed. */
+			.eyebrow {
+				font-size: 0.75em;
+				font-weight: 700;
+				letter-spacing: 0.12em;
+				text-transform: uppercase;
+				color: var(--accent);
+				margin-bottom: 0.5em;
+			}
+			.lead {
+				font-size: 1.15em;
+				color: rgb(var(--gray-dark));
+			}
+			.hero-image img {
+				display: block;
+				margin: 0 auto 2em;
+				border-radius: 12px;
+				box-shadow: var(--box-shadow);
+			}
+			section {
+				margin-bottom: 2.5em;
+			}
+			.cards {
+				display: grid;
+				grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+				gap: 1em;
+				margin-top: 1em;
+			}
+			.card {
+				border: 1px solid rgb(var(--gray-light));
+				border-radius: 12px;
+				padding: 1em 1.1em;
+				background: #fff;
+			}
+			.card h3 {
+				font-size: 1.1em;
+				margin-bottom: 0.4em;
+			}
+			.card p {
+				margin: 0;
+				font-size: 0.9em;
+				color: rgb(var(--gray));
+			}
+			.mission {
+				border-left: 4px solid var(--accent);
+				background: rgba(var(--gray-light), 35%);
+				border-radius: 0 12px 12px 0;
+				padding: 1em 1.2em;
+			}
+			.mission p {
+				margin: 0;
+			}
+			.formula {
+				border: 1px solid rgb(var(--gray-light));
+				border-radius: 12px;
+				padding: 1em 1.2em;
+				background: rgba(var(--gray-light), 25%);
+				text-align: center;
+				font-weight: 700;
+				color: rgb(var(--black));
+			}
+			.disclaimer {
+				border: 1px solid rgb(var(--gray-light));
+				border-radius: 12px;
+				padding: 1em 1.2em;
+				background: rgba(var(--gray-light), 25%);
+			}
+			.actions {
+				display: flex;
+				gap: 0.75em;
+				flex-wrap: wrap;
+				margin-top: 1.5em;
+			}
+			.btn {
+				display: inline-block;
+				padding: 0.45em 1.1em;
+				border-radius: 999px;
+				font-weight: 700;
+				font-size: 0.85em;
+				text-decoration: none;
+				border: 2px solid var(--accent);
+			}
+			.btn-primary {
+				background: var(--accent);
+				color: #fff;
+			}
+			.btn-primary:hover {
+				color: #fff;
+				background: var(--accent-dark);
+				border-color: var(--accent-dark);
+			}
+			.btn-ghost {
+				color: var(--accent);
+				background: transparent;
+			}
+		</style>
+	</head>
+	<body>
+		<Header />
+		<main>
+			<!-- Hero -->
+			<section aria-labelledby="about-heading">
+				<p class="eyebrow">About</p>
+				<h1 id="about-heading">About YouTube CPM Bot</h1>
+				<div class="hero-image">
+					<img width={1020} height={510} src="/blog-placeholder-about.jpg" alt="" />
+				</div>
+				<p class="lead">
+					YouTube CPM Bot is a platform designed to help YouTube creators understand CPM
+					(Cost Per Mille) and RPM (Revenue Per Mille), explore estimated earning potential,
+					and make more informed content and audience-targeting decisions.
+				</p>
+				<p>
+					Monetisation terms can feel opaque — especially when two channels with similar view
+					counts earn very differently. This site translates CPM and RPM into plain language
+					and simple, transparent estimates, so you can focus on the content decisions behind
+					the numbers. Start with the articles on our <a href="/blog">blog</a>, or read how the
+					numbers work below.
+				</p>
+				<div class="actions">
+					<a class="btn btn-primary" href="/blog">Read the blog</a>
+					<a class="btn btn-ghost" href="#how-it-works">How it works</a>
+				</div>
+			</section>
 
-	<p>
-		Morbi tristique senectus et netus. Id semper risus in hendrerit gravida rutrum quisque non
-		tellus. Habitasse platea dictumst quisque sagittis purus sit amet. Tellus molestie nunc non
-		blandit massa. Cursus vitae congue mauris rhoncus. Accumsan tortor posuere ac ut. Fringilla urna
-		porttitor rhoncus dolor. Elit ullamcorper dignissim cras tincidunt lobortis. In cursus turpis
-		massa tincidunt dui ut ornare lectus. Integer feugiat scelerisque varius morbi enim nunc.
-		Bibendum neque egestas congue quisque egestas diam. Cras ornare arcu dui vivamus arcu felis
-		bibendum. Dignissim suspendisse in est ante in nibh mauris. Sed tempus urna et pharetra pharetra
-		massa massa ultricies mi.
-	</p>
+			<!-- Mission -->
+			<section aria-labelledby="mission-heading">
+				<h2 id="mission-heading">Our Mission</h2>
+				<div class="mission">
+					<p>
+						To help YouTube creators make better decisions using accessible, understandable
+						CPM insights and practical analytics. No jargon for its own sake and no inflated
+						promises — just clear explanations and honest estimates creators can actually use
+						when planning videos, choosing topics, and thinking about their audience.
+					</p>
+				</div>
+			</section>
 
-	<p>
-		Mollis nunc sed id semper risus in. Convallis a cras semper auctor neque. Diam sit amet nisl
-		suscipit. Lacus viverra vitae congue eu consequat ac felis donec. Egestas integer eget aliquet
-		nibh praesent tristique magna sit amet. Eget magna fermentum iaculis eu non diam. In vitae
-		turpis massa sed elementum. Tristique et egestas quis ipsum suspendisse ultrices. Eget lorem
-		dolor sed viverra ipsum. Vel turpis nunc eget lorem dolor sed viverra. Posuere ac ut consequat
-		semper viverra nam. Laoreet suspendisse interdum consectetur libero id faucibus. Diam phasellus
-		vestibulum lorem sed risus ultricies tristique. Rhoncus dolor purus non enim praesent elementum
-		facilisis. Ultrices tincidunt arcu non sodales neque. Tempus egestas sed sed risus pretium quam
-		vulputate. Viverra suspendisse potenti nullam ac tortor vitae purus faucibus ornare. Fringilla
-		urna porttitor rhoncus dolor purus non. Amet dictum sit amet justo donec enim.
-	</p>
+			<!-- What the tool offers — only what exists on this site -->
+			<section aria-labelledby="offers-heading">
+				<h2 id="offers-heading">What the Tool Offers</h2>
+				<div class="cards">
+					<article class="card">
+						<h3>CPM &amp; RPM education</h3>
+						<p>
+							Plain-language explanations of what CPM and RPM mean, how they differ, and why
+							both matter for creator revenue — on this page and across the
+							<a href="/blog">blog</a>.
+						</p>
+					</article>
+					<article class="card">
+						<h3>Estimated earnings calculations</h3>
+						<p>
+							The simple formula behind every earnings estimate, explained step by step in
+							<a href="#how-it-works">How it works</a>, so you can calculate estimated revenue
+							from any view count and an assumed CPM or RPM value.
+						</p>
+					</article>
+					<article class="card">
+						<h3>Why earnings vary</h3>
+						<p>
+							Insights into how audience location, niche, content category, and advertiser
+							demand can affect monetisation — see
+							<a href="#transparency">Transparency and accuracy</a>.
+						</p>
+					</article>
+					<article class="card">
+						<h3>Scenario comparison</h3>
+						<p>
+							Work through hypothetical revenue scenarios — the same views at a different RPM,
+							or a different view count at the same RPM — to compare outcomes on equal terms
+							before you commit to a content direction.
+						</p>
+					</article>
+				</div>
+				<p>And throughout: a simple, creator-friendly experience.</p>
+			</section>
 
-	<p>
-		Mattis ullamcorper velit sed ullamcorper morbi tincidunt. Tortor posuere ac ut consequat semper
-		viverra. Tellus mauris a diam maecenas sed enim ut sem viverra. Venenatis urna cursus eget nunc
-		scelerisque viverra mauris in. Arcu ac tortor dignissim convallis aenean et tortor at. Curabitur
-		gravida arcu ac tortor dignissim convallis aenean et tortor. Egestas tellus rutrum tellus
-		pellentesque eu. Fusce ut placerat orci nulla pellentesque dignissim enim sit amet. Ut enim
-		blandit volutpat maecenas volutpat blandit aliquam etiam. Id donec ultrices tincidunt arcu. Id
-		cursus metus aliquam eleifend mi.
-	</p>
+			<!-- How it works -->
+			<section id="how-it-works" aria-labelledby="how-heading">
+				<h2 id="how-heading">How It Works</h2>
+				<p>
+					It starts with three numbers: <strong>views</strong>, <strong>CPM</strong>, and
+					<strong>RPM</strong>. They sound similar, but they measure different sides of the
+					same transaction.
+				</p>
+				<div class="cards">
+					<article class="card">
+						<h3>CPM — the advertiser side</h3>
+						<p>
+							CPM (Cost Per Mille) is what advertisers pay for 1,000 ad impressions. It
+							reflects advertiser demand for your audience, niche, and ad inventory — before
+							YouTube's revenue share.
+						</p>
+					</article>
+					<article class="card">
+						<h3>RPM — the creator side</h3>
+						<p>
+							RPM (Revenue Per Mille) is what a creator actually earns per 1,000 views, after
+							YouTube's share. RPM is the more useful number for estimating your own income.
+						</p>
+					</article>
+				</div>
+				<h3>The estimate, in simple language</h3>
+				<ol>
+					<li>Pick a view count — a video you have published, or one you are planning.</li>
+					<li>
+						Choose an assumed RPM (or CPM) based on your niche, audience location, and past
+						channel experience.
+					</li>
+					<li>Apply the formula:</li>
+				</ol>
+				<p class="formula">Estimated creator revenue &asymp; (Views &divide; 1,000) &times; RPM</p>
+				<p>
+					Worked example: 100,000 views at an assumed RPM of $4 gives (100,000 &divide; 1,000)
+					&times; $4 = <strong>$400 estimated creator revenue</strong>. That figure is an
+					<strong>estimate, not guaranteed earnings</strong> — your real RPM will depend on the
+					factors below. Try a different RPM or view count in the same formula to compare a
+					second, hypothetical scenario.
+				</p>
+			</section>
 
-	<p>
-		Tempus quam pellentesque nec nam aliquam sem. Risus at ultrices mi tempus imperdiet. Id porta
-		nibh venenatis cras sed felis eget velit. Ipsum a arcu cursus vitae. Facilisis magna etiam
-		tempor orci eu lobortis elementum. Tincidunt dui ut ornare lectus sit. Quisque non tellus orci
-		ac. Blandit libero volutpat sed cras. Nec tincidunt praesent semper feugiat nibh sed pulvinar
-		proin gravida. Egestas integer eget aliquet nibh praesent tristique magna.
-	</p>
-</Layout>
+			<!-- Who it's for -->
+			<section aria-labelledby="who-heading">
+				<h2 id="who-heading">Who It's For</h2>
+				<div class="cards">
+					<article class="card">
+						<h3>YouTube beginners</h3>
+						<p>
+							Learning what CPM and RPM mean before — or just after — monetisation, without
+							needing an analytics background.
+						</p>
+					</article>
+					<article class="card">
+						<h3>Established creators</h3>
+						<p>
+							Sanity-checking revenue scenarios when planning a new series, format, or
+							audience, and comparing niches on equal terms.
+						</p>
+					</article>
+					<article class="card">
+						<h3>Content strategists</h3>
+						<p>
+							Modelling hypothetical outcomes to inform topic, category, and
+							audience-targeting decisions.
+						</p>
+					</article>
+					<article class="card">
+						<h3>Monetisation researchers</h3>
+						<p>
+							Anyone researching how YouTube monetisation works who wants clear definitions
+							and transparent, reproducible estimates.
+						</p>
+					</article>
+				</div>
+			</section>
+
+			<!-- Transparency -->
+			<section id="transparency" aria-labelledby="transparency-heading">
+				<h2 id="transparency-heading">Transparency and Accuracy</h2>
+				<p>
+					Estimates are only as good as the assumptions behind them. Actual YouTube earnings
+					vary — often significantly — based on factors including:
+				</p>
+				<ul>
+					<li>
+						<strong>Viewer geography</strong> — advertiser demand and rates differ by country
+						and region.
+					</li>
+					<li>
+						<strong>Niche and content category</strong> — some topics attract higher-value
+						advertisers than others.
+					</li>
+					<li>
+						<strong>Monetised playbacks</strong> — not every view shows an ad, so views and ad
+						impressions are not the same.
+					</li>
+					<li>
+						<strong>Ad formats and watch behaviour</strong> — format mix, video length, and
+						viewer engagement affect revenue.
+					</li>
+					<li>
+						<strong>Seasonality</strong> — advertiser spending typically rises and falls
+						through the year.
+					</li>
+					<li>
+						<strong>YouTube's revenue share</strong> — the split between YouTube and the
+						creator is already reflected in RPM, but not in raw CPM.
+					</li>
+				</ul>
+				<p>
+					This site works from the numbers <em>you</em> choose. It does not access your private
+					YouTube Analytics data, and it does not claim to — the explanations and examples here
+					simply apply the formula above to stated assumptions, so you can judge whether those
+					assumptions are realistic for your channel.
+				</p>
+			</section>
+
+			<!-- Disclaimer -->
+			<section id="disclaimer" aria-labelledby="disclaimer-heading">
+				<div class="disclaimer" role="note" aria-label="Important disclaimer">
+					<h2 id="disclaimer-heading">Important Disclaimer</h2>
+					<p>
+						YouTube CPM Bot is an <strong>independent tool</strong> and is
+						<strong>
+							not affiliated with, endorsed by, or officially associated with YouTube or
+							Google
+						</strong>.
+					</p>
+					<p>
+						All CPM, RPM, and earnings figures discussed on this site are estimates based on
+						assumed values. They are <strong>not guarantees of actual income</strong>. Always
+						rely on your own YouTube Studio analytics for your channel's real performance.
+					</p>
+				</div>
+				<div class="actions">
+					<a class="btn btn-primary" href="/blog">Explore the blog</a>
+					<a class="btn btn-ghost" href="/">Back to home</a>
+				</div>
+			</section>
+		</main>
+		<Footer />
+	</body>
+</html>
