@@ -2,6 +2,7 @@
 import BaseHead from '../components/BaseHead.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
+import { SHOT_GENERAL } from '../data/screenshots';
 
 /*
   ── Download configuration ─────────────────────────────────────────────
@@ -18,7 +19,7 @@ const PACKAGE_SHA256 = '97e5f3ebffb3b573a3990ab6a969f6204b2c5dcaab08a26415697d38
 
 const title = 'Download YTCPM Bot';
 const description =
-	'Get started with YTCPM Bot, a Browser Automation Studio-based tool designed for YouTube CPM-related workflows. Download the package and follow the setup guide to get started.';
+	'Get started with YTCPM Bot, a Windows tool designed for YouTube CPM-related workflows. Download the package and follow the setup guide to get started.';
 ---
 
 <!doctype html>
@@ -145,6 +146,21 @@ const description =
 			.note p {
 				margin: 0;
 			}
+			.shot {
+				margin: 1.5em 0 0;
+			}
+			.shot img {
+				border-radius: 12px;
+				box-shadow: var(--box-shadow);
+				width: 100%;
+				height: auto;
+			}
+			.shot figcaption {
+				font-size: 0.8em;
+				color: rgb(var(--gray));
+				text-align: center;
+				margin-top: 0.5em;
+			}
 			.disclaimer {
 				border: 1px solid rgb(var(--gray-light));
 				border-radius: 12px;
@@ -171,8 +187,8 @@ const description =
 				</div>
 				<p>
 					<small>
-						{PACKAGE_NAME} &middot; {PACKAGE_SIZE} &middot; Windows &middot; No separate Browser
-						Automation Studio installation is needed to run the package — see
+						{PACKAGE_NAME} &middot; {PACKAGE_SIZE} &middot; Windows &middot; Version 3.0.4 &middot;
+						Standalone — nothing else to install; see
 						<a href="#requirements">system requirements</a>.
 					</small>
 				</p>
@@ -182,22 +198,28 @@ const description =
 			<section aria-labelledby="what-heading">
 				<h2 id="what-heading">What Is YTCPM Bot?</h2>
 				<p>
-					YTCPM Bot is a standalone Windows application built with
-					<a href="https://bablosoft.com/shop/BrowserAutomationStudio" target="_blank" rel="noopener">
-						Browser Automation Studio
-					</a>
-					(BAS, by Bablosoft) for YouTube CPM-related workflows. The download is a single ZIP
-					archive containing the application (<code>YoutubeCPM.exe</code>) and its data files.
-					When you run it, a script launcher first downloads the BAS engine files it needs —
-					about 1–1.5&nbsp;GB the first time — and then starts the bot automatically, so the
-					package itself stays small.
+					YTCPM Bot is a standalone Windows application for YouTube CPM-related workflows.
+					The download is a single ZIP archive containing the application
+					(<code>YoutubeCPM.exe</code>) and its data files. When you run it, a script launcher
+					first downloads the files it needs — about 1–1.5&nbsp;GB the first time — and then
+					starts the bot automatically, so the package itself stays small.
 				</p>
 				<p>
-					Before it runs, the bot asks for the User ID and password provided with your access,
-					and then opens a settings window (<em>Please define resources</em>) where you
-					configure browsers, timing, ads, and proxies. The full walkthrough is in the
+					Before it runs, the bot asks for the login and password provided with your access,
+					and then opens its main window, where you configure browsers, timing, ads, and
+					proxies. The full walkthrough is in the
 					<a href="/instructions">installation and setup guide</a>.
 				</p>
+				<figure class="shot">
+					<img
+						src={SHOT_GENERAL}
+						width="920"
+						height="668"
+						loading="lazy"
+						alt="YTCPM Bot main window, version 3.0.4, showing the General settings: number of browsers, sleep between page loads, list of references websites, and total views"
+					/>
+					<figcaption>The bot's main window — General settings.</figcaption>
+				</figure>
 			</section>
 
 			<!-- Features — taken from the actual package and its settings window -->
@@ -205,19 +227,18 @@ const description =
 				<h2 id="features-heading">Features</h2>
 				<div class="cards">
 					<article class="card">
-						<h3>Standalone BAS application</h3>
+						<h3>Standalone Windows application</h3>
 						<p>
-							Built with Browser Automation Studio and shipped as a ready-to-run Windows
-							package. You run <code>YoutubeCPM.exe</code> directly — no BAS installation or
-							project import is required.
+							A ready-to-run Windows package. You run <code>YoutubeCPM.exe</code> directly —
+							nothing to install and no project file to open first.
 						</p>
 					</article>
 					<article class="card">
 						<h3>Automatic first-run setup</h3>
 						<p>
-							On first launch, the script launcher downloads the engine files it needs
-							(about 1–1.5&nbsp;GB) in the background and starts the script automatically when
-							ready.
+							On first launch, the script launcher downloads the files it needs
+							(about 1–1.5&nbsp;GB) in the background and starts automatically when ready —
+							you will see a “Downloading engine” progress window while it works.
 						</p>
 					</article>
 					<article class="card">
@@ -256,8 +277,9 @@ const description =
 					<article class="card">
 						<h3>Optional fingerprint service</h3>
 						<p>
-							The Browser settings include an optional premium fingerprint service. It is
-							off by default and only needed if you choose to use that service.
+							The Browser settings include an optional premium fingerprint service
+							($30/month, API key required). It is off by default — with it off, the bot
+							uses the bundled user-agents list instead.
 						</p>
 					</article>
 					<article class="card">
@@ -285,13 +307,20 @@ const description =
 							</td>
 						</tr>
 						<tr>
-							<th scope="row">Browser Automation Studio</th>
+							<th scope="row">Installation</th>
 							<td>
-								<strong>Not required to run the bot.</strong> The package is a standalone
-								application built with BAS and downloads its own engine on first launch. BAS
-								itself is a separate free download from
-								<a href="https://bablosoft.com/shop/BrowserAutomationStudio" target="_blank" rel="noopener">Bablosoft</a>
-								if you want the development tool.
+								<strong>None.</strong> The package runs as-is after extraction. On first
+								launch it downloads the additional files it needs (about 1–1.5&nbsp;GB), so
+								just give that first run time and a stable connection.
+							</td>
+						</tr>
+						<tr>
+							<th scope="row">Memory (RAM)</th>
+							<td>
+								Each running browser uses about <strong>2&nbsp;GB of RAM</strong>, so choose
+								the <em>Number of Browsers</em> setting for your PC: roughly 3 browsers on
+								8&nbsp;GB, 6 on 16&nbsp;GB, and 10 or more only on 32&nbsp;GB systems. If
+								your PC slows down, lower the number of browsers.
 							</td>
 						</tr>
 						<tr>
@@ -321,7 +350,7 @@ const description =
 							<th scope="row">Optional</th>
 							<td>
 								Your own proxies (the included <code>proxy.txt</code> starts empty) and, only
-								if you enable it, a premium fingerprint service account.
+								if you enable it, the premium fingerprint service ($30/month).
 							</td>
 						</tr>
 					</tbody>
@@ -356,10 +385,9 @@ const description =
 						<tr>
 							<th scope="row">Version</th>
 							<td>
-								Not pinned. The package is a remote script launcher configured to load the
-								latest script version (<code>Version="last"</code> in its
-								<code>data/project.xml</code>), so there is no fixed version number in the
-								archive.
+								<strong>3.0.4</strong> — the version shown in the main window's title bar
+								(<code>YoutubeCPM(3.0.4)</code>). The launcher loads the latest script when
+								it starts, so keep the PC online when you launch it.
 							</td>
 						</tr>
 						<tr>
@@ -445,7 +473,7 @@ const description =
 						<strong>
 							not affiliated with, endorsed by, or officially associated with YouTube or
 							Google
-						</strong>. Browser Automation Studio is a product of Bablosoft. Use the bot only
+						</strong>. Use the bot only
 						with appropriate authorisation and in accordance with applicable platform rules.
 						Nothing on this page guarantees earnings, CPM results, or that an account will not
 						be restricted — see

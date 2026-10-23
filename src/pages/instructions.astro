@@ -2,6 +2,16 @@
 import BaseHead from '../components/BaseHead.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
+import {
+	SHOT_GENERAL,
+	SHOT_YOUTUBE,
+	SHOT_ADS,
+	SHOT_BROWSER,
+	SHOT_BROWSER_FP,
+	SHOT_PROXIES,
+	SHOT_LAUNCHER,
+	SHOT_LOGIN,
+} from '../data/screenshots';
 
 const title = 'YTCPM Bot — Installation and Setup Guide';
 const description =
@@ -83,6 +93,21 @@ const description =
 				width: 22%;
 				white-space: nowrap;
 			}
+			.shot {
+				margin: 1em 0 0;
+			}
+			.shot img {
+				border-radius: 12px;
+				box-shadow: var(--box-shadow);
+				width: 100%;
+				height: auto;
+			}
+			.shot figcaption {
+				font-size: 0.85em;
+				color: rgb(var(--gray));
+				text-align: center;
+				margin-top: 0.5em;
+			}
 			.toc {
 				border: 1px solid rgb(var(--gray-light));
 				border-radius: 12px;
@@ -138,7 +163,7 @@ const description =
 					<ol>
 						<li><a href="#step-1">Download the bot</a></li>
 						<li><a href="#step-2">Extract the ZIP file</a></li>
-						<li><a href="#step-3">Do you need Browser Automation Studio?</a></li>
+						<li><a href="#step-3">No installation needed</a></li>
 						<li><a href="#step-4">Configure the bot (every settings tab)</a></li>
 						<li><a href="#step-5">First-time startup and sign-in</a></li>
 						<li><a href="#step-6">How long does the first run take?</a></li>
@@ -216,20 +241,14 @@ const description =
 
 			<!-- Step 3 -->
 			<section id="step-3" aria-labelledby="step-3-heading">
-				<h2 id="step-3-heading">Step 3: Do You Need Browser Automation Studio?</h2>
+				<h2 id="step-3-heading">Step 3: No Installation Needed</h2>
 				<p>
-					<strong>No — not to run this package.</strong> YTCPM Bot was built with Browser
-					Automation Studio (BAS, by Bablosoft) and is distributed as a standalone, compiled
-					application. There is no BAS project file to import and no BAS menu to open: you
-					simply run <code>YoutubeCPM.exe</code> (Step 5), and its script launcher downloads
-					the BAS engine it needs by itself.
-				</p>
-				<p>
-					If you want Browser Automation Studio itself — for example, to learn how BAS bots
-					are built — it is a free download from the official Bablosoft website:
-					<a href="https://bablosoft.com/shop/BrowserAutomationStudio" target="_blank" rel="noopener">
-						bablosoft.com/shop/BrowserAutomationStudio
-					</a>. It is not part of this package and is not required for anything in this guide.
+					<strong>There is nothing to install.</strong> YTCPM Bot is a ready-to-run package:
+					you simply run <code>YoutubeCPM.exe</code> (Step 5), and on first launch it
+					downloads the additional files it needs by itself. There is no setup wizard, no
+					project file to open, and no other software required for anything in this guide —
+					if the download and extraction from Steps 1–2 are done, you are ready to configure
+					the bot.
 				</p>
 			</section>
 
@@ -250,17 +269,32 @@ const description =
 						<tbody>
 							<tr>
 								<th scope="row">Number of Browsers</th>
-								<td>How many browser instances the bot runs in parallel. More browsers do more work at once, but use more CPU, memory, and bandwidth.</td>
+								<td>
+									How many browser instances the bot runs in parallel. <strong>Set this for
+									your PC's RAM: each browser uses about 2&nbsp;GB.</strong> For example,
+									keep it around 3 on an 8&nbsp;GB PC and around 6 on a 16&nbsp;GB PC, so
+									Windows still has room; 10 (as shown) suits high-RAM PCs (32&nbsp;GB).
+								</td>
 								<td class="shown">10</td>
 							</tr>
 							<tr>
 								<th scope="row">Sleep between every page load, in seconds</th>
-								<td>A random pause between the minimum and maximum values, applied between page loads.</td>
+								<td>
+									A random pause between the minimum and maximum values, applied between
+									page loads. These values are set by the developer as the recommended
+									minimum — <strong>you can increase them</strong> if your internet or
+									proxies are slow (slower connections usually need a longer sleep), but
+									keep at least 3 and 5.
+								</td>
 								<td class="shown">Min 3 · Max 5</td>
 							</tr>
 							<tr>
 								<th scope="row">List of Refrences Websites</th>
-								<td>Select the <code>List_of_Refrences.txt</code> file that came with the package (use the folder button to browse to it).</td>
+								<td>
+									Click the folder button and attach the <code>List_of_Refrences.txt</code>
+									file from the folder you extracted in Step 2 — it sits next to the
+									<code>YoutubeCPM</code> folder.
+								</td>
 								<td class="shown">Bundled file</td>
 							</tr>
 							<tr>
@@ -271,6 +305,11 @@ const description =
 						</tbody>
 					</table>
 				</article>
+
+				<figure class="shot">
+					<img src={SHOT_GENERAL} width="920" height="668" loading="lazy" alt="YTCPM Bot main window showing the General settings tab" />
+					<figcaption>General settings in the bot's main window.</figcaption>
+				</figure>
 
 				<article class="card">
 					<h3>Youtube Setting</h3>
@@ -284,6 +323,11 @@ const description =
 						</tbody>
 					</table>
 				</article>
+
+				<figure class="shot">
+					<img src={SHOT_YOUTUBE} width="915" height="647" loading="lazy" alt="Youtube Setting tab showing Enable Skip Ads set to Yes" />
+					<figcaption>Youtube Setting tab.</figcaption>
+				</figure>
 
 				<article class="card">
 					<h3>Ads Setting</h3>
@@ -318,6 +362,11 @@ const description =
 					</table>
 				</article>
 
+				<figure class="shot">
+					<img src={SHOT_ADS} width="916" height="666" loading="lazy" alt="Ads Setting tab showing enable ads, ads type, scroll and duration settings" />
+					<figcaption>Ads Setting tab.</figcaption>
+				</figure>
+
 				<article class="card">
 					<h3>Browser</h3>
 					<table class="info">
@@ -325,25 +374,67 @@ const description =
 							<tr>
 								<th scope="row">Enable Fingerprint, Premium Service</th>
 								<td>
-									Optional premium fingerprint service. Leave on <em>No</em> unless you have
-									that service — the text field next to it is for the details the service
-									requires when enabled.
+									Your choice of two modes (both are shown in the screenshots below):
+									<ul>
+										<li>
+											<strong>No</strong> — the bot uses the user-agents list file instead:
+											set <em>Select User Agents</em> to <em>List Mix</em> and link the
+											<code>User_Agents.txt</code> file from the extracted folder.
+										</li>
+										<li>
+											<strong>Yes</strong> — the bot uses the premium fingerprint service
+											instead, and <em>Select User Agents</em> switches to <em>Off</em>. This
+											needs a <strong>Fingerprint API Key</strong> (see below).
+										</li>
+									</ul>
 								</td>
 								<td class="shown">No</td>
 							</tr>
 							<tr>
+								<th scope="row">Fingerprint API Key (only if Fingerprint = Yes)</th>
+								<td>
+									<strong>Required when fingerprint is enabled</strong> — the red
+									<strong>!</strong> beside the Browser tab means it is missing. This is a
+									paid premium service: <strong>$30 per month</strong>, and per the developer
+									it allows up to <strong>100 threads per minute</strong>. Keep your key
+									private; never share it publicly.
+								</td>
+								<td class="shown">Paid key</td>
+							</tr>
+							<tr>
+								<th scope="row">Fingerprint Device Type (only if Fingerprint = Yes)</th>
+								<td>The device type the fingerprint service should imitate.</td>
+								<td class="shown">Mobile</td>
+							</tr>
+							<tr>
 								<th scope="row">Select User Agents</th>
-								<td>How user agents are chosen. <em>List Mix</em> uses the list file below.</td>
+								<td>
+									With Fingerprint <em>No</em>: <em>List Mix</em>, which reads the file below.
+									With Fingerprint <em>Yes</em>: <em>Off</em>.
+								</td>
 								<td class="shown">List Mix</td>
 							</tr>
 							<tr>
 								<th scope="row">User Agents File Mix</th>
-								<td>Select the <code>User_Agents.txt</code> file that came with the package (999 user-agent strings).</td>
+								<td>
+									Select the <code>User_Agents.txt</code> file from the same extracted
+									folder (it contains 999 user-agent strings). Used when Fingerprint is
+									<em>No</em>.
+								</td>
 								<td class="shown">Bundled file</td>
 							</tr>
 						</tbody>
 					</table>
 				</article>
+
+				<figure class="shot">
+					<img src={SHOT_BROWSER} width="920" height="660" loading="lazy" alt="Browser tab with fingerprint off, user agents set to List Mix and the User Agents file linked" />
+					<figcaption>Browser tab with Fingerprint off — the User_Agents.txt file is used.</figcaption>
+				</figure>
+				<figure class="shot">
+					<img src={SHOT_BROWSER_FP} width="920" height="686" loading="lazy" alt="Browser tab with fingerprint premium service on, showing the API key field and device type, and user agents off" />
+					<figcaption>Browser tab with Fingerprint on — an API key is required (red !) and user agents are off.</figcaption>
+				</figure>
 
 				<article class="card">
 					<h3>Proxies</h3>
@@ -389,6 +480,11 @@ const description =
 					</table>
 				</article>
 
+				<figure class="shot">
+					<img src={SHOT_PROXIES} width="920" height="647" loading="lazy" alt="Proxies tab showing proxy list, type, login and password fields, with a red exclamation mark because the proxy list is not selected yet" />
+					<figcaption>Proxies tab — note the red ! while no proxy list file is selected.</figcaption>
+				</figure>
+
 				<h3>Required vs optional — at a glance</h3>
 				<ul>
 					<li>
@@ -426,6 +522,10 @@ const description =
 						<strong>Wait for it to finish — do not close the launcher.</strong> You can watch
 						the progress bar and percentage; click <em>Cancel</em> only if you want to stop.
 					</li>
+					<figure class="shot">
+						<img src={SHOT_LAUNCHER} width="555" height="244" loading="lazy" alt="Script launcher window showing Downloading engine with a progress bar" />
+						<figcaption>The Script launcher window you will see on first run.</figcaption>
+					</figure>
 					<li>
 						When the download completes, the script starts by itself and a window titled
 						<strong>Please enter credentials</strong> asks for your <strong>Login</strong> and
@@ -436,6 +536,10 @@ const description =
 						<strong>Login</strong> and <strong>Password</strong> fields. If you want the bot to
 						remember them on this computer, tick <strong>Save Pass On Disk</strong>.
 					</li>
+					<figure class="shot">
+						<img src={SHOT_LOGIN} width="474" height="237" loading="lazy" alt="Please enter credentials window with Login and Password fields and the Save Pass On Disk checkbox" />
+						<figcaption>The “Please enter credentials” window.</figcaption>
+					</figure>
 					<li>
 						Click <strong>OK</strong>. The bot checks the username and password — if they are
 						correct, the main window opens. If they are rejected, re-check for typing errors
@@ -477,7 +581,7 @@ const description =
 							<td>About 1–3 minutes.</td>
 						</tr>
 						<tr>
-							<th scope="row">Installing BAS</th>
+							<th scope="row">Installing anything</th>
 							<td>Not needed — there is nothing to install (see Step 3).</td>
 						</tr>
 						<tr>
@@ -528,7 +632,9 @@ const description =
 					<li>Click <strong>OK</strong> to start the workflow.</li>
 					<li>
 						Monitor progress in the bot's window while it works. The browsers it opens are
-						part of the workflow — let it run, and do not close the bot window mid-run.
+						part of the workflow — let it run, and do not close the bot window mid-run. The
+						main window also has a <strong>Restart</strong> button (bottom left) if you need
+						to restart the workflow with the same settings.
 					</li>
 					<li>
 						A run is finished when the bot stops working and returns to its idle/finished
@@ -564,12 +670,11 @@ const description =
 					extract again with <em>Extract All</em>.
 				</p>
 
-				<h3>“Do I need to install BAS?” / BAS missing or incompatible</h3>
+				<h3>The script launcher reports a download problem</h3>
 				<p>
-					You do not need BAS installed to run this package — it is a standalone application
-					(Step 3). If the script launcher reports an engine problem, let it finish or retry
-					its own engine download on a stable connection rather than installing anything
-					manually.
+					There is nothing else to install for this package (Step 3). If the launcher cannot
+					finish downloading its files, check your connection and let it retry on a stable
+					network rather than installing anything manually.
 				</p>
 
 				<h3>The bot does not start, or the project file is not recognised</h3>
@@ -601,7 +706,9 @@ const description =
 					Check that you are online and that the connection is stable — the launcher needs to
 					download 1–1.5&nbsp;GB on first run and reports download errors with an HTTP
 					status. Close other heavy downloads, retry, and let the launcher run undisturbed.
-					If browsers fail to start, restart the bot and lower the Number of Browsers.
+					If browsers fail to start, restart the bot and lower the Number of Browsers —
+					each browser uses about 2&nbsp;GB of RAM, so too many browsers for your PC is a
+					common cause.
 				</p>
 
 				<h3>The automation runs but produces no results</h3>
