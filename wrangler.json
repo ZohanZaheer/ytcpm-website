@@ -15,6 +15,7 @@
 	"upload_source_maps": true,
 	"keep_vars": true,
 	"vars": {
+		"ADMIN_EMAIL": "admin@ytcpm.cyou",
 		"PAYMENT_USDT_ADDRESS": "TSuxRZsBCSpRwVAgNoUih1r4zqaBFT6AVN",
 		"PAYMENT_USDT_NETWORK": "TRC20",
 		"STORAGE_DRIVER": "github",
