@@ -1,0 +1,463 @@
+---
+import BaseHead from '../components/BaseHead.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+
+/*
+  ── Download configuration ─────────────────────────────────────────────
+  Verified download target: the bot package committed to this project at
+  `public/YoutubeCPM.zip` (added 23 Oct 2026). Astro serves everything in
+  `public/` from the site root, so the live URL is `/YoutubeCPM.zip`.
+  To change the download, replace that file — or update DOWNLOAD_URL here
+  to another verified location. Never point this at an unverified URL.
+*/
+const DOWNLOAD_URL = '/YoutubeCPM.zip';
+const PACKAGE_NAME = 'YoutubeCPM.zip';
+const PACKAGE_SIZE = '17.0 MB';
+const PACKAGE_SHA256 = '97e5f3ebffb3b573a3990ab6a969f6204b2c5dcaab08a26415697d38a4deef6f';
+
+const title = 'Download YTCPM Bot';
+const description =
+	'Get started with YTCPM Bot, a Browser Automation Studio-based tool designed for YouTube CPM-related workflows. Download the package and follow the setup guide to get started.';
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<BaseHead title={title} description={description} />
+		<style>
+			/* Download page only — uses the site's existing design tokens.
+			   No global styles are changed. */
+			.eyebrow {
+				font-size: 0.75em;
+				font-weight: 700;
+				letter-spacing: 0.12em;
+				text-transform: uppercase;
+				color: var(--accent);
+				margin-bottom: 0.5em;
+			}
+			.lead {
+				font-size: 1.15em;
+			}
+			section {
+				margin-bottom: 2.5em;
+			}
+			.actions {
+				display: flex;
+				gap: 0.75em;
+				flex-wrap: wrap;
+				margin-top: 1.25em;
+			}
+			.btn {
+				display: inline-block;
+				padding: 0.45em 1.1em;
+				border-radius: 999px;
+				font-weight: 700;
+				font-size: 0.85em;
+				text-decoration: none;
+				border: 2px solid var(--accent);
+			}
+			.btn-primary {
+				background: var(--accent);
+				color: #fff;
+			}
+			.btn-primary:hover {
+				color: #fff;
+				background: var(--accent-dark);
+				border-color: var(--accent-dark);
+			}
+			.btn-ghost {
+				color: var(--accent);
+				background: transparent;
+			}
+			.cards {
+				display: grid;
+				grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+				gap: 1em;
+				margin-top: 1em;
+			}
+			.card {
+				border: 1px solid rgb(var(--gray-light));
+				border-radius: 12px;
+				padding: 1em 1.1em;
+				background: #fff;
+			}
+			.card h3 {
+				font-size: 1.1em;
+				margin-bottom: 0.4em;
+			}
+			.card p {
+				margin: 0;
+				font-size: 0.9em;
+				color: rgb(var(--gray));
+			}
+			.steps {
+				display: grid;
+				grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+				gap: 1em;
+				margin-top: 1em;
+				counter-reset: step;
+			}
+			.step {
+				border: 1px solid rgb(var(--gray-light));
+				border-radius: 12px;
+				padding: 1em 1.1em;
+				background: rgba(var(--gray-light), 25%);
+			}
+			.step strong {
+				display: block;
+				margin-bottom: 0.3em;
+				color: rgb(var(--black));
+			}
+			.step p {
+				margin: 0;
+				font-size: 0.9em;
+				color: rgb(var(--gray));
+			}
+			table.info {
+				width: 100%;
+				border-collapse: collapse;
+				font-size: 0.9em;
+				margin-top: 1em;
+			}
+			table.info th,
+			table.info td {
+				text-align: left;
+				padding: 0.5em 0.75em;
+				border: 1px solid rgb(var(--gray-light));
+				vertical-align: top;
+			}
+			table.info th {
+				width: 38%;
+				background: rgba(var(--gray-light), 35%);
+				color: rgb(var(--black));
+			}
+			code.hash {
+				word-break: break-all;
+				font-size: 0.82em;
+			}
+			.note {
+				border-left: 4px solid var(--accent);
+				background: rgba(var(--gray-light), 35%);
+				border-radius: 0 12px 12px 0;
+				padding: 1em 1.2em;
+			}
+			.note p {
+				margin: 0;
+			}
+			.disclaimer {
+				border: 1px solid rgb(var(--gray-light));
+				border-radius: 12px;
+				padding: 1em 1.2em;
+				background: rgba(var(--gray-light), 25%);
+			}
+		</style>
+	</head>
+	<body>
+		<Header />
+		<main>
+			<!-- Hero -->
+			<section aria-labelledby="download-heading">
+				<p class="eyebrow">Download</p>
+				<h1 id="download-heading">Download YTCPM Bot</h1>
+				<p class="lead">
+					Get started with YTCPM Bot, a Browser Automation Studio-based tool designed for
+					YouTube CPM-related workflows. Download the package and follow the setup guide to get
+					started.
+				</p>
+				<div class="actions">
+					<a class="btn btn-primary" href={DOWNLOAD_URL} download>Download YTCPM Bot</a>
+					<a class="btn btn-ghost" href="/instructions">Installation Instructions</a>
+				</div>
+				<p>
+					<small>
+						{PACKAGE_NAME} &middot; {PACKAGE_SIZE} &middot; Windows &middot; No separate Browser
+						Automation Studio installation is needed to run the package — see
+						<a href="#requirements">system requirements</a>.
+					</small>
+				</p>
+			</section>
+
+			<!-- What it is -->
+			<section aria-labelledby="what-heading">
+				<h2 id="what-heading">What Is YTCPM Bot?</h2>
+				<p>
+					YTCPM Bot is a standalone Windows application built with
+					<a href="https://bablosoft.com/shop/BrowserAutomationStudio" target="_blank" rel="noopener">
+						Browser Automation Studio
+					</a>
+					(BAS, by Bablosoft) for YouTube CPM-related workflows. The download is a single ZIP
+					archive containing the application (<code>YoutubeCPM.exe</code>) and its data files.
+					When you run it, a script launcher first downloads the BAS engine files it needs —
+					about 1–1.5&nbsp;GB the first time — and then starts the bot automatically, so the
+					package itself stays small.
+				</p>
+				<p>
+					Before it runs, the bot asks for the User ID and password provided with your access,
+					and then opens a settings window (<em>Please define resources</em>) where you
+					configure browsers, timing, ads, and proxies. The full walkthrough is in the
+					<a href="/instructions">installation and setup guide</a>.
+				</p>
+			</section>
+
+			<!-- Features — taken from the actual package and its settings window -->
+			<section aria-labelledby="features-heading">
+				<h2 id="features-heading">Features</h2>
+				<div class="cards">
+					<article class="card">
+						<h3>Standalone BAS application</h3>
+						<p>
+							Built with Browser Automation Studio and shipped as a ready-to-run Windows
+							package. You run <code>YoutubeCPM.exe</code> directly — no BAS installation or
+							project import is required.
+						</p>
+					</article>
+					<article class="card">
+						<h3>Automatic first-run setup</h3>
+						<p>
+							On first launch, the script launcher downloads the engine files it needs
+							(about 1–1.5&nbsp;GB) in the background and starts the script automatically when
+							ready.
+						</p>
+					</article>
+					<article class="card">
+						<h3>Multiple browsers, your pace</h3>
+						<p>
+							Set the number of browsers, a target for total views, and a randomised delay
+							(sleep) between page loads — see the
+							<a href="/instructions#step-4">General settings</a>.
+						</p>
+					</article>
+					<article class="card">
+						<h3>YouTube &amp; ads settings</h3>
+						<p>
+							Options include skip-ads behaviour, enabling ads, choosing the ads type
+							(e.g. DisplayAds), scroll-for-ads, opening the ads internal page, and how long
+							ads are shown.
+						</p>
+					</article>
+					<article class="card">
+						<h3>User agents &amp; references</h3>
+						<p>
+							Ships with <code>User_Agents.txt</code> (999 user-agent strings, used in
+							<em>List Mix</em> mode) and <code>List_of_Refrences.txt</code>, the reference
+							websites list used by the workflow.
+						</p>
+					</article>
+					<article class="card">
+						<h3>Proxy support</h3>
+						<p>
+							Optional proxies with automatic, HTTP, or SOCKS5 type detection and optional
+							proxy login and password. Add your own list to the included
+							<code>proxy.txt</code> workflow — see the
+							<a href="/instructions#step-4">Proxies settings</a>.
+						</p>
+					</article>
+					<article class="card">
+						<h3>Optional fingerprint service</h3>
+						<p>
+							The Browser settings include an optional premium fingerprint service. It is
+							off by default and only needed if you choose to use that service.
+						</p>
+					</article>
+					<article class="card">
+						<h3>Setup &amp; troubleshooting docs</h3>
+						<p>
+							A beginner-friendly <a href="/instructions">step-by-step guide</a> covers
+							download, extraction, first launch, every settings tab, timing expectations,
+							and troubleshooting.
+						</p>
+					</article>
+				</div>
+			</section>
+
+			<!-- System requirements -->
+			<section id="requirements" aria-labelledby="requirements-heading">
+				<h2 id="requirements-heading">System Requirements</h2>
+				<table class="info">
+					<tbody>
+						<tr>
+							<th scope="row">Operating system</th>
+							<td>
+								Windows. The package is a Windows application (<code>YoutubeCPM.exe</code>,
+								32-bit) with its Qt runtime libraries included. The minimum Windows version
+								is not documented in the package.
+							</td>
+						</tr>
+						<tr>
+							<th scope="row">Browser Automation Studio</th>
+							<td>
+								<strong>Not required to run the bot.</strong> The package is a standalone
+								application built with BAS and downloads its own engine on first launch. BAS
+								itself is a separate free download from
+								<a href="https://bablosoft.com/shop/BrowserAutomationStudio" target="_blank" rel="noopener">Bablosoft</a>
+								if you want the development tool.
+							</td>
+						</tr>
+						<tr>
+							<th scope="row">Internet connection</th>
+							<td>
+								Required. The launcher downloads about 1–1.5&nbsp;GB of engine files on first
+								run, loads the latest script version, and the workflow itself runs online.
+							</td>
+						</tr>
+						<tr>
+							<th scope="row">Free disk space</th>
+							<td>
+								At least 2&nbsp;GB recommended: the archive is {PACKAGE_SIZE}, it extracts to
+								about 42&nbsp;MB, and the first-run engine download adds roughly 1–1.5&nbsp;GB.
+							</td>
+						</tr>
+						<tr>
+							<th scope="row">Access credentials</th>
+							<td>
+								A User ID and password for the bot. The launcher asks for them at startup,
+								verifies them, and offers a <em>Save</em> option so you do not have to type
+								them every time. Enter them only in the application — never share them
+								publicly.
+							</td>
+						</tr>
+						<tr>
+							<th scope="row">Optional</th>
+							<td>
+								Your own proxies (the included <code>proxy.txt</code> starts empty) and, only
+								if you enable it, a premium fingerprint service account.
+							</td>
+						</tr>
+					</tbody>
+				</table>
+			</section>
+
+			<!-- Download information — verified values only -->
+			<section aria-labelledby="info-heading">
+				<h2 id="info-heading">Download Information</h2>
+				<table class="info">
+					<tbody>
+						<tr>
+							<th scope="row">Package filename</th>
+							<td><code>{PACKAGE_NAME}</code></td>
+						</tr>
+						<tr>
+							<th scope="row">Download size</th>
+							<td>{PACKAGE_SIZE} (17,020,384 bytes)</td>
+						</tr>
+						<tr>
+							<th scope="row">Supported operating system</th>
+							<td>Windows</td>
+						</tr>
+						<tr>
+							<th scope="row">Contents</th>
+							<td>
+								A <code>YoutubeCPM</code> folder with <code>YoutubeCPM.exe</code> and its
+								libraries, plus <code>List_of_Refrences.txt</code>,
+								<code>User_Agents.txt</code>, and <code>proxy.txt</code>.
+							</td>
+						</tr>
+						<tr>
+							<th scope="row">Version</th>
+							<td>
+								Not pinned. The package is a remote script launcher configured to load the
+								latest script version (<code>Version="last"</code> in its
+								<code>data/project.xml</code>), so there is no fixed version number in the
+								archive.
+							</td>
+						</tr>
+						<tr>
+							<th scope="row">Published on this site</th>
+							<td>23 October 2026</td>
+						</tr>
+						<tr>
+							<th scope="row">SHA-256 checksum</th>
+							<td>
+								<code class="hash">{PACKAGE_SHA256}</code><br />
+								<small>
+									Verify your download: run
+									<code>certutil -hashfile YoutubeCPM.zip SHA256</code> in the folder where
+									you saved it, and compare the result.
+								</small>
+							</td>
+						</tr>
+					</tbody>
+				</table>
+				<div class="actions">
+					<a class="btn btn-primary" href={DOWNLOAD_URL} download>Download YTCPM Bot</a>
+					<a class="btn btn-ghost" href="/instructions">Installation Instructions</a>
+				</div>
+			</section>
+
+			<!-- 3 steps -->
+			<section aria-labelledby="steps-heading">
+				<h2 id="steps-heading">Get Running in 3 Steps</h2>
+				<div class="steps">
+					<div class="step">
+						<strong>1. Download</strong>
+						<p>Save <code>{PACKAGE_NAME}</code> ({PACKAGE_SIZE}) from the button above.</p>
+					</div>
+					<div class="step">
+						<strong>2. Extract</strong>
+						<p>
+							Right-click the ZIP, choose <em>Extract All</em>, then open the extracted
+							<code>YoutubeCPM</code> folder.
+						</p>
+					</div>
+					<div class="step">
+						<strong>3. Configure &amp; run</strong>
+						<p>
+							Run <code>YoutubeCPM.exe</code>, wait for the first-run download, sign in, set
+							your options, and click OK. Full guide:
+							<a href="/instructions">/instructions</a>.
+						</p>
+					</div>
+				</div>
+			</section>
+
+			<!-- Troubleshooting preview -->
+			<section aria-labelledby="help-heading">
+				<h2 id="help-heading">Having Trouble?</h2>
+				<p>The most common first-run issues are easy to fix:</p>
+				<ul>
+					<li>
+						<strong>Launcher seems stuck on “Downloading engine”</strong> — on first run it is
+						downloading 1–1.5&nbsp;GB. Check your connection and give it time; the script
+						starts automatically when ready.
+					</li>
+					<li>
+						<strong>Red ! next to Proxies</strong> — the List of Proxies file is required
+						when proxies are enabled. Select your proxy list file, or turn proxies off.
+					</li>
+					<li>
+						<strong>Login rejected</strong> — re-check the User ID and password provided with
+						your access; the bot only continues after they verify.
+					</li>
+				</ul>
+				<p>
+					See the full <a href="/instructions#troubleshooting">troubleshooting section</a> in
+					the setup guide.
+				</p>
+			</section>
+
+			<!-- Disclaimer -->
+			<section aria-labelledby="disclaimer-heading">
+				<div class="disclaimer" role="note" aria-label="Disclaimer">
+					<h2 id="disclaimer-heading">Disclaimer</h2>
+					<p>
+						YTCPM Bot is an <strong>independent tool</strong> and is
+						<strong>
+							not affiliated with, endorsed by, or officially associated with YouTube or
+							Google
+						</strong>. Browser Automation Studio is a product of Bablosoft. Use the bot only
+						with appropriate authorisation and in accordance with applicable platform rules.
+						Nothing on this page guarantees earnings, CPM results, or that an account will not
+						be restricted — see
+						<a href="/instructions#security">Security and responsible use</a>.
+					</p>
+				</div>
+				<p>
+					New here? Read <a href="/about">about YouTube CPM Bot</a> or browse the
+					<a href="/blog">blog</a> for CPM and RPM guides.
+				</p>
+			</section>
+		</main>
+		<Footer />
+	</body>
+</html>

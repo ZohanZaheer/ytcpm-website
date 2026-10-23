@@ -1,0 +1,664 @@
+---
+import BaseHead from '../components/BaseHead.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+
+const title = 'YTCPM Bot — Installation and Setup Guide';
+const description =
+	'Beginner-friendly installation and setup guide for YTCPM Bot: download, extract, first launch, login, every settings tab, timing, troubleshooting, and responsible use.';
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<BaseHead title={title} description={description} />
+		<style>
+			/* Instructions page only — uses the site's existing design tokens.
+			   No global styles are changed. */
+			.eyebrow {
+				font-size: 0.75em;
+				font-weight: 700;
+				letter-spacing: 0.12em;
+				text-transform: uppercase;
+				color: var(--accent);
+				margin-bottom: 0.5em;
+			}
+			.lead {
+				font-size: 1.15em;
+			}
+			section {
+				margin-bottom: 2.5em;
+			}
+			.card {
+				border: 1px solid rgb(var(--gray-light));
+				border-radius: 12px;
+				padding: 1em 1.1em;
+				background: #fff;
+				margin-top: 1em;
+			}
+			.card h3 {
+				font-size: 1.1em;
+				margin-bottom: 0.4em;
+			}
+			.note {
+				border-left: 4px solid var(--accent);
+				background: rgba(var(--gray-light), 35%);
+				border-radius: 0 12px 12px 0;
+				padding: 1em 1.2em;
+				margin-top: 1em;
+			}
+			.note p {
+				margin: 0;
+			}
+			.warn {
+				border: 1px solid rgb(var(--gray-light));
+				border-left: 4px solid #b91c1c;
+				background: rgba(var(--gray-light), 25%);
+				border-radius: 0 12px 12px 0;
+				padding: 1em 1.2em;
+				margin-top: 1em;
+			}
+			.warn p {
+				margin: 0;
+			}
+			table.info {
+				width: 100%;
+				border-collapse: collapse;
+				font-size: 0.9em;
+				margin-top: 1em;
+			}
+			table.info th,
+			table.info td {
+				text-align: left;
+				padding: 0.5em 0.75em;
+				border: 1px solid rgb(var(--gray-light));
+				vertical-align: top;
+			}
+			table.info th {
+				width: 34%;
+				background: rgba(var(--gray-light), 35%);
+				color: rgb(var(--black));
+			}
+			table.info td.shown {
+				width: 22%;
+				white-space: nowrap;
+			}
+			.toc {
+				border: 1px solid rgb(var(--gray-light));
+				border-radius: 12px;
+				padding: 1em 1.2em;
+				background: rgba(var(--gray-light), 25%);
+			}
+			.toc ol {
+				margin: 0;
+			}
+			.actions {
+				display: flex;
+				gap: 0.75em;
+				flex-wrap: wrap;
+				margin-top: 1.25em;
+			}
+			.btn {
+				display: inline-block;
+				padding: 0.45em 1.1em;
+				border-radius: 999px;
+				font-weight: 700;
+				font-size: 0.85em;
+				text-decoration: none;
+				border: 2px solid var(--accent);
+			}
+			.btn-primary {
+				background: var(--accent);
+				color: #fff;
+			}
+			.btn-primary:hover {
+				color: #fff;
+				background: var(--accent-dark);
+				border-color: var(--accent-dark);
+			}
+			.btn-ghost {
+				color: var(--accent);
+				background: transparent;
+			}
+		</style>
+	</head>
+	<body>
+		<Header />
+		<main>
+			<section aria-labelledby="guide-heading">
+				<p class="eyebrow">Setup Guide</p>
+				<h1 id="guide-heading">YTCPM Bot — Installation and Setup Guide</h1>
+				<p class="lead">
+					This beginner-friendly guide takes you from download to a running bot: what to
+					download, how to extract it, what happens on first launch, how signing in works, and
+					what every setting in the bot means.
+				</p>
+				<div class="toc">
+					<strong>On this page</strong>
+					<ol>
+						<li><a href="#step-1">Download the bot</a></li>
+						<li><a href="#step-2">Extract the ZIP file</a></li>
+						<li><a href="#step-3">Do you need Browser Automation Studio?</a></li>
+						<li><a href="#step-4">Configure the bot (every settings tab)</a></li>
+						<li><a href="#step-5">First-time startup and sign-in</a></li>
+						<li><a href="#step-6">How long does the first run take?</a></li>
+						<li><a href="#step-7">Run the bot and understand results</a></li>
+						<li><a href="#troubleshooting">Troubleshooting</a></li>
+						<li><a href="#security">Security and responsible use</a></li>
+					</ol>
+				</div>
+			</section>
+
+			<!-- Step 1 -->
+			<section id="step-1" aria-labelledby="step-1-heading">
+				<h2 id="step-1-heading">Step 1: Download the Bot</h2>
+				<ol>
+					<li>Go to the <a href="/download">download page</a>.</li>
+					<li>
+						Click <strong>Download YTCPM Bot</strong>. Your browser downloads
+						<code>YoutubeCPM.zip</code> (17.0&nbsp;MB).
+					</li>
+					<li>
+						If the browser asks where to save it, choose a folder you can find again — the
+						Windows <strong>Downloads</strong> folder is fine.
+					</li>
+					<li>Wait until the download finishes completely before continuing.</li>
+				</ol>
+				<p>
+					<strong>Finding the file afterwards:</strong> press <code>Ctrl + J</code> in your
+					browser to open its Downloads list, or open File Explorer and click
+					<strong>Downloads</strong> in the left sidebar. Look for <code>YoutubeCPM.zip</code>.
+				</p>
+				<div class="note">
+					<p>
+						<strong>Optional check:</strong> verify the file is genuine and complete. In the
+						Downloads folder, run
+						<code>certutil -hashfile YoutubeCPM.zip SHA256</code> in a terminal and compare it
+						with the SHA-256 checksum published on the <a href="/download">download page</a>.
+					</p>
+				</div>
+			</section>
+
+			<!-- Step 2 -->
+			<section id="step-2" aria-labelledby="step-2-heading">
+				<h2 id="step-2-heading">Step 2: Extract the ZIP File</h2>
+				<ol>
+					<li>Locate <code>YoutubeCPM.zip</code> in your Downloads folder.</li>
+					<li>Right-click the archive and select <strong>Extract All…</strong></li>
+					<li>Choose a destination folder (the suggested folder is fine) and click <strong>Extract</strong>.</li>
+					<li>Open the extracted folder.</li>
+					<li>
+						Go into the <strong><code>YoutubeCPM</code></strong> folder inside it — that is
+						where the application lives.
+					</li>
+				</ol>
+				<p>After extraction you should see this structure:</p>
+				<ul>
+					<li>
+						<code>YoutubeCPM</code> folder containing <code>YoutubeCPM.exe</code>, its library
+						(.dll) files, and subfolders such as <code>data</code>, <code>platforms</code>, and
+						<code>translations</code>.
+					</li>
+					<li>
+						Next to that folder: <code>List_of_Refrences.txt</code>,
+						<code>User_Agents.txt</code>, and <code>proxy.txt</code>.
+					</li>
+				</ul>
+				<div class="warn">
+					<p>
+						<strong>Do not run the bot from inside the ZIP archive.</strong> Always extract
+						first, and keep the folder structure exactly as extracted — do not move
+						<code>YoutubeCPM.exe</code> away from its .dll files, and do not delete the three
+						text files, because the bot's settings point to them.
+					</p>
+				</div>
+			</section>
+
+			<!-- Step 3 -->
+			<section id="step-3" aria-labelledby="step-3-heading">
+				<h2 id="step-3-heading">Step 3: Do You Need Browser Automation Studio?</h2>
+				<p>
+					<strong>No — not to run this package.</strong> YTCPM Bot was built with Browser
+					Automation Studio (BAS, by Bablosoft) and is distributed as a standalone, compiled
+					application. There is no BAS project file to import and no BAS menu to open: you
+					simply run <code>YoutubeCPM.exe</code> (Step 5), and its script launcher downloads
+					the BAS engine it needs by itself.
+				</p>
+				<p>
+					If you want Browser Automation Studio itself — for example, to learn how BAS bots
+					are built — it is a free download from the official Bablosoft website:
+					<a href="https://bablosoft.com/shop/BrowserAutomationStudio" target="_blank" rel="noopener">
+						bablosoft.com/shop/BrowserAutomationStudio
+					</a>. It is not part of this package and is not required for anything in this guide.
+				</p>
+			</section>
+
+			<!-- Step 4 -->
+			<section id="step-4" aria-labelledby="step-4-heading">
+				<h2 id="step-4-heading">Step 4: Configure the Bot</h2>
+				<p>
+					When the bot starts, it opens a settings window titled
+					<strong>Please define resources</strong>. Work through the tabs below, then click
+					<strong>OK</strong> to continue (or <strong>Cancel</strong> to stop). The values in
+					the “Shown as” column are the values from the reference screenshots — treat them as
+					starting points, not recommendations.
+				</p>
+
+				<article class="card">
+					<h3>General</h3>
+					<table class="info">
+						<tbody>
+							<tr>
+								<th scope="row">Number of Browsers</th>
+								<td>How many browser instances the bot runs in parallel. More browsers do more work at once, but use more CPU, memory, and bandwidth.</td>
+								<td class="shown">10</td>
+							</tr>
+							<tr>
+								<th scope="row">Sleep between every page load, in seconds</th>
+								<td>A random pause between the minimum and maximum values, applied between page loads.</td>
+								<td class="shown">Min 3 · Max 5</td>
+							</tr>
+							<tr>
+								<th scope="row">List of Refrences Websites</th>
+								<td>Select the <code>List_of_Refrences.txt</code> file that came with the package (use the folder button to browse to it).</td>
+								<td class="shown">Bundled file</td>
+							</tr>
+							<tr>
+								<th scope="row">Total Views</th>
+								<td>The total number of views the workflow is set to work towards.</td>
+								<td class="shown">9999999</td>
+							</tr>
+						</tbody>
+					</table>
+				</article>
+
+				<article class="card">
+					<h3>Youtube Setting</h3>
+					<table class="info">
+						<tbody>
+							<tr>
+								<th scope="row">Enable Skip Ads</th>
+								<td>Whether the bot skips ads when YouTube offers a skip option (<em>Yes</em> / <em>No</em>).</td>
+								<td class="shown">Yes</td>
+							</tr>
+						</tbody>
+					</table>
+				</article>
+
+				<article class="card">
+					<h3>Ads Setting</h3>
+					<table class="info">
+						<tbody>
+							<tr>
+								<th scope="row">Enable Ads</th>
+								<td>Turn ads handling in the workflow on or off (<em>Yes</em> / <em>No</em>).</td>
+								<td class="shown">Yes</td>
+							</tr>
+							<tr>
+								<th scope="row">Select Ads Type</th>
+								<td>Which ads type the workflow works with.</td>
+								<td class="shown">DisplayAds</td>
+							</tr>
+							<tr>
+								<th scope="row">Enable Scroll 4 Ads</th>
+								<td>Whether the page is scrolled for ads (<em>Yes</em> / <em>No</em>).</td>
+								<td class="shown">Yes</td>
+							</tr>
+							<tr>
+								<th scope="row">Open Ads Internal page</th>
+								<td>Whether the ads internal (landing) page is opened (<em>Yes</em> / <em>No</em>).</td>
+								<td class="shown">Yes</td>
+							</tr>
+							<tr>
+								<th scope="row">Time Duration for Ads, in Seconds</th>
+								<td>A random duration between the minimum and maximum values for how long ads are shown.</td>
+								<td class="shown">Min 30 · Max 50</td>
+							</tr>
+						</tbody>
+					</table>
+				</article>
+
+				<article class="card">
+					<h3>Browser</h3>
+					<table class="info">
+						<tbody>
+							<tr>
+								<th scope="row">Enable Fingerprint, Premium Service</th>
+								<td>
+									Optional premium fingerprint service. Leave on <em>No</em> unless you have
+									that service — the text field next to it is for the details the service
+									requires when enabled.
+								</td>
+								<td class="shown">No</td>
+							</tr>
+							<tr>
+								<th scope="row">Select User Agents</th>
+								<td>How user agents are chosen. <em>List Mix</em> uses the list file below.</td>
+								<td class="shown">List Mix</td>
+							</tr>
+							<tr>
+								<th scope="row">User Agents File Mix</th>
+								<td>Select the <code>User_Agents.txt</code> file that came with the package (999 user-agent strings).</td>
+								<td class="shown">Bundled file</td>
+							</tr>
+						</tbody>
+					</table>
+				</article>
+
+				<article class="card">
+					<h3>Proxies</h3>
+					<table class="info">
+						<tbody>
+							<tr>
+								<th scope="row">Want to Used Proxies?</th>
+								<td>Turn proxy use on or off (<em>Yes</em> / <em>No</em>). If you choose <em>No</em>, the rest of this tab is not needed.</td>
+								<td class="shown">Yes</td>
+							</tr>
+							<tr>
+								<th scope="row">Proxy Methods</th>
+								<td>How proxies are supplied.</td>
+								<td class="shown">Proxies</td>
+							</tr>
+							<tr>
+								<th scope="row">List of Proxies</th>
+								<td>
+									<strong>Required when proxies are enabled.</strong> Select your proxy list
+									file — the package includes an empty <code>proxy.txt</code> for your own
+									proxies (add them in the file, one entry per line, in the format your proxy
+									provider supplies). A red <strong>!</strong> beside this tab means this
+									field is missing or invalid.
+								</td>
+								<td class="shown">File required</td>
+							</tr>
+							<tr>
+								<th scope="row">Proxy Type. Can be auto.</th>
+								<td><em>auto</em> detects the type; or force <em>http</em> or <em>socks5</em>.</td>
+								<td class="shown">auto</td>
+							</tr>
+							<tr>
+								<th scope="row">Proxy Login. Can be blank.</th>
+								<td>Optional. Only if your proxies require authentication.</td>
+								<td class="shown">Blank</td>
+							</tr>
+							<tr>
+								<th scope="row">Proxy Password. Can be blank</th>
+								<td>Optional. Only if your proxies require authentication. Never share it publicly.</td>
+								<td class="shown">Blank</td>
+							</tr>
+						</tbody>
+					</table>
+				</article>
+
+				<h3>Required vs optional — at a glance</h3>
+				<ul>
+					<li>
+						<strong>Required:</strong> the User ID and password for sign-in (Step 5); the
+						<code>List_of_Refrences.txt</code> and <code>User_Agents.txt</code> files (they
+						come with the package — just keep them selected); and, if proxies are enabled, a
+						List of Proxies file.
+					</li>
+					<li>
+						<strong>Optional:</strong> proxies in general, proxy login/password, and the
+						premium fingerprint service.
+					</li>
+				</ul>
+				<div class="note">
+					<p>
+						Never type your bot password, proxy password, or any other credential into a
+						website, chat, or public place — credentials belong only in the bot's own windows.
+						This page deliberately shows no real credentials.
+					</p>
+				</div>
+			</section>
+
+			<!-- Step 5 -->
+			<section id="step-5" aria-labelledby="step-5-heading">
+				<h2 id="step-5-heading">Step 5: First-Time Startup and Sign-In</h2>
+				<ol>
+					<li>
+						Open the extracted <code>YoutubeCPM</code> folder and double-click
+						<strong><code>YoutubeCPM.exe</code></strong>.
+					</li>
+					<li>
+						The <strong>Script launcher</strong> window appears: “Downloading engine — The
+						script will start automatically when it is ready.” On first run it downloads
+						about <strong>1–1.5&nbsp;GB</strong> of engine files in the background.
+						<strong>Wait for it to finish — do not close the launcher.</strong> You can watch
+						the progress bar and percentage; click <em>Cancel</em> only if you want to stop.
+					</li>
+					<li>
+						When the download completes, the script starts by itself and asks for your
+						<strong>User ID</strong> and <strong>password</strong>.
+					</li>
+					<li>
+						Enter the credentials provided with your access. If you want the bot to remember
+						them on this computer, tick the <strong>Save</strong> option.
+					</li>
+					<li>
+						Click <strong>OK</strong>. The bot checks the username and password — if they are
+						correct, the main window opens. If they are rejected, re-check for typing errors
+						and try again.
+					</li>
+					<li>
+						Complete the settings window (<a href="#step-4">Step 4</a>) and click
+						<strong>OK</strong> to run.
+					</li>
+				</ol>
+				<h3>One-time vs every time</h3>
+				<ul>
+					<li>
+						<strong>First run only:</strong> the 1–1.5&nbsp;GB engine download, and (if you
+						ticked Save) storing your sign-in.
+					</li>
+					<li>
+						<strong>Every run:</strong> launch <code>YoutubeCPM.exe</code>, sign in (if not
+						saved), confirm the settings, click OK.
+					</li>
+				</ul>
+			</section>
+
+			<!-- Step 6 -->
+			<section id="step-6" aria-labelledby="step-6-heading">
+				<h2 id="step-6-heading">Step 6: How Long Does the First Run Take?</h2>
+				<p>
+					These are planning estimates, not guarantees — your connection and computer decide
+					the real times:
+				</p>
+				<table class="info">
+					<tbody>
+						<tr>
+							<th scope="row">Downloading the package</th>
+							<td>About 1–5 minutes on typical broadband — the archive is only 17.0&nbsp;MB.</td>
+						</tr>
+						<tr>
+							<th scope="row">Extracting the ZIP</th>
+							<td>About 1–3 minutes.</td>
+						</tr>
+						<tr>
+							<th scope="row">Installing BAS</th>
+							<td>Not needed — there is nothing to install (see Step 3).</td>
+						</tr>
+						<tr>
+							<th scope="row">First-run engine download</th>
+							<td>
+								The big one: about 1–1.5&nbsp;GB downloads in the background after you first
+								run <code>YoutubeCPM.exe</code>. On a fast connection this can be a few
+								minutes; on a slow connection (around 10&nbsp;Mbps) it can take 15–25
+								minutes or longer.
+							</td>
+						</tr>
+						<tr>
+							<th scope="row">Initial configuration</th>
+							<td>About 3–10 minutes if your sign-in details and any proxy list are ready.</td>
+						</tr>
+						<tr>
+							<th scope="row">First execution</th>
+							<td>Varies with the workflow, browser startup, network speed, and the settings you chose (browsers, total views, delays).</td>
+						</tr>
+					</tbody>
+				</table>
+				<p>
+					Altogether, a straightforward setup takes around <strong>10–30 minutes</strong>,
+					excluding a slow first-run engine download, which can extend the first launch
+					beyond that. Later launches are faster: the engine is already downloaded and your
+					sign-in and settings do not need to be set up again.
+				</p>
+				<div class="note">
+					<p>
+						There is no guaranteed execution or completion time for a run — it depends on
+						your settings (for example, number of browsers and total views) and network
+						conditions.
+					</p>
+				</div>
+			</section>
+
+			<!-- Step 7 -->
+			<section id="step-7" aria-labelledby="step-7-heading">
+				<h2 id="step-7-heading">Step 7: Run the Bot and Understand Results</h2>
+				<ol>
+					<li>Launch <code>YoutubeCPM.exe</code> and sign in if asked (Step 5).</li>
+					<li>
+						In the <strong>Please define resources</strong> window, review each tab
+						(<a href="#step-4">Step 4</a>) — especially the number of browsers, total views,
+						and, if enabled, that a valid List of Proxies file is selected (no red
+						<strong>!</strong>).
+					</li>
+					<li>Click <strong>OK</strong> to start the workflow.</li>
+					<li>
+						Monitor progress in the bot's window while it works. The browsers it opens are
+						part of the workflow — let it run, and do not close the bot window mid-run.
+					</li>
+					<li>
+						A run is finished when the bot stops working and returns to its idle/finished
+						state in the main window. How long that takes depends on your settings — there
+						is no fixed duration.
+					</li>
+				</ol>
+				<p>
+					The current package does not document a fixed output file, log file name, or results
+					format in its files, so treat anything the bot shows in its own window as the result
+					of the run, and check the bot window first if you are looking for status or output.
+					If a future script version adds exported results, this section will be updated with
+					the real file names.
+				</p>
+			</section>
+
+			<!-- Step 8 -->
+			<section id="troubleshooting" aria-labelledby="troubleshooting-heading">
+				<h2 id="troubleshooting-heading">Step 8: Troubleshooting</h2>
+
+				<h3>Download interrupted or the archive is missing</h3>
+				<p>
+					Re-download from the <a href="/download">download page</a> and wait for it to finish
+					completely. Check the file size (17.0&nbsp;MB) or the SHA-256 checksum shown there.
+					If your browser removed it after a security scan, download it again from this site
+					only — never from a re-upload on another site.
+				</p>
+
+				<h3>ZIP extraction errors</h3>
+				<p>
+					Usually a incomplete download or not enough free disk space. Delete the partial
+					extraction, make sure you have at least 2&nbsp;GB free, re-download the archive, and
+					extract again with <em>Extract All</em>.
+				</p>
+
+				<h3>“Do I need to install BAS?” / BAS missing or incompatible</h3>
+				<p>
+					You do not need BAS installed to run this package — it is a standalone application
+					(Step 3). If the script launcher reports an engine problem, let it finish or retry
+					its own engine download on a stable connection rather than installing anything
+					manually.
+				</p>
+
+				<h3>The bot does not start, or the project file is not recognised</h3>
+				<p>
+					Make sure you extracted the ZIP first (Step 2) and are double-clicking
+					<code>YoutubeCPM.exe</code> inside the extracted <code>YoutubeCPM</code> folder —
+					not opening files from inside the archive, and not moving the .exe away from its
+					.dll files. If <code>data/project.xml</code> is missing, the extraction is
+					incomplete: extract a fresh copy.
+				</p>
+
+				<h3>Red ! next to a settings tab / required settings missing</h3>
+				<p>
+					A red <strong>!</strong> means a required resource is missing or invalid. The most
+					common case: Proxies are enabled but no List of Proxies file is selected. Select
+					your proxy list file (or set <em>Want to Used Proxies?</em> to <em>No</em>), and
+					check that the References and User Agents files are still selected.
+				</p>
+
+				<h3>Sign-in is rejected</h3>
+				<p>
+					Re-type the User ID and password carefully (watch for extra spaces and Caps Lock).
+					The bot verifies them before opening the main window, so correct credentials are
+					required every run unless you used the <em>Save</em> option on this computer.
+				</p>
+
+				<h3>Browser startup or network errors; engine download fails</h3>
+				<p>
+					Check that you are online and that the connection is stable — the launcher needs to
+					download 1–1.5&nbsp;GB on first run and reports download errors with an HTTP
+					status. Close other heavy downloads, retry, and let the launcher run undisturbed.
+					If browsers fail to start, restart the bot and lower the Number of Browsers.
+				</p>
+
+				<h3>The automation runs but produces no results</h3>
+				<p>
+					Check your settings: total views, the delays, and whether the References and User
+					Agents files are valid. If proxies are enabled, test that your proxy list works —
+					dead proxies are a common cause. There is no guaranteed outcome for any run.
+				</p>
+
+				<h3>Windows or antivirus warnings</h3>
+				<p>
+					Only run the package if you downloaded it from this site and the checksum matches
+					(Step 1). If your security software flags the file, verify the checksum first and
+					use your security software's own reporting/quarantine process — do not disable your
+					antivirus or other security controls to force the bot to run.
+				</p>
+			</section>
+
+			<!-- Step 9 -->
+			<section id="security" aria-labelledby="security-heading">
+				<h2 id="security-heading">Step 9: Security and Responsible Use</h2>
+				<ul>
+					<li>
+						<strong>Download only from the verified source</strong> — this website's
+						<a href="/download">download page</a> / project repository — and verify the
+						SHA-256 checksum. Copies from other sites may be altered.
+					</li>
+					<li>
+						<strong>Review before you run.</strong> You can inspect the archive contents
+						(executable, libraries, and the three text files) before extracting and running
+						anything.
+					</li>
+					<li>
+						<strong>Keep credentials private.</strong> Your bot User ID/password and any proxy
+						password belong only in the bot's own windows. Never post them publicly or send
+						them to anyone claiming to offer support.
+					</li>
+					<li>
+						<strong>Use only with authorisation and within platform rules.</strong> Use the
+						bot only for accounts, content, and activity you are authorised for, and in
+						accordance with YouTube's and Google's current terms and policies.
+					</li>
+					<li>
+						<strong>Avoid excessive or unauthorised automated requests.</strong> Aggressive
+						settings can burden networks and platforms — use reasonable browser counts and
+						delays.
+					</li>
+					<li>
+						<strong>No tool is risk-free.</strong> Using automation can lead to accounts being
+						limited or restricted by a platform. This guide does not promise that using the
+						bot is risk-free or that any account cannot be restricted.
+					</li>
+				</ul>
+				<div class="actions">
+					<a class="btn btn-primary" href="/download">Download YTCPM Bot</a>
+					<a class="btn btn-ghost" href="/about">About YouTube CPM Bot</a>
+				</div>
+			</section>
+		</main>
+		<Footer />
+	</body>
+</html>
