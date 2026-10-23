@@ -17,9 +17,14 @@
 		"@astrojs/rss": "4.0.14",
 		"@astrojs/sitemap": "3.6.1",
 		"astro": "5.16.9",
+		"aws4fetch": "^1.0.20",
+		"pg": "^8.23.1",
+		"qrcode": "^1.5.4",
 		"typescript": "5.9.3"
 	},
 	"devDependencies": {
+		"@types/pg": "^8.23.1",
+		"@types/qrcode": "^1.5.6",
 		"wrangler": "4.136.1"
 	},
 	"engines": {

@@ -200,3 +200,6 @@ dist
 
 ### Astro ###
 .astro/
+
+# Payment screenshot uploads (local storage driver)
+uploads/

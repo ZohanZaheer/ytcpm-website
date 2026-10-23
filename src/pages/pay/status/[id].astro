@@ -1,0 +1,185 @@
+---
+import BaseHead from '../../../components/BaseHead.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import { getDatabaseUrl } from '../../../lib/env';
+import { getOrder } from '../../../lib/db';
+import { formatUsd } from '../../../lib/packages';
+
+export const prerender = false;
+
+const id = Astro.params.id ?? '';
+const dbUrl = getDatabaseUrl(Astro);
+let order = null;
+let dbError = false;
+if (!dbUrl) {
+	dbError = true;
+} else {
+	try {
+		order = await getOrder(dbUrl, id);
+	} catch {
+		dbError = true;
+	}
+}
+
+const title = 'Payment Status — YTCPM Bot License';
+const description = 'Check the confirmation status of your YTCPM Bot license payment.';
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<BaseHead title={title} description={description} />
+		<style>
+			section {
+				margin-bottom: 2.5em;
+			}
+			.statusbox {
+				border: 1px solid rgb(var(--gray-light));
+				border-radius: 12px;
+				padding: 1.2em;
+				background: #fff;
+			}
+			.status-pending {
+				border-left: 4px solid var(--accent);
+			}
+			.status-confirmed {
+				border-left: 4px solid #16a34a;
+			}
+			.status-rejected {
+				border-left: 4px solid #b91c1c;
+			}
+			.big {
+				font-size: 1.25em;
+				font-weight: 700;
+				color: rgb(var(--black));
+			}
+			table.info {
+				width: 100%;
+				border-collapse: collapse;
+				font-size: 0.9em;
+				margin-top: 1em;
+			}
+			table.info th,
+			table.info td {
+				text-align: left;
+				padding: 0.5em 0.75em;
+				border: 1px solid rgb(var(--gray-light));
+			}
+			table.info th {
+				width: 38%;
+				background: rgba(var(--gray-light), 35%);
+			}
+		</style>
+	</head>
+	<body>
+		<Header />
+		<main>
+			<section aria-labelledby="status-heading">
+				<h1 id="status-heading">Payment Status</h1>
+				{
+					dbError ? (
+						<p>Order lookup is unavailable right now (database not configured). Please keep your order ID and contact support.</p>
+					) : !order ? (
+						<p>
+							We could not find an order with ID <code>{id}</code>. Check the link from your
+							submission, or contact support.
+						</p>
+					) : (
+						<>
+							<div class={`statusbox status-${order.status}`} aria-live="polite">
+								{order.status === 'pending' && (
+									<>
+										<p class="big">⏳ Waiting for confirmation…</p>
+										<p style="margin-bottom:0">
+											Your submission has been received and your payment is being confirmed.
+											Until the crypto transaction confirms, please wait — this page checks
+											automatically, so you can keep it open or come back to it later. Once
+											confirmed, this page will show it here.
+										</p>
+									</>
+								)}
+								{order.status === 'confirmed' && (
+									<>
+										<p class="big">✅ Payment confirmed — thank you!</p>
+										<p style="margin-bottom:0">
+											Your license payment is confirmed.{' '}
+											<strong>Our admin will contact you within 24 hours</strong> with your
+											license details. Please keep your order ID safe.
+										</p>
+									</>
+								)}
+								{order.status === 'rejected' && (
+									<>
+										<p class="big">Payment could not be verified</p>
+										<p style="margin-bottom:0">
+											We could not verify this payment from the details provided. Please
+											contact support with your order ID and transaction hash so we can
+											check it manually.
+										</p>
+									</>
+								)}
+							</div>
+							<table class="info">
+								<tbody>
+									<tr>
+										<th scope="row">Order ID</th>
+										<td>
+											<code id="order-id">{order.id}</code>
+										</td>
+									</tr>
+									<tr>
+										<th scope="row">Package</th>
+										<td>{order.package_label}</td>
+									</tr>
+									<tr>
+										<th scope="row">Amount</th>
+										<td>
+											{formatUsd(order.amount_usd)} — paid in {order.crypto}
+											{order.network ? ` (${order.network})` : ''}
+										</td>
+									</tr>
+									<tr>
+										<th scope="row">Status</th>
+										<td id="live-status">{order.status}</td>
+									</tr>
+									<tr>
+										<th scope="row">Submitted</th>
+										<td>{new Date(order.created_at).toLocaleString()}</td>
+									</tr>
+								</tbody>
+							</table>
+							<p>
+								Bookmark this page to check your status any time. Questions? See the{' '}
+								<a href="/pricing">pricing page</a> for support hours (6 days a week, night
+								support 7:00 PM – 7:00 AM).
+							</p>
+						</>
+					)
+				}
+			</section>
+		</main>
+		<Footer />
+		{
+			order && order.status === 'pending' && (
+				<script is:inline>
+					const idEl = document.getElementById('order-id');
+					const statusEl = document.getElementById('live-status');
+					async function poll() {
+						try {
+							const res = await fetch('/api/orders/' + encodeURIComponent(idEl.textContent.trim()));
+							if (!res.ok) return;
+							const data = await res.json();
+							if (data.status && data.status !== 'pending') {
+								statusEl.textContent = data.status;
+								location.reload();
+							}
+						} catch {}
+					}
+					setInterval(poll, 25000);
+					poll();
+				</script>
+			)
+		}
+	</body>
+</html>

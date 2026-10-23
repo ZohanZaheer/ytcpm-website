@@ -1,0 +1,191 @@
+---
+import BaseHead from '../components/BaseHead.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import { LICENSE_PACKAGES, DURATION_ORDER, formatUsd } from '../lib/packages';
+
+const title = 'YTCPM Bot — License Pricing';
+const description =
+	'Premium YTCPM Bot license packages: 1 month, 6 months, 12 months and lifetime plans for 100–500 devices, with device resets every 10 days and support 6 days a week.';
+
+const groups = DURATION_ORDER.map((duration) => ({
+	duration,
+	packages: LICENSE_PACKAGES.filter((p) => p.duration === duration),
+}));
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<BaseHead title={title} description={description} />
+		<style>
+			.eyebrow {
+				font-size: 0.75em;
+				font-weight: 700;
+				letter-spacing: 0.12em;
+				text-transform: uppercase;
+				color: var(--accent);
+				margin-bottom: 0.5em;
+			}
+			.lead {
+				font-size: 1.15em;
+			}
+			section {
+				margin-bottom: 2.5em;
+			}
+			.cards {
+				display: grid;
+				grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+				gap: 1em;
+				margin-top: 1em;
+			}
+			.card {
+				border: 1px solid rgb(var(--gray-light));
+				border-radius: 12px;
+				padding: 1.1em;
+				background: #fff;
+				display: flex;
+				flex-direction: column;
+				gap: 0.4em;
+			}
+			.card.popular {
+				border: 2px solid var(--accent);
+				box-shadow: var(--box-shadow);
+			}
+			.devices {
+				font-size: 1.3em;
+				font-weight: 700;
+				color: rgb(var(--black));
+			}
+			.price {
+				font-size: 1.6em;
+				font-weight: 700;
+				color: var(--accent);
+			}
+			.save {
+				display: inline-block;
+				font-size: 0.75em;
+				font-weight: 700;
+				color: #166534;
+				background: rgba(22, 163, 74, 0.12);
+				border-radius: 999px;
+				padding: 0.15em 0.7em;
+				width: fit-content;
+			}
+			.badge {
+				display: inline-block;
+				font-size: 0.7em;
+				font-weight: 700;
+				letter-spacing: 0.08em;
+				text-transform: uppercase;
+				color: #fff;
+				background: var(--accent);
+				border-radius: 999px;
+				padding: 0.2em 0.7em;
+				width: fit-content;
+			}
+			.btn {
+				margin-top: auto;
+				display: inline-block;
+				text-align: center;
+				padding: 0.45em 1.1em;
+				border-radius: 999px;
+				font-weight: 700;
+				font-size: 0.85em;
+				text-decoration: none;
+				border: 2px solid var(--accent);
+				background: var(--accent);
+				color: #fff;
+			}
+			.btn:hover {
+				color: #fff;
+				background: var(--accent-dark);
+				border-color: var(--accent-dark);
+			}
+			.note {
+				border-left: 4px solid var(--accent);
+				background: rgba(var(--gray-light), 35%);
+				border-radius: 0 12px 12px 0;
+				padding: 1em 1.2em;
+			}
+			.note p {
+				margin: 0 0 0.5em;
+			}
+			.note p:last-child {
+				margin-bottom: 0;
+			}
+		</style>
+	</head>
+	<body>
+		<Header />
+		<main>
+			<section aria-labelledby="pricing-heading">
+				<p class="eyebrow">Pricing</p>
+				<h1 id="pricing-heading">Premium Bot License Packages</h1>
+				<p class="lead">
+					Reliable licensing plans designed for both short-term testing and long-term
+					deployment. Choose a plan, pay with USDT, BTC or ETH, and your license is activated
+					after payment confirmation.
+				</p>
+			</section>
+
+			{
+				groups.map((group) => (
+					<section aria-labelledby={`h-${group.duration.replace(/[^a-z0-9]+/gi, '-')}`}>
+						<h2 id={`h-${group.duration.replace(/[^a-z0-9]+/gi, '-')}`}>{group.duration}</h2>
+						<div class="cards">
+							{group.packages.map((pkg) => (
+								<article class={`card${pkg.popular ? ' popular' : ''}`}>
+									{pkg.popular && <span class="badge">Popular</span>}
+									<span class="devices">{pkg.devices} Devices</span>
+									<span class="price">{formatUsd(pkg.priceUsd)}</span>
+									{pkg.saveNote && <span class="save">💰 {pkg.saveNote}</span>}
+									<a class="btn" href={`/pay/${pkg.slug}`}>
+										Buy — {formatUsd(pkg.priceUsd)}
+									</a>
+								</article>
+							))}
+						</div>
+					</section>
+				))
+			}
+
+			<section aria-labelledby="reset-heading">
+				<h2 id="reset-heading">Device Reset Policy</h2>
+				<div class="note">
+					<p>
+						Devices are automatically reset <strong>every 10 days</strong> during the active
+						license period.
+					</p>
+					<p>
+						If you need an earlier reset, you can submit a reset request. Manual reset
+						requests may take <strong>up to 24 hours</strong> to process, but we will handle
+						them as quickly as possible.
+					</p>
+				</div>
+			</section>
+
+			<section aria-labelledby="terms-heading">
+				<h2 id="terms-heading">Payment Terms &amp; Support</h2>
+				<ul>
+					<li><strong>100% payment in advance.</strong> License activation begins after payment confirmation.</li>
+					<li>
+						<strong>Support available 6 days a week</strong>, including night support from
+						<strong>7:00 PM – 7:00 AM</strong>. Support requests are handled as quickly as
+						possible.
+					</li>
+					<li>
+						<strong>Custom device limits &amp; enterprise packages are available</strong> —
+						contact us for custom pricing or larger deployments.
+					</li>
+				</ul>
+				<p>
+					Not sure which plan fits? Read the <a href="/instructions">setup guide</a> or learn
+					more <a href="/about">about YTCPM Bot</a> first. Ready to go? Get the app from the
+					<a href="/download">download page</a>.
+				</p>
+			</section>
+		</main>
+		<Footer />
+	</body>
+</html>

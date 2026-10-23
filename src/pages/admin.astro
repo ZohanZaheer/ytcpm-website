@@ -1,0 +1,175 @@
+---
+import BaseHead from '../components/BaseHead.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import { getEnv, getDatabaseUrl } from '../lib/env';
+import { listOrders } from '../lib/db';
+import { formatUsd } from '../lib/packages';
+
+export const prerender = false;
+
+const title = 'Admin — Payment Orders';
+const description = 'Admin order review for YTCPM Bot license payments.';
+
+const secret = getEnv(Astro, 'ADMIN_SECRET');
+const key = Astro.url.searchParams.get('key') ?? '';
+const authed = !!secret && key === secret;
+const dbUrl = getDatabaseUrl(Astro);
+let orders: Awaited<ReturnType<typeof listOrders>> = [];
+let loadError = '';
+if (authed) {
+	if (!dbUrl) loadError = 'Database not configured (DATABASE_URL / Hyperdrive).';
+	else {
+		try {
+			orders = await listOrders(dbUrl, 100);
+		} catch (err) {
+			loadError = (err as Error).message;
+		}
+	}
+}
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<BaseHead title={title} description={description} />
+		<meta name="robots" content="noindex, nofollow" />
+		<style>
+			table.orders {
+				width: 100%;
+				border-collapse: collapse;
+				font-size: 0.82em;
+			}
+			table.orders th,
+			table.orders td {
+				border: 1px solid rgb(var(--gray-light));
+				padding: 0.45em 0.6em;
+				text-align: left;
+				vertical-align: top;
+			}
+			table.orders th {
+				background: rgba(var(--gray-light), 35%);
+			}
+			.pill {
+				font-weight: 700;
+				border-radius: 999px;
+				padding: 0.1em 0.6em;
+				background: rgba(var(--gray-light), 60%);
+			}
+			.pill.confirmed {
+				background: rgba(22, 163, 74, 0.18);
+			}
+			.pill.rejected {
+				background: rgba(185, 28, 28, 0.15);
+			}
+			.actions form {
+				display: inline;
+			}
+			.actions button {
+				cursor: pointer;
+				font: inherit;
+				font-size: 0.9em;
+				border-radius: 8px;
+				border: 1px solid rgb(var(--gray-light));
+				background: #fff;
+				padding: 0.25em 0.7em;
+			}
+		</style>
+	</head>
+	<body>
+		<Header />
+		<main>
+			<h1>Payment Orders (Admin)</h1>
+			{
+				!secret ? (
+					<p>
+						Admin is not configured yet. Set the <code>ADMIN_SECRET</code> environment
+						variable, then open this page as <code>/admin?key=YOUR_SECRET</code>.
+					</p>
+				) : !authed ? (
+					<form method="get">
+						<label>
+							Admin secret
+							<input type="password" name="key" required />
+						</label>
+						<button type="submit">Open orders</button>
+					</form>
+				) : loadError ? (
+					<p role="alert">{loadError}</p>
+				) : orders.length === 0 ? (
+					<p>No orders yet.</p>
+				) : (
+					<div style="overflow-x:auto">
+						<table class="orders">
+							<thead>
+								<tr>
+									<th>Created</th>
+									<th>Order</th>
+									<th>Package</th>
+									<th>Customer</th>
+									<th>TX hash</th>
+									<th>Screenshot</th>
+									<th>Status</th>
+									<th>Actions</th>
+								</tr>
+							</thead>
+							<tbody>
+								{orders.map((o) => (
+									<tr>
+										<td>{new Date(o.created_at).toLocaleString()}</td>
+										<td>
+											<code>{o.id}</code>
+											<br />
+											{formatUsd(o.amount_usd)} · {o.crypto}
+											{o.network ? ` (${o.network})` : ''}
+										</td>
+										<td>{o.package_label}</td>
+										<td>
+											{o.customer_name}
+											<br />
+											{o.email}
+											{o.contact && (
+												<>
+													<br />
+													{o.contact}
+												</>
+											)}
+											{o.note && (
+												<>
+													<br />
+													<em>{o.note}</em>
+												</>
+											)}
+										</td>
+										<td style="word-break:break-all">{o.tx_hash ?? '—'}</td>
+										<td>
+											<a href={`/api/screenshot/${o.id}?key=${encodeURIComponent(secret)}`} target="_blank" rel="noopener">
+												View
+											</a>
+										</td>
+										<td>
+											<span class={`pill ${o.status}`}>{o.status}</span>
+										</td>
+										<td class="actions">
+											<form method="post" action="/api/admin/update">
+												<input type="hidden" name="secret" value={secret} />
+												<input type="hidden" name="id" value={o.id} />
+												<button type="submit" name="status" value="confirmed">
+													Confirm
+												</button>
+												<button type="submit" name="status" value="rejected">
+													Reject
+												</button>
+											</form>
+										</td>
+									</tr>
+								))}
+							</tbody>
+						</table>
+					</div>
+				)
+			}
+		</main>
+		<Footer />
+	</body>
+</html>

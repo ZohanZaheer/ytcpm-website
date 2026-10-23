@@ -1,0 +1,334 @@
+---
+import BaseHead from '../../components/BaseHead.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import { getPackage, formatUsd, CRYPTOS, type CryptoCode } from '../../lib/packages';
+import { getEnv } from '../../lib/env';
+import QRCode from 'qrcode';
+
+export const prerender = false;
+
+const pkg = getPackage(Astro.params.slug ?? '');
+if (!pkg) {
+	return new Response('Package not found.', { status: 404 });
+}
+
+const title = `Pay ${formatUsd(pkg.priceUsd)} — ${pkg.duration}, ${pkg.devices} Devices`;
+const description = `Pay for your YTCPM Bot license (${pkg.duration}, ${pkg.devices} devices) with USDT, BTC or ETH, then submit your payment screenshot for activation.`;
+
+const usdtNetwork = getEnv(Astro, 'PAYMENT_USDT_NETWORK') ?? 'TRC20';
+const addresses: Record<CryptoCode, string | undefined> = {
+	USDT: getEnv(Astro, 'PAYMENT_USDT_ADDRESS'),
+	BTC: getEnv(Astro, 'PAYMENT_BTC_ADDRESS'),
+	ETH: getEnv(Astro, 'PAYMENT_ETH_ADDRESS'),
+};
+const networkLabel: Record<CryptoCode, string> = {
+	USDT: usdtNetwork,
+	BTC: 'Bitcoin',
+	ETH: 'ERC20',
+};
+
+const qrData: Partial<Record<CryptoCode, string>> = {};
+for (const code of CRYPTOS) {
+	const addr = addresses[code];
+	if (addr) {
+		qrData[code] = await QRCode.toDataURL(addr, { width: 240, margin: 1 });
+	}
+}
+const anyConfigured = CRYPTOS.some((c) => addresses[c]);
+const error = Astro.url.searchParams.get('error');
+
+const exchanges = [
+	{ name: 'Binance', url: 'https://www.binance.com' },
+	{ name: 'Coinbase', url: 'https://www.coinbase.com' },
+	{ name: 'Kraken', url: 'https://www.kraken.com' },
+	{ name: 'OKX', url: 'https://www.okx.com' },
+];
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<BaseHead title={title} description={description} />
+		<style>
+			.eyebrow {
+				font-size: 0.75em;
+				font-weight: 700;
+				letter-spacing: 0.12em;
+				text-transform: uppercase;
+				color: var(--accent);
+				margin-bottom: 0.5em;
+			}
+			section {
+				margin-bottom: 2.5em;
+			}
+			.summary {
+				border: 1px solid rgb(var(--gray-light));
+				border-radius: 12px;
+				padding: 1em 1.2em;
+				background: rgba(var(--gray-light), 25%);
+				display: flex;
+				justify-content: space-between;
+				flex-wrap: wrap;
+				gap: 0.5em 2em;
+			}
+			.amount {
+				font-size: 1.6em;
+				font-weight: 700;
+				color: var(--accent);
+			}
+			.coins {
+				display: flex;
+				gap: 0.5em;
+				flex-wrap: wrap;
+				margin: 1em 0;
+			}
+			.coins label {
+				border: 2px solid rgb(var(--gray-light));
+				border-radius: 999px;
+				padding: 0.4em 1.2em;
+				font-weight: 700;
+				cursor: pointer;
+			}
+			.coins input {
+				position: absolute;
+				opacity: 0;
+			}
+			.coins label:has(input:checked) {
+				border-color: var(--accent);
+				background: var(--accent);
+				color: #fff;
+			}
+			.coin-panel {
+				border: 1px solid rgb(var(--gray-light));
+				border-radius: 12px;
+				padding: 1.2em;
+				background: #fff;
+				text-align: center;
+			}
+			.coin-panel img {
+				border-radius: 8px;
+			}
+			.addr {
+				word-break: break-all;
+				font-size: 0.85em;
+				background: rgb(var(--gray-light));
+				border-radius: 8px;
+				padding: 0.6em;
+				display: block;
+				margin: 0.6em 0;
+			}
+			.field {
+				display: block;
+				margin-top: 1em;
+				font-weight: 700;
+				font-size: 0.9em;
+			}
+			.field input[type='text'],
+			.field input[type='email'],
+			.field input[type='file'],
+			.field textarea {
+				width: 100%;
+				margin-top: 0.3em;
+				padding: 0.5em;
+				border: 1px solid rgb(var(--gray-light));
+				border-radius: 8px;
+				font: inherit;
+				font-weight: 400;
+			}
+			.btn {
+				margin-top: 1.5em;
+				display: inline-block;
+				padding: 0.5em 1.4em;
+				border-radius: 999px;
+				font-weight: 700;
+				border: 2px solid var(--accent);
+				background: var(--accent);
+				color: #fff;
+				cursor: pointer;
+				font-size: 0.95em;
+			}
+			.error {
+				border: 1px solid #b91c1c;
+				border-left: 4px solid #b91c1c;
+				border-radius: 0 12px 12px 0;
+				background: rgba(185, 28, 28, 0.06);
+				padding: 1em 1.2em;
+			}
+			.warnbox {
+				border-left: 4px solid var(--accent);
+				background: rgba(var(--gray-light), 35%);
+				border-radius: 0 12px 12px 0;
+				padding: 1em 1.2em;
+			}
+			.exchanges {
+				display: flex;
+				gap: 0.75em;
+				flex-wrap: wrap;
+			}
+			.exchanges a {
+				border: 1px solid rgb(var(--gray-light));
+				border-radius: 999px;
+				padding: 0.35em 1.1em;
+				text-decoration: none;
+				font-weight: 700;
+				background: #fff;
+			}
+		</style>
+	</head>
+	<body>
+		<Header />
+		<main>
+			<section aria-labelledby="pay-heading">
+				<p class="eyebrow">Checkout</p>
+				<h1 id="pay-heading">Complete Your Payment</h1>
+				<div class="summary" role="note" aria-label="Order summary">
+					<span><strong>{pkg.duration}</strong> — {pkg.devices} devices</span>
+					<span class="amount">{formatUsd(pkg.priceUsd)}</span>
+				</div>
+				<p>
+					<a href="/pricing">← Choose a different package</a>
+				</p>
+				{error && <p class="error" role="alert">{error}</p>}
+			</section>
+
+			{
+				!anyConfigured ? (
+					<section>
+						<div class="warnbox">
+							<p style="margin:0">
+								<strong>Payment addresses are being configured.</strong> The crypto payment
+								addresses for this site have not been set up yet, so checkout is temporarily
+								unavailable. Please check back soon or contact support — do not send crypto
+								to any address that is not shown on this page.
+							</p>
+						</div>
+					</section>
+				) : (
+					<form method="post" action="/api/orders" enctype="multipart/form-data">
+						<input type="hidden" name="package" value={pkg.slug} />
+
+						<section aria-labelledby="coin-heading">
+							<h2 id="coin-heading">1. Choose your currency &amp; pay</h2>
+							<p>
+								Pick a currency — only the selected one is shown. Send exactly the USD
+								equivalent of <strong>{formatUsd(pkg.priceUsd)}</strong>
+								{pkg && ' '}to the address below (for USDT, that is
+								<strong> {formatUsd(pkg.priceUsd)} worth of USDT</strong> on the stated
+								network).
+							</p>
+							<div class="coins" role="radiogroup" aria-label="Payment currency">
+								{CRYPTOS.map((code, i) => (
+									<label>
+										<input type="radio" name="crypto" value={code} checked={i === 0} />
+										{code}
+										{code === 'USDT' ? ` (${usdtNetwork})` : ''}
+									</label>
+								))}
+							</div>
+
+							{CRYPTOS.map((code) => (
+								<div class="coin-panel" data-panel={code} hidden={code !== 'USDT'}>
+									{addresses[code] ? (
+										<>
+											<img src={qrData[code]} width="240" height="240" alt={`QR code for the ${code} payment address`} />
+											<p style="margin:0.4em 0 0">
+												<strong>
+													{code} address ({networkLabel[code]})
+												</strong>
+											</p>
+											<code class="addr">{addresses[code]}</code>
+											<p style="margin:0">
+												<small>
+													Double-check the network before sending. Crypto payments
+													cannot be reversed.
+												</small>
+											</p>
+										</>
+									) : (
+										<p style="margin:0">
+											<strong>{code} payments are not available right now.</strong> Please
+											choose another currency above.
+										</p>
+									)}
+								</div>
+							))}
+
+							<p>
+								Need crypto first? You can buy it on a major exchange — these links open
+								in a new tab:
+							</p>
+							<div class="exchanges">
+								{exchanges.map((ex) => (
+									<a href={ex.url} target="_blank" rel="noopener noreferrer">
+										{ex.name} ↗
+									</a>
+								))}
+							</div>
+						</section>
+
+						<section aria-labelledby="proof-heading">
+							<h2 id="proof-heading">2. Submit your payment proof</h2>
+							<p>
+								After paying, <strong>take a screenshot of the successful payment</strong>{' '}
+								and attach it below with your details. Your order is then verified — while
+								the crypto transaction is confirming, your status page shows “waiting”;
+								once it confirms, you will see it there. After confirmation,{' '}
+								<strong>our admin will contact you within 24 hours</strong> with your
+								license.
+							</p>
+
+							<label class="field">
+								Full name *
+								<input type="text" name="name" required autocomplete="name" />
+							</label>
+							<label class="field">
+								Email address *
+								<input type="email" name="email" required autocomplete="email" />
+							</label>
+							<label class="field">
+								WhatsApp / Telegram (so admin can reach you faster)
+								<input type="text" name="contact" autocomplete="tel" />
+							</label>
+							<label class="field">
+								Transaction hash / TXID (recommended — enables automatic confirmation)
+								<input type="text" name="tx_hash" placeholder="Paste the transaction hash from your wallet or exchange" />
+							</label>
+							<label class="field">
+								Payment screenshot * (PNG, JPG or WebP, max 5 MB)
+								<input type="file" name="screenshot" accept="image/png,image/jpeg,image/webp" required />
+							</label>
+							<label class="field">
+								Note (optional)
+								<textarea name="note" rows="2" />
+							</label>
+
+							<button class="btn" type="submit">
+								I have paid — submit screenshot &amp; details
+							</button>
+							<p>
+								<small>
+									100% payment in advance. License activation begins after payment
+									confirmation.
+								</small>
+							</p>
+						</section>
+					</form>
+				)
+			}
+		</main>
+		<Footer />
+		<script is:inline>
+			const radios = document.querySelectorAll('input[name="crypto"]');
+			const panels = document.querySelectorAll('[data-panel]');
+			function sync() {
+				const selected = document.querySelector('input[name="crypto"]:checked')?.value;
+				panels.forEach((p) => {
+					p.hidden = p.getAttribute('data-panel') !== selected;
+				});
+			}
+			radios.forEach((r) => r.addEventListener('change', sync));
+			sync();
+		</script>
+	</body>
+</html>
