@@ -8,7 +8,9 @@ import {
 	SHOT_ADS,
 	SHOT_BROWSER,
 	SHOT_BROWSER_FP,
+	SHOT_BROWSER_DROPDOWN,
 	SHOT_PROXIES,
+	SHOT_PROXIES_NO,
 	SHOT_LAUNCHER,
 	SHOT_LOGIN,
 } from '../data/screenshots';
@@ -164,9 +166,9 @@ const description =
 						<li><a href="#step-1">Download the bot</a></li>
 						<li><a href="#step-2">Extract the ZIP file</a></li>
 						<li><a href="#step-3">No installation needed</a></li>
-						<li><a href="#step-4">Configure the bot (every settings tab)</a></li>
-						<li><a href="#step-5">First-time startup and sign-in</a></li>
-						<li><a href="#step-6">How long does the first run take?</a></li>
+						<li><a href="#step-4">First-time startup and sign-in</a></li>
+						<li><a href="#step-5">How long does the first run take?</a></li>
+						<li><a href="#step-6">Configure the bot (every settings tab)</a></li>
 						<li><a href="#step-7">Run the bot and understand results</a></li>
 						<li><a href="#troubleshooting">Troubleshooting</a></li>
 						<li><a href="#security">Security and responsible use</a></li>
@@ -229,6 +231,13 @@ const description =
 						<code>User_Agents.txt</code>, and <code>proxy.txt</code>.
 					</li>
 				</ul>
+				<p>
+					You can also edit <code>List_of_Refrences.txt</code> and <code>User_Agents.txt</code>
+					yourself, or replace them with your own files — the rule is simply
+					<strong>one entry per line</strong>: one reference website per line, one user agent
+					per line. The same rule applies to <code>proxy.txt</code> (one proxy per line).
+					Details are in <a href="#step-6">Step 6</a>.
+				</p>
 				<div class="warn">
 					<p>
 						<strong>Do not run the bot from inside the ZIP archive.</strong> Always extract
@@ -244,7 +253,7 @@ const description =
 				<h2 id="step-3-heading">Step 3: No Installation Needed</h2>
 				<p>
 					<strong>There is nothing to install.</strong> YTCPM Bot is a ready-to-run package:
-					you simply run <code>YoutubeCPM.exe</code> (Step 5), and on first launch it
+					you simply run <code>YoutubeCPM.exe</code> (Step 4), and on first launch it
 					downloads the additional files it needs by itself. There is no setup wizard, no
 					project file to open, and no other software required for anything in this guide —
 					if the download and extraction from Steps 1–2 are done, you are ready to configure
@@ -254,7 +263,119 @@ const description =
 
 			<!-- Step 4 -->
 			<section id="step-4" aria-labelledby="step-4-heading">
-				<h2 id="step-4-heading">Step 4: Configure the Bot</h2>
+				<h2 id="step-4-heading">Step 4: First-Time Startup and Sign-In</h2>
+				<ol>
+					<li>
+						From the extracted folder, open the inner <code>YoutubeCPM</code> folder and
+						double-click <strong><code>YoutubeCPM.exe</code></strong> inside it. (The text
+						files stay next to that folder — do not move them.)
+					</li>
+					<li>
+						The <strong>Script launcher</strong> window appears: “Downloading engine — The
+						script will start automatically when it is ready.” On first run it downloads
+						up to <strong>2.0&nbsp;GB</strong> of engine files in the background.
+						<strong>Wait for it to finish — do not close the launcher.</strong> You can watch
+						the progress bar and percentage; click <em>Cancel</em> only if you want to stop.
+					</li>
+					<figure class="shot">
+						<img src={SHOT_LAUNCHER} width="555" height="244" loading="lazy" alt="Script launcher window showing Downloading engine with a progress bar" />
+						<figcaption>The Script launcher window you will see on first run.</figcaption>
+					</figure>
+					<li>
+						When the download completes, the script starts by itself and a window titled
+						<strong>Please enter credentials</strong> asks for your <strong>Login</strong> and
+						<strong>Password</strong>.
+					</li>
+					<li>
+						Enter the login and password provided with your access in the
+						<strong>Login</strong> and <strong>Password</strong> fields. If you want the bot to
+						remember them on this computer, tick <strong>Save Pass On Disk</strong>.
+					</li>
+					<figure class="shot">
+						<img src={SHOT_LOGIN} width="474" height="237" loading="lazy" alt="Please enter credentials window with Login and Password fields and the Save Pass On Disk checkbox" />
+						<figcaption>The “Please enter credentials” window.</figcaption>
+					</figure>
+					<li>
+						Click <strong>OK</strong>. The bot checks the username and password — if they are
+						correct, the main window opens. If they are rejected, re-check for typing errors
+						and try again.
+					</li>
+					<li>
+						Complete the settings window (<a href="#step-6">Step 6</a>) and click
+						<strong>OK</strong> to run.
+					</li>
+				</ol>
+				<h3>One-time vs every time</h3>
+				<ul>
+					<li>
+						<strong>First run only:</strong> the up to 2.0&nbsp;GB engine download, and (if you
+						ticked Save) storing your sign-in.
+					</li>
+					<li>
+						<strong>Every run:</strong> launch <code>YoutubeCPM.exe</code>, sign in (if not
+						saved), confirm the settings, click OK.
+					</li>
+				</ul>
+			</section>
+
+			<!-- Step 5 -->
+			<section id="step-5" aria-labelledby="step-5-heading">
+				<h2 id="step-5-heading">Step 5: How Long Does the First Run Take?</h2>
+				<p>
+					These are planning estimates, not guarantees — your connection and computer decide
+					the real times:
+				</p>
+				<table class="info">
+					<tbody>
+						<tr>
+							<th scope="row">Downloading the package</th>
+							<td>About 1–5 minutes on typical broadband — the archive is only 17.0&nbsp;MB.</td>
+						</tr>
+						<tr>
+							<th scope="row">Extracting the ZIP</th>
+							<td>About 1–3 minutes.</td>
+						</tr>
+						<tr>
+							<th scope="row">Installing anything</th>
+							<td>Not needed — there is nothing to install (see Step 3).</td>
+						</tr>
+						<tr>
+							<th scope="row">First-run engine download</th>
+							<td>
+								The big one: up to 2.0&nbsp;GB downloads in the background after you first
+								run <code>YoutubeCPM.exe</code>. On a fast connection this can be a few
+								minutes; on a slow connection (around 10&nbsp;Mbps) it can take 15–25
+								minutes or longer.
+							</td>
+						</tr>
+						<tr>
+							<th scope="row">Initial configuration</th>
+							<td>About 3–10 minutes if your sign-in details and any proxy list are ready.</td>
+						</tr>
+						<tr>
+							<th scope="row">First execution</th>
+							<td>Varies with the workflow, browser startup, network speed, and the settings you chose (browsers, total views, delays).</td>
+						</tr>
+					</tbody>
+				</table>
+				<p>
+					Altogether, a straightforward setup takes around <strong>10–30 minutes</strong>,
+					excluding a slow first-run engine download, which can extend the first launch
+					beyond that. Later launches are faster: the engine is already downloaded and your
+					sign-in and settings do not need to be set up again.
+				</p>
+				<div class="note">
+					<p>
+						There is no guaranteed execution or completion time for a run — it depends on
+						your settings (for example, number of browsers and total views) and network
+						conditions.
+					</p>
+				</div>
+			</section>
+
+			<!-- Step 6 -->
+			<section id="step-6" aria-labelledby="step-6-heading">
+				<h2 id="step-6-heading">Step 6: Configure the Bot</h2>
 				<p>
 					When the bot starts, it opens a settings window titled
 					<strong>Please define resources</strong>. Work through the tabs below, then click
@@ -293,7 +414,9 @@ const description =
 								<td>
 									Click the folder button and attach the <code>List_of_Refrences.txt</code>
 									file from the folder you extracted in Step 2 — it sits next to the
-									<code>YoutubeCPM</code> folder.
+									<code>YoutubeCPM</code> folder. These references are the websites your
+									traffic will appear to come from. You can edit this file or use your
+									own — <strong>one website per line</strong>.
 								</td>
 								<td class="shown">Bundled file</td>
 							</tr>
@@ -378,13 +501,15 @@ const description =
 									<ul>
 										<li>
 											<strong>No</strong> — the bot uses the user-agents list file instead:
-											set <em>Select User Agents</em> to <em>List Mix</em> and link the
-											<code>User_Agents.txt</code> file from the extracted folder.
+											set <em>Select User Agents</em> (below) and link the
+											<code>User_Agents.txt</code> file from the extracted folder. With
+											<em>No</em>, setting up user agents is <strong>required</strong>.
 										</li>
 										<li>
 											<strong>Yes</strong> — the bot uses the premium fingerprint service
 											instead, and <em>Select User Agents</em> switches to <em>Off</em>. This
-											needs a <strong>Fingerprint API Key</strong> (see below).
+											needs a <strong>Fingerprint API Key</strong> (see below), and user
+											agents do not need to be set.
 										</li>
 									</ul>
 								</td>
@@ -396,8 +521,10 @@ const description =
 									<strong>Required when fingerprint is enabled</strong> — the red
 									<strong>!</strong> beside the Browser tab means it is missing. This is a
 									paid premium service: <strong>$30 per month</strong>, and per the developer
-									it allows up to <strong>100 threads per minute</strong>. Keep your key
-									private; never share it publicly.
+									it allows up to <strong>100 threads per minute</strong>. The key must be
+									<strong>valid and working</strong> — with a missing or non-working key,
+									the browser/bot keeps failing with errors. Keep your key private; never
+									share it publicly.
 								</td>
 								<td class="shown">Paid key</td>
 							</tr>
@@ -409,8 +536,30 @@ const description =
 							<tr>
 								<th scope="row">Select User Agents</th>
 								<td>
-									With Fingerprint <em>No</em>: <em>List Mix</em>, which reads the file below.
-									With Fingerprint <em>Yes</em>: <em>Off</em>.
+									Four options (see the dropdown screenshot below):
+									<ul>
+										<li>
+											<strong>Off</strong> — the one built-in default user agent is used.
+											This is also what the setting switches to when Fingerprint is
+											<em>Yes</em>.
+										</li>
+										<li>
+											<strong>Auto</strong> — paste the link of a web page that lists user
+											agents into the field above; the bot loads the user agents from
+											that page.
+										</li>
+										<li>
+											<strong>List Mix</strong> — the bot mixes the user agents from your
+											file itself: any browser can receive any user agent, and repeats
+											are possible. This works per run — stop and start the task again
+											and the bot starts mixing from the beginning.
+										</li>
+										<li>
+											<strong>List Unique</strong> — each line of your file is used only
+											<strong>once</strong> per run: a user agent is never repeated
+											until you stop the task and start it again.
+										</li>
+									</ul>
 								</td>
 								<td class="shown">List Mix</td>
 							</tr>
@@ -418,8 +567,11 @@ const description =
 								<th scope="row">User Agents File Mix</th>
 								<td>
 									Select the <code>User_Agents.txt</code> file from the same extracted
-									folder (it contains 999 user-agent strings). Used when Fingerprint is
-									<em>No</em>.
+									folder (it contains 999 user-agent strings). Used with <em>List Mix</em>
+									and <em>List Unique</em> when Fingerprint is <em>No</em>. You can edit
+									this file or use your own — <strong>one user agent per line</strong>.
+									User-agent lists can also be downloaded from the internet; which file
+									you use is your choice.
 								</td>
 								<td class="shown">Bundled file</td>
 							</tr>
@@ -432,8 +584,12 @@ const description =
 					<figcaption>Browser tab with Fingerprint off — the User_Agents.txt file is used.</figcaption>
 				</figure>
 				<figure class="shot">
-					<img src={SHOT_BROWSER_FP} width="920" height="686" loading="lazy" alt="Browser tab with fingerprint premium service on, showing the API key field and device type, and user agents off" />
+					<img src={SHOT_BROWSER_FP} width="915" height="663" loading="lazy" alt="Browser tab with fingerprint premium service on, showing the API key field and device type, and user agents off" />
 					<figcaption>Browser tab with Fingerprint on — an API key is required (red !) and user agents are off.</figcaption>
+				</figure>
+				<figure class="shot">
+					<img src={SHOT_BROWSER_DROPDOWN} width="919" height="671" loading="lazy" alt="Browser tab with the Select User Agents menu open, showing the Off, Auto, List Mix and List Unique options" />
+					<figcaption>The four Select User Agents options: Off, Auto, List Mix and List Unique.</figcaption>
 				</figure>
 
 				<article class="card">
@@ -442,7 +598,13 @@ const description =
 						<tbody>
 							<tr>
 								<th scope="row">Want to Used Proxies?</th>
-								<td>Turn proxy use on or off (<em>Yes</em> / <em>No</em>). If you choose <em>No</em>, the rest of this tab is not needed.</td>
+								<td>
+									Turn proxy use on or off (<em>Yes</em> / <em>No</em>). With <em>No</em>, the
+									bot simply uses <strong>your own internet connection's IP</strong> — or
+									whatever IP, VPN or proxy is active on your whole system — and the rest
+									of this tab is not needed (see the screenshot below). With <em>Yes</em>,
+									fill in the fields below.
+								</td>
 								<td class="shown">Yes</td>
 							</tr>
 							<tr>
@@ -453,17 +615,23 @@ const description =
 							<tr>
 								<th scope="row">List of Proxies</th>
 								<td>
-									<strong>Required when proxies are enabled.</strong> Select your proxy list
-									file — the package includes an empty <code>proxy.txt</code> for your own
-									proxies (add them in the file, one entry per line, in the format your proxy
-									provider supplies). A red <strong>!</strong> beside this tab means this
-									field is missing or invalid.
+									<strong>Required when proxies are enabled.</strong> Fill the included
+									<code>proxy.txt</code> (it starts empty) or create your own list file,
+									then select it here: <strong>one proxy per line</strong>, in the format
+									<code>hostname:port:username:password</code>.
+									<strong>Tip for residential proxies:</strong> if you have a single
+									residential proxy, paste the same line <strong>10 times</strong> so all
+									threads can use it easily. A red <strong>!</strong> beside this tab
+									means this field is missing or invalid.
 								</td>
 								<td class="shown">File required</td>
 							</tr>
 							<tr>
 								<th scope="row">Proxy Type. Can be auto.</th>
-								<td><em>auto</em> detects the type; or force <em>http</em> or <em>socks5</em>.</td>
+								<td>
+									<em>auto</em> works with most providers. If you get errors, switch to
+									<em>http</em> or <em>socks5</em> and test again first.
+								</td>
 								<td class="shown">auto</td>
 							</tr>
 							<tr>
@@ -484,11 +652,15 @@ const description =
 					<img src={SHOT_PROXIES} width="920" height="647" loading="lazy" alt="Proxies tab showing proxy list, type, login and password fields, with a red exclamation mark because the proxy list is not selected yet" />
 					<figcaption>Proxies tab — note the red ! while no proxy list file is selected.</figcaption>
 				</figure>
+				<figure class="shot">
+					<img src={SHOT_PROXIES_NO} width="909" height="659" loading="lazy" alt="Proxies tab with Want to Used Proxies set to No, so no proxy fields are shown" />
+					<figcaption>Proxies tab with proxies off — the bot then uses your own system connection (IP / VPN).</figcaption>
+				</figure>
 
 				<h3>Required vs optional — at a glance</h3>
 				<ul>
 					<li>
-						<strong>Required:</strong> the User ID and password for sign-in (Step 5); the
+						<strong>Required:</strong> the User ID and password for sign-in (Step 4); the
 						<code>List_of_Refrences.txt</code> and <code>User_Agents.txt</code> files (they
 						come with the package — just keep them selected); and, if proxies are enabled, a
 						List of Proxies file.
@@ -507,125 +679,14 @@ const description =
 				</div>
 			</section>
 
-			<!-- Step 5 -->
-			<section id="step-5" aria-labelledby="step-5-heading">
-				<h2 id="step-5-heading">Step 5: First-Time Startup and Sign-In</h2>
-				<ol>
-					<li>
-						Open the extracted <code>YoutubeCPM</code> folder and double-click
-						<strong><code>YoutubeCPM.exe</code></strong>.
-					</li>
-					<li>
-						The <strong>Script launcher</strong> window appears: “Downloading engine — The
-						script will start automatically when it is ready.” On first run it downloads
-						up to <strong>2.0&nbsp;GB</strong> of engine files in the background.
-						<strong>Wait for it to finish — do not close the launcher.</strong> You can watch
-						the progress bar and percentage; click <em>Cancel</em> only if you want to stop.
-					</li>
-					<figure class="shot">
-						<img src={SHOT_LAUNCHER} width="555" height="244" loading="lazy" alt="Script launcher window showing Downloading engine with a progress bar" />
-						<figcaption>The Script launcher window you will see on first run.</figcaption>
-					</figure>
-					<li>
-						When the download completes, the script starts by itself and a window titled
-						<strong>Please enter credentials</strong> asks for your <strong>Login</strong> and
-						<strong>Password</strong>.
-					</li>
-					<li>
-						Enter the login and password provided with your access in the
-						<strong>Login</strong> and <strong>Password</strong> fields. If you want the bot to
-						remember them on this computer, tick <strong>Save Pass On Disk</strong>.
-					</li>
-					<figure class="shot">
-						<img src={SHOT_LOGIN} width="474" height="237" loading="lazy" alt="Please enter credentials window with Login and Password fields and the Save Pass On Disk checkbox" />
-						<figcaption>The “Please enter credentials” window.</figcaption>
-					</figure>
-					<li>
-						Click <strong>OK</strong>. The bot checks the username and password — if they are
-						correct, the main window opens. If they are rejected, re-check for typing errors
-						and try again.
-					</li>
-					<li>
-						Complete the settings window (<a href="#step-4">Step 4</a>) and click
-						<strong>OK</strong> to run.
-					</li>
-				</ol>
-				<h3>One-time vs every time</h3>
-				<ul>
-					<li>
-						<strong>First run only:</strong> the up to 2.0&nbsp;GB engine download, and (if you
-						ticked Save) storing your sign-in.
-					</li>
-					<li>
-						<strong>Every run:</strong> launch <code>YoutubeCPM.exe</code>, sign in (if not
-						saved), confirm the settings, click OK.
-					</li>
-				</ul>
-			</section>
-
-			<!-- Step 6 -->
-			<section id="step-6" aria-labelledby="step-6-heading">
-				<h2 id="step-6-heading">Step 6: How Long Does the First Run Take?</h2>
-				<p>
-					These are planning estimates, not guarantees — your connection and computer decide
-					the real times:
-				</p>
-				<table class="info">
-					<tbody>
-						<tr>
-							<th scope="row">Downloading the package</th>
-							<td>About 1–5 minutes on typical broadband — the archive is only 17.0&nbsp;MB.</td>
-						</tr>
-						<tr>
-							<th scope="row">Extracting the ZIP</th>
-							<td>About 1–3 minutes.</td>
-						</tr>
-						<tr>
-							<th scope="row">Installing anything</th>
-							<td>Not needed — there is nothing to install (see Step 3).</td>
-						</tr>
-						<tr>
-							<th scope="row">First-run engine download</th>
-							<td>
-								The big one: up to 2.0&nbsp;GB downloads in the background after you first
-								run <code>YoutubeCPM.exe</code>. On a fast connection this can be a few
-								minutes; on a slow connection (around 10&nbsp;Mbps) it can take 15–25
-								minutes or longer.
-							</td>
-						</tr>
-						<tr>
-							<th scope="row">Initial configuration</th>
-							<td>About 3–10 minutes if your sign-in details and any proxy list are ready.</td>
-						</tr>
-						<tr>
-							<th scope="row">First execution</th>
-							<td>Varies with the workflow, browser startup, network speed, and the settings you chose (browsers, total views, delays).</td>
-						</tr>
-					</tbody>
-				</table>
-				<p>
-					Altogether, a straightforward setup takes around <strong>10–30 minutes</strong>,
-					excluding a slow first-run engine download, which can extend the first launch
-					beyond that. Later launches are faster: the engine is already downloaded and your
-					sign-in and settings do not need to be set up again.
-				</p>
-				<div class="note">
-					<p>
-						There is no guaranteed execution or completion time for a run — it depends on
-						your settings (for example, number of browsers and total views) and network
-						conditions.
-					</p>
-				</div>
-			</section>
-
 			<!-- Step 7 -->
 			<section id="step-7" aria-labelledby="step-7-heading">
 				<h2 id="step-7-heading">Step 7: Run the Bot and Understand Results</h2>
 				<ol>
-					<li>Launch <code>YoutubeCPM.exe</code> and sign in if asked (Step 5).</li>
+					<li>Launch <code>YoutubeCPM.exe</code> and sign in if asked (Step 4).</li>
 					<li>
 						In the <strong>Please define resources</strong> window, review each tab
-						(<a href="#step-4">Step 4</a>) — especially the number of browsers, total views,
+						(<a href="#step-6">Step 6</a>) — especially the number of browsers, total views,
 						and, if enabled, that a valid List of Proxies file is selected (no red
 						<strong>!</strong>).
 					</li>
@@ -666,7 +727,7 @@ const description =
 				<h3>ZIP extraction errors</h3>
 				<p>
 					Usually a incomplete download or not enough free disk space. Delete the partial
-					extraction, make sure you have at least 3&nbsp;GB free, re-download the archive, and
+					extraction, make sure you have at least 2.5&nbsp;GB free, re-download the archive, and
 					extract again with <em>Extract All</em>.
 				</p>
 
