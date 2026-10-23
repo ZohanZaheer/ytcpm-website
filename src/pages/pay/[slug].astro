@@ -28,11 +28,13 @@ const networkLabel: Record<CryptoCode, string> = {
 	ETH: 'ERC20',
 };
 
-const qrData: Partial<Record<CryptoCode, string>> = {};
+const qrSvg: Partial<Record<CryptoCode, string>> = {};
 for (const code of CRYPTOS) {
 	const addr = addresses[code];
 	if (addr) {
-		qrData[code] = await QRCode.toDataURL(addr, { width: 240, margin: 1 });
+		// SVG output is pure JS — the PNG/canvas build of this library
+		// crashes inside Cloudflare Workers ("specify a canvas element").
+		qrSvg[code] = await QRCode.toString(addr, { type: 'svg', width: 240, margin: 1 });
 	}
 }
 const anyConfigured = CRYPTOS.some((c) => addresses[c]);
@@ -106,8 +108,15 @@ const exchanges = [
 				background: #fff;
 				text-align: center;
 			}
-			.coin-panel img {
+			.coin-panel .qr {
+				display: flex;
+				justify-content: center;
+			}
+			.coin-panel .qr svg {
+				width: 240px;
+				height: 240px;
 				border-radius: 8px;
+				background: #fff;
 			}
 			.addr {
 				word-break: break-all;
@@ -231,7 +240,7 @@ const exchanges = [
 								<div class="coin-panel" data-panel={code} hidden={code !== 'USDT'}>
 									{addresses[code] ? (
 										<>
-											<img src={qrData[code]} width="240" height="240" alt={`QR code for the ${code} payment address`} />
+											<div class="qr" role="img" aria-label={`QR code for the ${code} payment address`} set:html={qrSvg[code]} />
 											<p style="margin:0.4em 0 0">
 												<strong>
 													{code} address ({networkLabel[code]})
