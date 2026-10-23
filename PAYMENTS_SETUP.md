@@ -71,3 +71,28 @@ differ:
 
 Local development: copy `.env.example` to `.env` (or `.env.local`), fill
 in your values, and run `npm run dev`.
+
+## 5. Current production setup (owner decision, 2026-10-23)
+
+The live configuration currently uses: **USDT (TRC20) payments only**
+(BTC/ETH addresses intentionally left empty for now), **PostgreSQL** via
+`DATABASE_URL`, and **screenshot storage on GitHub** (`STORAGE_DRIVER=github`,
+same repo, `payment-screenshots/` folder). This was verified end-to-end
+locally with these exact settings. The screenshot location is temporary:
+once the site is complete, screenshots will move to a separate
+**private** repository (update `GITHUB_REPO` then).
+
+Quick checklist to switch the live site on (Cloudflare dashboard):
+
+1. Workers & Pages → your Worker → Settings → Variables and Secrets: add
+   every variable from your `.env` file (`PAYMENT_USDT_ADDRESS`,
+   `PAYMENT_USDT_NETWORK`, `DATABASE_URL`, `ADMIN_SECRET`,
+   `STORAGE_DRIVER=github`, `GITHUB_OWNER`, `GITHUB_REPO`,
+   `GITHUB_BRANCH`, `GITHUB_UPLOAD_DIR`, `GITHUB_TOKEN`,
+   `ETHERSCAN_API_KEY`). Keep `DATABASE_URL`, `ADMIN_SECRET` and
+   `GITHUB_TOKEN` as encrypted secrets.
+2. If `pg` cannot reach your database from Workers directly, add a
+   **Hyperdrive** binding named `HYPERDRIVE` for the same database
+   instead of `DATABASE_URL`.
+3. Redeploy. Until these variables exist, checkout pages show an
+   "addresses are being configured" notice instead of any address.
