@@ -1,7 +1,9 @@
 {
 	"name": "ytcpm-astro-blog",
 	"compatibility_date": "2025-10-08",
-	"compatibility_flags": ["nodejs_compat"],
+	"compatibility_flags": [
+		"nodejs_compat"
+	],
 	"main": "./dist/_worker.js/index.js",
 	"assets": {
 		"directory": "./dist",
@@ -10,5 +12,16 @@
 	"observability": {
 		"enabled": true
 	},
-	"upload_source_maps": true
+	"upload_source_maps": true,
+	"keep_vars": true,
+	"vars": {
+		"PAYMENT_USDT_ADDRESS": "TSuxRZsBCSpRwVAgNoUih1r4zqaBFT6AVN",
+		"PAYMENT_USDT_NETWORK": "TRC20",
+		"STORAGE_DRIVER": "github",
+		"GITHUB_OWNER": "ZohanZaheer",
+		"GITHUB_REPO": "ytcpm-astro-blog",
+		"GITHUB_BRANCH": "main",
+		"GITHUB_UPLOAD_DIR": "payment-screenshots",
+		"MAX_UPLOAD_BYTES": "5242880"
+	}
 }
