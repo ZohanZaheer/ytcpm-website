@@ -10,6 +10,8 @@ export interface LicensePackage {
 	/** "Save $X" note exactly as supplied, if any. */
 	saveNote?: string;
 	popular?: boolean;
+	/** Hidden from the pricing page and checkout when false. Default true. */
+	active?: boolean;
 }
 
 export const LICENSE_PACKAGES: LicensePackage[] = [

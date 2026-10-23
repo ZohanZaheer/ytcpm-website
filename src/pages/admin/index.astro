@@ -1,0 +1,169 @@
+---
+import BaseHead from '../../components/BaseHead.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import AdminNav from '../../components/AdminNav.astro';
+import AdminLogin from '../../components/AdminLogin.astro';
+import { getEnv, getDatabaseUrl } from '../../lib/env';
+import { adminGate } from '../../lib/adminGate';
+import { adminConfigured } from '../../lib/auth';
+import { listOrders } from '../../lib/db';
+import { getEffectiveSettings } from '../../lib/settings';
+
+export const prerender = false;
+
+const gate = await adminGate(Astro);
+if (gate.redirect) return gate.redirect;
+const email = gate.email;
+const error = Astro.url.searchParams.get('error');
+const configured = adminConfigured(Astro);
+
+let counts = { total: 0, pending: 0, confirmed: 0, rejected: 0 };
+let settingsSummary: { usdt: string; network: string; storage: string; version: string } | null = null;
+let dbError = '';
+if (email) {
+	const dbUrl = getDatabaseUrl(Astro);
+	if (!dbUrl) {
+		dbError = 'The order database is not configured on the server yet (DATABASE_URL).';
+	} else {
+		try {
+			const orders = await listOrders(dbUrl, 200);
+			counts = {
+				total: orders.length,
+				pending: orders.filter((o) => o.status === 'pending').length,
+				confirmed: orders.filter((o) => o.status === 'confirmed').length,
+				rejected: orders.filter((o) => o.status === 'rejected').length,
+			};
+			const s = await getEffectiveSettings(dbUrl, (k) => getEnv(Astro, k));
+			settingsSummary = {
+				usdt: s.payments.usdtAddress || '— not set —',
+				network: s.payments.usdtNetwork,
+				storage: getEnv(Astro, 'STORAGE_DRIVER') ?? 'local',
+				version: s.download.version,
+			};
+		} catch {
+			dbError = 'Could not read the database. Check DATABASE_URL in the server settings.';
+		}
+	}
+}
+
+const title = 'Admin Dashboard';
+const description = 'YTCPM admin dashboard.';
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<BaseHead title={title} description={description} />
+		<style>
+			.lead {
+				color: rgb(var(--gray-dark));
+				margin-bottom: 1.4em;
+			}
+			.cards {
+				display: grid;
+				grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+				gap: 0.8em;
+				margin-bottom: 1.4em;
+			}
+			.card {
+				border: 1px solid rgb(var(--gray-light));
+				border-radius: 12px;
+				padding: 0.9em 1em;
+				text-decoration: none;
+				color: inherit;
+				display: block;
+			}
+			a.card:hover {
+				border-color: var(--accent);
+			}
+			.num {
+				font-size: 1.8em;
+				font-weight: 700;
+				line-height: 1.1;
+			}
+			.lbl {
+				color: rgb(var(--gray));
+				font-size: 0.88em;
+			}
+			.summary {
+				border: 1px solid rgb(var(--gray-light));
+				border-radius: 12px;
+				padding: 1em 1.2em;
+			}
+			.summary h2 {
+				margin-top: 0;
+				font-size: 1.15em;
+			}
+			.summary p {
+				margin: 0.35em 0;
+				overflow-wrap: anywhere;
+			}
+			.error {
+				color: #b00020;
+				font-weight: 600;
+			}
+		</style>
+	</head>
+	<body>
+		<Header />
+		<main>
+			<h1>Admin Dashboard</h1>
+			{
+				!email ? (
+					<AdminLogin error={error} configured={configured} />
+				) : (
+					<>
+						<AdminNav active="dashboard" email={email} />
+						{dbError ? (
+							<p class="error">{dbError}</p>
+						) : (
+							<>
+								<div class="cards">
+									<a class="card" href="/admin/orders">
+										<div class="num">{counts.pending}</div>
+										<div class="lbl">Orders waiting for confirmation</div>
+									</a>
+									<a class="card" href="/admin/orders">
+										<div class="num">{counts.confirmed}</div>
+										<div class="lbl">Confirmed orders (recent 200)</div>
+									</a>
+									<a class="card" href="/admin/packages">
+										<div class="num">✎</div>
+										<div class="lbl">Packages, devices &amp; prices</div>
+									</a>
+									<a class="card" href="/admin/settings">
+										<div class="num">⚙</div>
+										<div class="lbl">Payment addresses &amp; download</div>
+									</a>
+								</div>
+								{settingsSummary && (
+									<div class="summary">
+										<h2>Current live configuration</h2>
+										<p>
+											<strong>USDT address ({settingsSummary.network}):</strong>{' '}
+											{settingsSummary.usdt}
+										</p>
+										<p>
+											<strong>Screenshot storage:</strong> {settingsSummary.storage}
+										</p>
+										<p>
+											<strong>Bot version shown on the site:</strong>{' '}
+											{settingsSummary.version}
+										</p>
+										<p class="lbl">
+											Change any of this under Packages &amp; Prices or Payment
+											&amp; Download Settings — changes apply immediately, no
+											redeploy needed.
+										</p>
+									</div>
+								)}
+							</>
+						)}
+					</>
+				)
+			}
+		</main>
+		<Footer />
+	</body>
+</html>

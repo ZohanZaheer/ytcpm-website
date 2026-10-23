@@ -1,8 +1,9 @@
 import type { APIRoute } from 'astro';
 import { getEnv, getDatabaseUrl } from '../../lib/env';
-import { getPackage, CRYPTOS, type CryptoCode } from '../../lib/packages';
+import { CRYPTOS, type CryptoCode } from '../../lib/packages';
 import { validateScreenshot, storeImage } from '../../lib/storage';
 import { createOrder } from '../../lib/db';
+import { getEffectiveSettings, findPackage } from '../../lib/settings';
 
 export const prerender = false;
 
@@ -21,7 +22,15 @@ export const POST: APIRoute = async (ctx) => {
 	}
 
 	const slug = String(form.get('package') ?? '');
-	const pkg = getPackage(slug);
+	const dbUrlEarly = getDatabaseUrl(ctx);
+	if (!dbUrlEarly) {
+		return backToPay(
+			slug,
+			'Checkout is being configured — payments are not being accepted yet. Please contact us to order.',
+		);
+	}
+	const settings = await getEffectiveSettings(dbUrlEarly, env);
+	const pkg = findPackage(settings, slug);
 	if (!pkg) return new Response('Unknown package.', { status: 400 });
 
 	const crypto = String(form.get('crypto') ?? '') as CryptoCode;
@@ -40,13 +49,7 @@ export const POST: APIRoute = async (ctx) => {
 		return backToPay(slug, 'Please attach your payment screenshot.');
 	}
 
-	const dbUrl = getDatabaseUrl(ctx);
-	if (!dbUrl) {
-		return backToPay(
-			slug,
-			'Payments are not fully configured on this server yet (database missing). Please contact support before paying.',
-		);
-	}
+	const dbUrl = dbUrlEarly;
 
 	const maxBytes = Number(env('MAX_UPLOAD_BYTES') ?? 5 * 1024 * 1024);
 	const bytes = new Uint8Array(await file.arrayBuffer());
@@ -63,7 +66,7 @@ export const POST: APIRoute = async (ctx) => {
 	try {
 		const stored = await storeImage(env, id, bytes, check.ext, check.type);
 		const network =
-			crypto === 'USDT' ? (env('PAYMENT_USDT_NETWORK') ?? 'TRC20') : crypto === 'BTC' ? 'Bitcoin' : 'ERC20';
+			crypto === 'USDT' ? settings.payments.usdtNetwork : crypto === 'BTC' ? 'Bitcoin' : 'ERC20';
 		await createOrder(dbUrl, {
 			id,
 			package_slug: pkg.slug,

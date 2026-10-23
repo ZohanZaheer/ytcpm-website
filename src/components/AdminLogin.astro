@@ -1,0 +1,95 @@
+---
+// The admin sign-in card shown when there is no valid session.
+interface Props {
+	error?: string | null;
+	configured: boolean;
+}
+const { error, configured } = Astro.props;
+---
+
+<div class="panel">
+	<h2 class="panel-title">Admin sign-in</h2>
+	{
+		error === 'invalid' && (
+			<p class="msg err">Incorrect email or password. Please try again.</p>
+		)
+	}
+	{
+		!configured && (
+			<p class="msg warn">
+				Email + password login is not set up on the server yet. Add
+				<code>ADMIN_EMAIL</code> and <code>ADMIN_PASSWORD</code> as
+				<strong>Runtime variables and secrets</strong> (type: Secret) in
+				Cloudflare, then reload this page. As a one-time bootstrap you can
+				also open this page with <code>?key=</code> followed by your
+				existing admin secret to sign in immediately.
+			</p>
+		)
+	}
+	<form method="post" action="/api/admin/login" class="login-form">
+		<label>
+			Email
+			<input type="email" name="email" autocomplete="username" required />
+		</label>
+		<label>
+			Password
+			<input type="password" name="password" autocomplete="current-password" required />
+		</label>
+		<button type="submit" class="btn">Sign in</button>
+	</form>
+</div>
+
+<style>
+	.panel {
+		border: 1px solid rgb(var(--gray-light));
+		border-radius: 12px;
+		padding: 1.2em 1.4em;
+		max-width: 430px;
+	}
+	.panel-title {
+		margin-top: 0;
+		font-size: 1.25em;
+	}
+	.msg.err {
+		color: #b00020;
+		font-weight: 600;
+	}
+	.msg.warn {
+		background: rgba(255, 193, 7, 0.14);
+		border: 1px solid rgba(255, 193, 7, 0.55);
+		border-radius: 8px;
+		padding: 0.6em 0.8em;
+		font-size: 0.92em;
+	}
+	.login-form {
+		display: grid;
+		gap: 0.9em;
+		margin-top: 0.6em;
+	}
+	.login-form label {
+		display: grid;
+		gap: 0.3em;
+		font-weight: 600;
+		font-size: 0.92em;
+	}
+	.login-form input {
+		font: inherit;
+		font-weight: 400;
+		padding: 0.5em 0.7em;
+		border: 1px solid rgb(var(--gray-light));
+		border-radius: 8px;
+		background: #fff;
+		color: rgb(var(--black));
+	}
+	.btn {
+		font: inherit;
+		font-weight: 700;
+		padding: 0.6em 1.1em;
+		border-radius: 8px;
+		border: 1px solid var(--accent);
+		background: var(--accent);
+		color: #fff;
+		cursor: pointer;
+		justify-self: start;
+	}
+</style>

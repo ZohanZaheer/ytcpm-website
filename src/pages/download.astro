@@ -3,19 +3,26 @@ import BaseHead from '../components/BaseHead.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import { SHOT_GENERAL } from '../data/screenshots';
+import { getEnv, getDatabaseUrl } from '../lib/env';
+import { getEffectiveSettings } from '../lib/settings';
 
 /*
   ── Download configuration ─────────────────────────────────────────────
-  Verified download target: the bot package committed to this project at
-  `public/YoutubeCPM.zip` (added 23 Oct 2026). Astro serves everything in
-  `public/` from the site root, so the live URL is `/YoutubeCPM.zip`.
-  To change the download, replace that file — or update DOWNLOAD_URL here
-  to another verified location. Never point this at an unverified URL.
+  The download link, file name, size, version and checksum shown here
+  come from the site settings, which the owner edits in the admin
+  dashboard (/admin/settings). Defaults below match the verified bot
+  package committed to this project at `public/YoutubeCPM.zip`
+  (17,020,384 bytes, added 23 Oct 2026) and are used whenever the
+  dashboard has not overridden them.
 */
-const DOWNLOAD_URL = '/YoutubeCPM.zip';
-const PACKAGE_NAME = 'YoutubeCPM.zip';
-const PACKAGE_SIZE = '17.0 MB';
-const PACKAGE_SHA256 = '97e5f3ebffb3b573a3990ab6a969f6204b2c5dcaab08a26415697d38a4deef6f';
+export const prerender = false;
+
+const dl = (await getEffectiveSettings(getDatabaseUrl(Astro), (k) => getEnv(Astro, k))).download;
+const DOWNLOAD_URL = dl.url;
+const PACKAGE_NAME = dl.packageName;
+const PACKAGE_SIZE = dl.sizeLabel;
+const PACKAGE_SHA256 = dl.sha256;
+const BOT_VERSION = dl.version;
 
 const title = 'Download YTCPM Bot';
 const description =
@@ -187,7 +194,7 @@ const description =
 				</div>
 				<p>
 					<small>
-						{PACKAGE_NAME} &middot; {PACKAGE_SIZE} &middot; Windows &middot; Version 3.0.4 &middot;
+						{PACKAGE_NAME} &middot; {PACKAGE_SIZE} &middot; Windows &middot; Version {BOT_VERSION} &middot;
 						Standalone — nothing else to install; see
 						<a href="#requirements">system requirements</a>.
 					</small>
@@ -385,8 +392,8 @@ const description =
 						<tr>
 							<th scope="row">Version</th>
 							<td>
-								<strong>3.0.4</strong> — the version shown in the main window's title bar
-								(<code>YoutubeCPM(3.0.4)</code>). The launcher loads the latest script when
+								<strong>{BOT_VERSION}</strong> — the version shown in the main window's title bar
+								(<code>YoutubeCPM({BOT_VERSION})</code>). The launcher loads the latest script when
 								it starts, so keep the PC online when you launch it.
 							</td>
 						</tr>

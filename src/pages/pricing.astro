@@ -2,15 +2,28 @@
 import BaseHead from '../components/BaseHead.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
-import { LICENSE_PACKAGES, DURATION_ORDER, formatUsd } from '../lib/packages';
+import { DURATION_ORDER, formatUsd } from '../lib/packages';
+import { getEnv, getDatabaseUrl } from '../lib/env';
+import { getEffectiveSettings, activePackages } from '../lib/settings';
+
+// Rendered per request so package/price edits made in the admin
+// dashboard apply immediately. Falls back to the built-in package
+// list if the database is unreachable.
+export const prerender = false;
+
+const settings = await getEffectiveSettings(getDatabaseUrl(Astro), (k) => getEnv(Astro, k));
+const ALL_PACKAGES = activePackages(settings);
 
 const title = 'YTCPM Bot — License Pricing';
 const description =
 	'Premium YTCPM Bot license packages: 1 month, 6 months, 12 months and lifetime plans for 100–500 devices, with device resets every 10 days and support 6 days a week.';
 
-const groups = DURATION_ORDER.map((duration) => ({
+const extraDurations = [...new Set(ALL_PACKAGES.map((p) => p.duration))].filter(
+	(d) => !DURATION_ORDER.includes(d as (typeof DURATION_ORDER)[number]),
+);
+const groups = [...DURATION_ORDER, ...extraDurations].map((duration) => ({
 	duration,
-	packages: LICENSE_PACKAGES.filter((p) => p.duration === duration),
+	packages: ALL_PACKAGES.filter((p) => p.duration === duration),
 }));
 ---
 

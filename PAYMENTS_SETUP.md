@@ -10,8 +10,10 @@ This site has a complete license checkout flow:
 - `/pay/status/<order-id>` — the customer's status page. It polls the server
   and shows *waiting* until the payment is confirmed, then *confirmed* plus
   "admin will contact you within 24 hours".
-- `/admin?key=<ADMIN_SECRET>` — order review: view screenshots, confirm or
-  reject orders.
+- `/admin` — the admin dashboard (email + password login): order review
+  (view screenshots, confirm or reject), a package/price editor, and
+  payment/download settings. Everything saved there is stored in the
+  `site_settings` table and applies to the live site immediately.
 
 ## 1. Required configuration
 
@@ -22,7 +24,9 @@ Set these environment variables (see `.env.example` for the full list):
 | `PAYMENT_USDT_ADDRESS`, `PAYMENT_BTC_ADDRESS`, `PAYMENT_ETH_ADDRESS` | Your receiving addresses. Until at least one is set, checkout pages show a "being configured" notice instead of any address. |
 | `PAYMENT_USDT_NETWORK` | `TRC20` (default) or `ERC20` — shown next to USDT everywhere. |
 | `DATABASE_URL` | PostgreSQL connection string for orders. On Cloudflare, a Hyperdrive binding named `HYPERDRIVE` can be used instead. |
-| `ADMIN_SECRET` | Long random secret that protects `/admin` and screenshot viewing. |
+| `ADMIN_SECRET` | Signs admin sessions; opening any `/admin` page once with `?key=<value>` also signs you in (bootstrap/recovery). |
+| `ADMIN_EMAIL` | Admin dashboard login email (set as a Secret). |
+| `ADMIN_PASSWORD` | Admin dashboard login password (set as a Secret; chosen by the owner, never stored in the repo). |
 | `STORAGE_DRIVER` | Where screenshots go: `local`, `s3` (incl. Cloudflare R2), or `github`. Plus the matching `S3_*` / `GITHUB_*` variables. |
 
 Orders are stored in the `payment_orders` table (auto-created on first
@@ -103,3 +107,24 @@ Quick checklist to switch the live site on (Cloudflare dashboard):
   (Production), with `DATABASE_URL`, `ADMIN_SECRET`, `GITHUB_TOKEN` and
   `ETHERSCAN_API_KEY` stored as encrypted secrets. This entry also serves
   as the deployment trigger that applies them.
+
+## 7. Admin dashboard (added 2026-10-23)
+
+- Login: `/admin` with `ADMIN_EMAIL` + `ADMIN_PASSWORD` (Runtime
+  secrets). Sessions are signed cookies (7 days) signed with
+  `ADMIN_SECRET`; the old `?key=<ADMIN_SECRET>` link still works as a
+  bootstrap/recovery sign-in and is stripped from the URL on use.
+- Sections: Dashboard (order counts + live config summary), Orders
+  (confirm/reject/reset, screenshot viewing), Packages & Prices
+  (duration, devices, price, save-note, popular, active, add/delete —
+  the pricing page and checkout read these values), Payment & Download
+  Settings (USDT/BTC/ETH addresses, USDT network, download link, file
+  name/size, bot version, SHA-256).
+- Storage: one JSON document in Postgres table `site_settings`
+  (key `site`). Environment variables remain the fallback until the
+  dashboard saves its first values; payment addresses saved in the
+  dashboard are authoritative (an empty BTC/ETH field hides that
+  currency at checkout).
+- The database layer opens a fresh connection per operation with one
+  retry — long-lived pools caused intermittent Worker 1101 errors when
+  isolates were suspended and their sockets went stale.

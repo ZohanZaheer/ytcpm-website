@@ -2,6 +2,7 @@ import type { APIRoute } from 'astro';
 import { getEnv, getDatabaseUrl } from '../../../lib/env';
 import { getOrder } from '../../../lib/db';
 import { readLocalImage } from '../../../lib/storage';
+import { isAdminRequest } from '../../../lib/auth';
 
 export const prerender = false;
 
@@ -10,15 +11,14 @@ function contentTypeFor(ref: string): string {
 	return ext === 'png' ? 'image/png' : ext === 'webp' ? 'image/webp' : 'image/jpeg';
 }
 
-// Serves a stored payment screenshot to the admin only (?key=ADMIN_SECRET).
+// Serves a stored payment screenshot to the admin only (session cookie
+// from the email+password login, or the legacy ?key=ADMIN_SECRET).
 // GitHub-stored screenshots are streamed through the GitHub API with the
 // configured token, so they keep working when the repository is private
 // (stored download URLs would expire). Public S3/R2 URLs are redirected
 // to; local files are streamed from disk (Node runtimes).
 export const GET: APIRoute = async (ctx) => {
-	const secret = getEnv(ctx, 'ADMIN_SECRET');
-	const key = ctx.url.searchParams.get('key') ?? '';
-	if (!secret || key !== secret) return new Response('Unauthorized.', { status: 401 });
+	if (!(await isAdminRequest(ctx))) return new Response('Unauthorized.', { status: 401 });
 
 	const dbUrl = getDatabaseUrl(ctx);
 	if (!dbUrl) return new Response('Database not configured.', { status: 503 });

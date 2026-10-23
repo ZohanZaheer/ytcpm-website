@@ -2,13 +2,18 @@
 import BaseHead from '../../components/BaseHead.astro';
 import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
-import { getPackage, formatUsd, CRYPTOS, type CryptoCode } from '../../lib/packages';
-import { getEnv } from '../../lib/env';
+import { formatUsd, CRYPTOS, type CryptoCode } from '../../lib/packages';
+import { getEnv, getDatabaseUrl } from '../../lib/env';
+import { getEffectiveSettings, findPackage } from '../../lib/settings';
 import QRCode from 'qrcode';
 
 export const prerender = false;
 
-const pkg = getPackage(Astro.params.slug ?? '');
+// Package, price and payment addresses come from the effective site
+// settings (admin dashboard overrides the environment defaults), so
+// dashboard edits apply to checkout immediately.
+const settings = await getEffectiveSettings(getDatabaseUrl(Astro), (k) => getEnv(Astro, k));
+const pkg = findPackage(settings, Astro.params.slug ?? '');
 if (!pkg) {
 	return new Response('Package not found.', { status: 404 });
 }
@@ -16,11 +21,11 @@ if (!pkg) {
 const title = `Pay ${formatUsd(pkg.priceUsd)} — ${pkg.duration}, ${pkg.devices} Devices`;
 const description = `Pay for your YTCPM Bot license (${pkg.duration}, ${pkg.devices} devices) with USDT, BTC or ETH, then submit your payment screenshot for activation.`;
 
-const usdtNetwork = getEnv(Astro, 'PAYMENT_USDT_NETWORK') ?? 'TRC20';
+const usdtNetwork = settings.payments.usdtNetwork;
 const addresses: Record<CryptoCode, string | undefined> = {
-	USDT: getEnv(Astro, 'PAYMENT_USDT_ADDRESS'),
-	BTC: getEnv(Astro, 'PAYMENT_BTC_ADDRESS'),
-	ETH: getEnv(Astro, 'PAYMENT_ETH_ADDRESS'),
+	USDT: settings.payments.usdtAddress || undefined,
+	BTC: settings.payments.btcAddress || undefined,
+	ETH: settings.payments.ethAddress || undefined,
 };
 const networkLabel: Record<CryptoCode, string> = {
 	USDT: usdtNetwork,

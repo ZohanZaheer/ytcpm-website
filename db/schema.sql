@@ -23,3 +23,11 @@ CREATE TABLE IF NOT EXISTS payment_orders (
 
 CREATE INDEX IF NOT EXISTS idx_payment_orders_status ON payment_orders (status);
 CREATE INDEX IF NOT EXISTS idx_payment_orders_created ON payment_orders (created_at DESC);
+
+-- Site settings edited from the admin dashboard (single JSON document
+-- stored under key 'site': packages, payment addresses, download info).
+CREATE TABLE IF NOT EXISTS site_settings (
+	key TEXT PRIMARY KEY,
+	value JSONB NOT NULL,
+	updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);

@@ -1,0 +1,261 @@
+---
+import BaseHead from '../../components/BaseHead.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import AdminNav from '../../components/AdminNav.astro';
+import AdminLogin from '../../components/AdminLogin.astro';
+import { getEnv, getDatabaseUrl } from '../../lib/env';
+import { adminGate } from '../../lib/adminGate';
+import { adminConfigured } from '../../lib/auth';
+import { getEffectiveSettings } from '../../lib/settings';
+
+export const prerender = false;
+
+const gate = await adminGate(Astro);
+if (gate.redirect) return gate.redirect;
+const email = gate.email;
+const errorParam = Astro.url.searchParams.get('error');
+const configured = adminConfigured(Astro);
+const saved = Astro.url.searchParams.get('saved');
+
+let packages: import('../../lib/packages').LicensePackage[] = [];
+let dbError = '';
+if (email) {
+	const dbUrl = getDatabaseUrl(Astro);
+	if (!dbUrl) {
+		dbError = 'The database is not configured on the server yet (DATABASE_URL).';
+	} else {
+		const s = await getEffectiveSettings(dbUrl, (k) => getEnv(Astro, k));
+		packages = s.packages;
+	}
+}
+
+const title = 'Packages & Prices (Admin)';
+const description = 'Edit YTCPM license packages, devices and prices.';
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<BaseHead title={title} description={description} />
+		<style>
+			.error {
+				color: #b00020;
+				font-weight: 600;
+			}
+			.ok {
+				background: rgba(20, 108, 46, 0.1);
+				border: 1px solid rgba(20, 108, 46, 0.4);
+				border-radius: 8px;
+				padding: 0.6em 0.9em;
+				font-weight: 600;
+			}
+			.hint {
+				color: rgb(var(--gray-dark));
+				font-size: 0.93em;
+			}
+			.table-wrap {
+				overflow-x: auto;
+			}
+			table.pkgs {
+				border-collapse: collapse;
+				width: 100%;
+				font-size: 0.9em;
+			}
+			table.pkgs th,
+			table.pkgs td {
+				border: 1px solid rgb(var(--gray-light));
+				padding: 0.4em 0.5em;
+				text-align: left;
+				vertical-align: middle;
+			}
+			table.pkgs input[type='text'],
+			table.pkgs input[type='number'] {
+				font: inherit;
+				width: 100%;
+				min-width: 90px;
+				padding: 0.3em 0.45em;
+				border: 1px solid rgb(var(--gray-light));
+				border-radius: 6px;
+				background: #fff;
+				color: rgb(var(--black));
+			}
+			.slug {
+				font-family: ui-monospace, monospace;
+				font-size: 0.85em;
+				color: rgb(var(--gray));
+				white-space: nowrap;
+			}
+			.btn {
+				font: inherit;
+				font-weight: 700;
+				padding: 0.55em 1.1em;
+				border-radius: 8px;
+				border: 1px solid var(--accent);
+				background: var(--accent);
+				color: #fff;
+				cursor: pointer;
+			}
+			.btn.ghost {
+				background: #fff;
+				color: var(--accent);
+			}
+			.row-actions {
+				display: flex;
+				gap: 0.6em;
+				margin-top: 1em;
+				flex-wrap: wrap;
+			}
+		</style>
+	</head>
+	<body>
+		<Header />
+		<main>
+			<h1>Packages &amp; Prices</h1>
+			{
+				!email ? (
+					<AdminLogin error={errorParam} configured={configured} />
+				) : (
+					<>
+						<AdminNav active="packages" email={email} />
+						{dbError ? (
+							<p class="error">{dbError}</p>
+						) : (
+							<>
+								{saved && (
+									<p class="ok">
+										Saved. The pricing page and checkout now use these values.
+									</p>
+								)}
+								{errorParam && <p class="error">{errorParam}</p>}
+								<p class="hint">
+									Edit any package below and press <strong>Save packages</strong>.
+									<strong>Active</strong> packages appear on the{' '}
+									<a href="/pricing">pricing page</a> and can be bought;
+									untick Active to hide one without deleting it. The{' '}
+									<strong>link name</strong> (slug) stays fixed so existing buy
+									links keep working — new packages get one automatically.
+								</p>
+								<form method="post" action="/api/admin/packages">
+									<div class="table-wrap">
+										<table class="pkgs">
+											<thead>
+												<tr>
+													<th>Link name</th>
+													<th>Duration</th>
+													<th>Devices</th>
+													<th>Price (USD)</th>
+													<th>Save note</th>
+													<th>Popular</th>
+													<th>Active</th>
+													<th>Delete</th>
+												</tr>
+											</thead>
+											<tbody id="pkg-rows">
+												{packages.map((p, i) => (
+													<tr>
+														<td class="slug">
+															{p.slug}
+															<input
+																type="hidden"
+																name={`slug[${i}]`}
+																value={p.slug}
+															/>
+														</td>
+														<td>
+															<input
+																type="text"
+																name={`duration[${i}]`}
+																value={p.duration}
+																required
+															/>
+														</td>
+														<td>
+															<input
+																type="number"
+																name={`devices[${i}]`}
+																value={p.devices}
+																min="1"
+																required
+															/>
+														</td>
+														<td>
+															<input
+																type="number"
+																name={`price[${i}]`}
+																value={p.priceUsd}
+																min="0"
+																required
+															/>
+														</td>
+														<td>
+															<input
+																type="text"
+																name={`saveNote[${i}]`}
+																value={p.saveNote ?? ''}
+																placeholder="Save $100"
+															/>
+														</td>
+														<td>
+															<input
+																type="checkbox"
+																name={`popular[${i}]`}
+																checked={!!p.popular}
+															/>
+														</td>
+														<td>
+															<input
+																type="checkbox"
+																name={`active[${i}]`}
+																checked={p.active !== false}
+															/>
+														</td>
+														<td>
+															<input type="checkbox" name={`delete[${i}]`} />
+														</td>
+													</tr>
+												))}
+											</tbody>
+										</table>
+									</div>
+									<div class="row-actions">
+										<button type="button" class="btn ghost" id="add-row">
+											+ Add a package
+										</button>
+										<button type="submit" class="btn">Save packages</button>
+									</div>
+								</form>
+								<template id="row-template">
+									<tr>
+										<td class="slug">(new)</td>
+										<td><input type="text" data-f="duration" required /></td>
+										<td><input type="number" data-f="devices" min="1" required /></td>
+										<td><input type="number" data-f="price" min="0" required /></td>
+										<td><input type="text" data-f="saveNote" placeholder="Save $100" /></td>
+										<td><input type="checkbox" data-f="popular" /></td>
+										<td><input type="checkbox" data-f="active" checked /></td>
+										<td><input type="checkbox" data-f="delete" /></td>
+									</tr>
+								</template>
+								<script>
+									document.getElementById('add-row')?.addEventListener('click', () => {
+										const tbody = document.getElementById('pkg-rows');
+										const tpl = document.getElementById('row-template');
+										if (!tbody || !tpl) return;
+										const idx = tbody.querySelectorAll('tr').length;
+										const row = tpl.content.cloneNode(true);
+										row.querySelectorAll('[data-f]').forEach((el) => {
+											el.setAttribute('name', `${el.getAttribute('data-f')}[${idx}]`);
+										});
+										tbody.appendChild(row);
+									});
+								</script>
+							</>
+						)}
+					</>
+				)
+			}
+		</main>
+		<Footer />
+	</body>
+</html>

@@ -1,0 +1,234 @@
+---
+import BaseHead from '../../components/BaseHead.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import AdminNav from '../../components/AdminNav.astro';
+import AdminLogin from '../../components/AdminLogin.astro';
+import { getEnv, getDatabaseUrl } from '../../lib/env';
+import { adminGate } from '../../lib/adminGate';
+import { adminConfigured } from '../../lib/auth';
+import { getEffectiveSettings, type SiteSettings } from '../../lib/settings';
+
+export const prerender = false;
+
+const gate = await adminGate(Astro);
+if (gate.redirect) return gate.redirect;
+const email = gate.email;
+const error = Astro.url.searchParams.get('error');
+const configured = adminConfigured(Astro);
+const saved = Astro.url.searchParams.get('saved');
+
+let settings: SiteSettings | null = null;
+let dbError = '';
+if (email) {
+	const dbUrl = getDatabaseUrl(Astro);
+	if (!dbUrl) {
+		dbError = 'The database is not configured on the server yet (DATABASE_URL).';
+	} else {
+		settings = await getEffectiveSettings(dbUrl, (k) => getEnv(Astro, k));
+	}
+}
+
+const title = 'Payment & Download Settings (Admin)';
+const description = 'Edit YTCPM payment addresses and download details.';
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<BaseHead title={title} description={description} />
+		<style>
+			.error {
+				color: #b00020;
+				font-weight: 600;
+			}
+			.ok {
+				background: rgba(20, 108, 46, 0.1);
+				border: 1px solid rgba(20, 108, 46, 0.4);
+				border-radius: 8px;
+				padding: 0.6em 0.9em;
+				font-weight: 600;
+			}
+			.panel {
+				border: 1px solid rgb(var(--gray-light));
+				border-radius: 12px;
+				padding: 1.1em 1.3em;
+				margin-bottom: 1.2em;
+			}
+			.panel h2 {
+				margin-top: 0;
+				font-size: 1.2em;
+			}
+			.grid {
+				display: grid;
+				gap: 0.9em;
+			}
+			.grid label {
+				display: grid;
+				gap: 0.3em;
+				font-weight: 600;
+				font-size: 0.92em;
+			}
+			.grid input,
+			.grid select {
+				font: inherit;
+				font-weight: 400;
+				padding: 0.5em 0.7em;
+				border: 1px solid rgb(var(--gray-light));
+				border-radius: 8px;
+				background: #fff;
+				color: rgb(var(--black));
+			}
+			.btn {
+				font: inherit;
+				font-weight: 700;
+				padding: 0.6em 1.2em;
+				border-radius: 8px;
+				border: 1px solid var(--accent);
+				background: var(--accent);
+				color: #fff;
+				cursor: pointer;
+			}
+			.warn {
+				background: rgba(255, 193, 7, 0.14);
+				border: 1px solid rgba(255, 193, 7, 0.55);
+				border-radius: 8px;
+				padding: 0.6em 0.8em;
+				font-size: 0.92em;
+			}
+		</style>
+	</head>
+	<body>
+		<Header />
+		<main>
+			<h1>Payment &amp; Download Settings</h1>
+			{
+				!email ? (
+					<AdminLogin error={error} configured={configured} />
+				) : (
+					<>
+						<AdminNav active="settings" email={email} />
+						{dbError ? (
+							<p class="error">{dbError}</p>
+						) : (
+							settings && (
+								<>
+									{saved && (
+										<p class="ok">
+											Saved. The checkout and download pages now use these
+											values.
+										</p>
+									)}
+									<form method="post" action="/api/admin/settings">
+										<div class="panel">
+											<h2>Payment addresses</h2>
+											<p class="warn">
+												⚠️ Double-check every address before saving — customers
+												will send real payments to exactly what is shown here.
+												Changes apply immediately.
+											</p>
+											<div class="grid">
+												<label>
+													USDT address
+													<input
+														type="text"
+														name="usdtAddress"
+														value={settings.payments.usdtAddress}
+														autocomplete="off"
+													/>
+												</label>
+												<label>
+													USDT network
+													<select name="usdtNetwork">
+														<option
+															value="TRC20"
+															selected={settings.payments.usdtNetwork !== 'ERC20'}
+														>
+															TRC20 (Tron)
+														</option>
+														<option
+															value="ERC20"
+															selected={settings.payments.usdtNetwork === 'ERC20'}
+														>
+															ERC20 (Ethereum)
+														</option>
+													</select>
+												</label>
+												<label>
+													BTC address (leave empty to hide Bitcoin at checkout)
+													<input
+														type="text"
+														name="btcAddress"
+														value={settings.payments.btcAddress}
+														autocomplete="off"
+													/>
+												</label>
+												<label>
+													ETH address (leave empty to hide Ethereum at checkout)
+													<input
+														type="text"
+														name="ethAddress"
+														value={settings.payments.ethAddress}
+														autocomplete="off"
+													/>
+												</label>
+											</div>
+										</div>
+										<div class="panel">
+											<h2>Download</h2>
+											<div class="grid">
+												<label>
+													Download link (the button on the download page)
+													<input
+														type="text"
+														name="downloadUrl"
+														value={settings.download.url}
+														autocomplete="off"
+													/>
+												</label>
+												<label>
+													File name shown on the site
+													<input
+														type="text"
+														name="packageName"
+														value={settings.download.packageName}
+													/>
+												</label>
+												<label>
+													File size shown on the site
+													<input
+														type="text"
+														name="sizeLabel"
+														value={settings.download.sizeLabel}
+													/>
+												</label>
+												<label>
+													Bot version shown on the site
+													<input
+														type="text"
+														name="version"
+														value={settings.download.version}
+													/>
+												</label>
+												<label>
+													SHA-256 shown for the built-in download file
+													<input
+														type="text"
+														name="sha256"
+														value={settings.download.sha256}
+													/>
+												</label>
+											</div>
+										</div>
+										<button type="submit" class="btn">Save settings</button>
+									</form>
+								</>
+							)
+						)}
+					</>
+				)
+			}
+		</main>
+		<Footer />
+	</body>
+</html>

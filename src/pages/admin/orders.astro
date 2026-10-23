@@ -1,0 +1,230 @@
+---
+import BaseHead from '../../components/BaseHead.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import AdminNav from '../../components/AdminNav.astro';
+import AdminLogin from '../../components/AdminLogin.astro';
+import { getDatabaseUrl } from '../../lib/env';
+import { adminGate } from '../../lib/adminGate';
+import { adminConfigured } from '../../lib/auth';
+import { listOrders, type PaymentOrder } from '../../lib/db';
+
+export const prerender = false;
+
+const gate = await adminGate(Astro);
+if (gate.redirect) return gate.redirect;
+const email = gate.email;
+const error = Astro.url.searchParams.get('error');
+const configured = adminConfigured(Astro);
+
+let orders: PaymentOrder[] = [];
+let dbError = '';
+if (email) {
+	const dbUrl = getDatabaseUrl(Astro);
+	if (!dbUrl) {
+		dbError = 'The order database is not configured on the server yet (DATABASE_URL).';
+	} else {
+		try {
+			orders = await listOrders(dbUrl, 100);
+		} catch {
+			dbError = 'Could not read orders from the database.';
+		}
+	}
+}
+
+const title = 'Payment Orders (Admin)';
+const description = 'Review and confirm YTCPM license payment orders.';
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<BaseHead title={title} description={description} />
+		<style>
+			.error {
+				color: #b00020;
+				font-weight: 600;
+			}
+			.table-wrap {
+				overflow-x: auto;
+			}
+			table.orders {
+				border-collapse: collapse;
+				width: 100%;
+				font-size: 0.85em;
+			}
+			table.orders th,
+			table.orders td {
+				border: 1px solid rgb(var(--gray-light));
+				padding: 0.45em 0.55em;
+				text-align: left;
+				vertical-align: top;
+			}
+			.status {
+				font-weight: 700;
+				text-transform: capitalize;
+			}
+			.st-pending {
+				color: #9a6b00;
+			}
+			.st-confirmed {
+				color: #146c2e;
+			}
+			.st-rejected {
+				color: #b00020;
+			}
+			.actions {
+				display: flex;
+				gap: 0.4em;
+				flex-wrap: wrap;
+			}
+			.btn {
+				font: inherit;
+				font-size: 0.92em;
+				font-weight: 700;
+				padding: 0.3em 0.7em;
+				border-radius: 8px;
+				border: 1px solid var(--accent);
+				background: var(--accent);
+				color: #fff;
+				cursor: pointer;
+			}
+			.btn.ghost {
+				background: #fff;
+				color: var(--accent);
+			}
+			.btn.danger {
+				border-color: #b00020;
+				background: #b00020;
+			}
+			.mono {
+				font-family: ui-monospace, monospace;
+				font-size: 0.92em;
+				overflow-wrap: anywhere;
+			}
+		</style>
+	</head>
+	<body>
+		<Header />
+		<main>
+			<h1>Payment Orders</h1>
+			{
+				!email ? (
+					<AdminLogin error={error} configured={configured} />
+				) : (
+					<>
+						<AdminNav active="orders" email={email} />
+						{dbError ? (
+							<p class="error">{dbError}</p>
+						) : orders.length === 0 ? (
+							<p>
+								No orders yet. New customer orders will appear here as soon as
+								someone submits a payment.
+							</p>
+						) : (
+							<div class="table-wrap">
+								<table class="orders">
+									<thead>
+										<tr>
+											<th>Order</th>
+											<th>Customer</th>
+											<th>Package</th>
+											<th>Payment</th>
+											<th>Proof</th>
+											<th>Status</th>
+											<th>Actions</th>
+										</tr>
+									</thead>
+									<tbody>
+										{orders.map((o) => (
+											<tr>
+												<td>
+													<span class="mono">{o.id}</span>
+													<br />
+													{new Date(o.created_at).toLocaleString()}
+												</td>
+												<td>
+													{o.customer_name}
+													<br />
+													{o.email}
+													{o.contact && (
+														<>
+															<br />
+															{o.contact}
+														</>
+													)}
+													{o.note && (
+														<>
+															<br />
+															<em>{o.note}</em>
+														</>
+													)}
+												</td>
+												<td>
+													{o.package_label}
+													<br />${o.amount_usd}
+												</td>
+												<td>
+													{o.crypto}
+													{o.network ? ` (${o.network})` : ''}
+													{o.tx_hash && (
+														<>
+															<br />
+															<span class="mono">{o.tx_hash}</span>
+														</>
+													)}
+												</td>
+												<td>
+													<a href={`/api/screenshot/${o.id}`}>View screenshot</a>
+												</td>
+												<td class={`status st-${o.status}`}>{o.status}</td>
+												<td>
+													<div class="actions">
+														<form method="post" action="/api/admin/update">
+															<input type="hidden" name="id" value={o.id} />
+															<input
+																type="hidden"
+																name="status"
+																value="confirmed"
+															/>
+															<button class="btn" type="submit">
+																Confirm
+															</button>
+														</form>
+														<form method="post" action="/api/admin/update">
+															<input type="hidden" name="id" value={o.id} />
+															<input
+																type="hidden"
+																name="status"
+																value="rejected"
+															/>
+															<button class="btn danger" type="submit">
+																Reject
+															</button>
+														</form>
+														<form method="post" action="/api/admin/update">
+															<input type="hidden" name="id" value={o.id} />
+															<input
+																type="hidden"
+																name="status"
+																value="pending"
+															/>
+															<button class="btn ghost" type="submit">
+																Reset
+															</button>
+														</form>
+													</div>
+												</td>
+											</tr>
+										))}
+									</tbody>
+								</table>
+							</div>
+						)}
+					</>
+				)
+			}
+		</main>
+		<Footer />
+	</body>
+</html>

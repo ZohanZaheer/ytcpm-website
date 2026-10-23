@@ -1,0 +1,81 @@
+---
+// Dashboard navigation shown on every signed-in admin page.
+interface Props {
+	active: 'dashboard' | 'orders' | 'packages' | 'settings';
+	email?: string;
+}
+const { active, email } = Astro.props;
+const links = [
+	{ id: 'dashboard', href: '/admin', label: 'Dashboard' },
+	{ id: 'orders', href: '/admin/orders', label: 'Orders' },
+	{ id: 'packages', href: '/admin/packages', label: 'Packages & Prices' },
+	{ id: 'settings', href: '/admin/settings', label: 'Payment & Download Settings' },
+];
+---
+
+<div class="admin-bar">
+	<nav class="admin-nav">
+		{
+			links.map((l) => (
+				<a href={l.href} class={l.id === active ? 'on' : undefined}>
+					{l.label}
+				</a>
+			))
+		}
+	</nav>
+	<div class="admin-user">
+		{email && <span class="who">{email}</span>}
+		<form method="post" action="/api/admin/logout">
+			<button type="submit" class="logout">Log out</button>
+		</form>
+	</div>
+</div>
+
+<style>
+	.admin-bar {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.8em;
+		align-items: center;
+		justify-content: space-between;
+		margin-bottom: 1.2em;
+	}
+	.admin-nav {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.4em;
+	}
+	.admin-nav a {
+		padding: 0.35em 0.8em;
+		border: 1px solid rgb(var(--gray-light));
+		border-radius: 999px;
+		text-decoration: none;
+		font-size: 0.9em;
+		color: rgb(var(--gray-dark));
+	}
+	.admin-nav a.on {
+		background: var(--accent);
+		border-color: var(--accent);
+		color: #fff;
+		font-weight: 700;
+	}
+	.admin-user {
+		display: flex;
+		align-items: center;
+		gap: 0.7em;
+	}
+	.who {
+		font-size: 0.85em;
+		color: rgb(var(--gray));
+	}
+	.logout {
+		font: inherit;
+		font-size: 0.85em;
+		background: none;
+		border: 1px solid rgb(var(--gray-light));
+		border-radius: 999px;
+		padding: 0.3em 0.8em;
+		cursor: pointer;
+		color: rgb(var(--gray-dark));
+	}
+</style>
