@@ -23,7 +23,7 @@ Set these environment variables (see `.env.example` for the full list):
 | --- | --- |
 | `PAYMENT_USDT_ADDRESS`, `PAYMENT_BTC_ADDRESS`, `PAYMENT_ETH_ADDRESS` | Your receiving addresses. Until at least one is set, checkout pages show a "being configured" notice instead of any address. |
 | `PAYMENT_USDT_NETWORK` | `TRC20` (default) or `ERC20` — shown next to USDT everywhere. |
-| `DATABASE_URL` | PostgreSQL connection string for orders. On Cloudflare, a Hyperdrive binding named `HYPERDRIVE` can be used instead. |
+| `DATABASE_URL` | PostgreSQL connection string for orders (works on every platform, including Cloudflare). |
 | `ADMIN_SECRET` | Signs admin sessions; opening any `/admin` page once with `?key=<value>` also signs you in (bootstrap/recovery). |
 | `ADMIN_EMAIL` | Admin dashboard login email (set as a Secret). |
 | `ADMIN_PASSWORD` | Admin dashboard login password (set as a Secret; chosen by the owner, never stored in the repo). |
@@ -128,3 +128,26 @@ Quick checklist to switch the live site on (Cloudflare dashboard):
 - The database layer opens a fresh connection per operation with one
   retry — long-lived pools caused intermittent Worker 1101 errors when
   isolates were suspended and their sockets went stale.
+
+## 8. Running on other platforms (portability)
+
+The project is not locked to Cloudflare. The hosting adapter is picked
+at build time (`DEPLOY_TARGET` in astro.config.mjs); configuration is
+read from `process.env` everywhere; the database is plain PostgreSQL
+(`DATABASE_URL`); screenshot storage drivers (github / s3 / local)
+are platform-neutral.
+
+- **Cloudflare Workers** (current production): default build —
+  `npm run build` — deployed by Workers Builds from git, exactly as
+  today. Nothing changes.
+- **Any Node server / VPS / local machine**:
+  `npm run build:node` then `npm start` (serves `dist/server/entry.mjs`
+  with variables from `.env`; set `PORT`/`HOST` to taste). Put it
+  behind any reverse proxy (nginx/Caddy) for HTTPS.
+- **Vercel**: import the repo in Vercel — the build auto-selects the
+  Vercel adapter (Vercel sets `VERCEL=1`); or build locally with
+  `npm run build:vercel`. Add the same variables as Environment
+  Variables in the Vercel project. On Vercel (serverless, read-only
+  filesystem) keep `STORAGE_DRIVER=github` or `s3` — the `local`
+  driver needs a writable disk, so use it only on a real server.
+- Local development stays `npm run dev` on any OS.
