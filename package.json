@@ -1,8 +1,23 @@
 {
-	"name": "ytcpm-astro-blog",
-	"description": "Build a personal website, blog, or portfolio with Astro.",
+	"name": "ytcpm-website",
+	"description": "Build a Youtube CPM Website with Astro.",
+	"type": "module",
+	"version": "1.0.0",
+	"private": true,
+	"engines": {
+		"node": ">=24"
+	},
+	"homepage": "https://ytcpm.cyou",
+	"keywords": [
+		"YT CPM",
+		"YTCPM",
+		"Youtube CPM",
+		"YoutubeCPM",
+		"Youtube CPM Blog",
+		"YoutubeCPM Blog"
+	],
 	"cloudflare": {
-		"label": "Astro Framework Starter",
+		"label": "YTCPM Website",
 		"products": [
 			"Workers"
 		],
@@ -11,34 +26,34 @@
 		"preview_image_url": "https://imagedelivery.net/wSMYJvS3Xw-n339CbDyDIA/f40a6577-eed5-4f3e-cef4-b5ef0a1be100/preview",
 		"publish": true
 	},
-	"dependencies": {
-		"@astrojs/cloudflare": "12.6.12",
-		"@astrojs/mdx": "4.3.13",
-		"@astrojs/rss": "4.0.14",
-		"@astrojs/sitemap": "3.6.1",
-		"astro": "5.16.9",
-		"aws4fetch": "^1.0.20",
-		"pg": "^8.23.1",
-		"qrcode": "^1.5.4",
-		"typescript": "5.9.3"
-	},
-	"devDependencies": {
-		"@types/pg": "^8.23.1",
-		"@types/qrcode": "^1.5.6",
-		"wrangler": "4.136.1"
-	},
-	"engines": {
-		"node": ">=22"
-	},
-	"private": true,
 	"scripts": {
-		"astro": "astro",
+		"dev": "astro dev",
 		"build": "astro build",
+		"astro": "astro",
 		"cf-typegen": "wrangler types",
 		"check": "astro build && tsc && wrangler deploy --dry-run",
 		"deploy": "wrangler deploy",
-		"dev": "astro dev",
 		"preview": "astro build && wrangler dev"
 	},
-	"type": "module"
+	"dependencies": {
+		"@astrojs/cloudflare": "14.4.2",
+		"@astrojs/mdx": "8.1.1",
+		"@astrojs/rss": "4.0.19",
+		"@astrojs/sitemap": "3.7.4",
+		"astro": "7.4.2",
+		"aws4fetch": "^1.0.20",
+		"pg": "^8.23.1",
+		"qrcode": "^1.5.4"
+	},
+	"devDependencies": {
+		"@astrojs/check": "^0.9.12",
+		"@types/pg": "^8.23.1",
+		"@types/qrcode": "^1.5.6",
+		"wrangler": "4.152.0",
+		"typescript": "6.0.3"
+	},
+	"allowScripts": {
+		"esbuild@0.28.2": true,
+		"workerd@1.20261019.1": true
+	}
 }

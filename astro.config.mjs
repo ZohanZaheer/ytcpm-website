@@ -9,9 +9,7 @@ import cloudflare from "@astrojs/cloudflare";
 export default defineConfig({
 	site: "https://ytcpm.cyou",
 	integrations: [mdx(), sitemap()],
-	adapter: cloudflare({
-		platformProxy: {
-			enabled: true,
-		},
-	}),
+	// @astrojs/cloudflare v14: the old `platformProxy` option was removed —
+	// local dev/preview proxying is handled by the Cloudflare Vite plugin.
+	adapter: cloudflare(),
 });
