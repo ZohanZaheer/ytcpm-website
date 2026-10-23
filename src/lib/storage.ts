@@ -149,8 +149,10 @@ export async function storeImage(
 			}),
 		});
 		if (!res.ok) throw new Error(`GitHub storage failed (${res.status}).`);
-		const json = (await res.json()) as { content?: { download_url?: string } };
-		return { driver, ref: json.content?.download_url ?? path, contentType };
+		// Store the repo path, not the download_url: on a private repo the
+		// download_url carries a short-lived token and expires. The admin
+		// screenshot endpoint fetches the file through the API instead.
+		return { driver, ref: path, contentType };
 	}
 
 	// local (Node runtimes only)
