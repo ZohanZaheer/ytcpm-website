@@ -33,11 +33,18 @@ const adapter =
 			? vercel()
 			: // @astrojs/cloudflare v14: the old `platformProxy` option was
 				// removed — the Cloudflare Vite plugin handles local proxying.
-				cloudflare();
+				// imageService 'passthrough': this site never uses Astro's
+				// image optimization (all images are plain <img>), so the
+				// Cloudflare Images "IMAGES" binding stays off.
+				cloudflare({ imageService: "passthrough" });
 
 // https://astro.build/config
 export default defineConfig({
 	site: "https://ytcpm.cyou",
 	integrations: [mdx(), sitemap()],
+	// Astro sessions are disabled: nothing on this site uses
+	// Astro.session (the admin login uses its own signed cookie), so no
+	// session storage — Cloudflare KV "SESSION" or any other — is set up.
+	session: false,
 	adapter,
 });
