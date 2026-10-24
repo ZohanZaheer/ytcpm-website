@@ -40,4 +40,4 @@ export const SITE_VERIFICATION = {
 // Paste the Measurement ID from GA → Admin → Data Streams → the web
 // stream (looks like "G-XXXXXXXXXX"). Empty = analytics is disabled.
 // Loaded on public pages only (never on admin/account/checkout/auth).
-export const GA_MEASUREMENT_ID = '';
+export const GA_MEASUREMENT_ID = 'G-NCM400NB7C';
