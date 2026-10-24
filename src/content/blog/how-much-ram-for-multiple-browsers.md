@@ -1,6 +1,6 @@
 ---
 title: "How Much RAM Do You Need to Run Multiple Browsers?"
-description: "Each working browser uses about 2 GB of RAM. Planning table for 8/16/32/64 GB machines, what else eats memory, and how to tell when RAM — not CPU — is your bottleneck."
+description: "A working browser uses about 2 GB of RAM. Planning table for 8/16/32/64 GB machines, what else eats memory, and how to tell if RAM is your bottleneck."
 pubDate: "Oct 23 2026"
 heroImage: "/blog/how-much-ram-for-multiple-browsers.jpg"
 ---

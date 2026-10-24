@@ -1,6 +1,6 @@
 ---
 title: "Residential vs Datacenter vs Mobile Proxies: Which Do You Need?"
-description: "Residential, datacenter, mobile and ISP proxies compared honestly: how each gets its IPs, speed, cost per GB, detection risk, and which jobs each type is right (and wrong) for."
+description: "Residential, datacenter, mobile and ISP proxies compared: how each gets its IPs, speed, cost per GB, detection risk, and which jobs each type is right for."
 pubDate: "Oct 17 2026"
 heroImage: "/blog/residential-vs-datacenter-vs-mobile-proxies.jpg"
 ---

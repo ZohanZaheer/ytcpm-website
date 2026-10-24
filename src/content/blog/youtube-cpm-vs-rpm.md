@@ -1,6 +1,6 @@
 ---
 title: "YouTube CPM vs RPM: What's the Difference (and Which One Pays You)?"
-description: "CPM vs RPM explained with worked math: CPM is what advertisers pay, RPM is what you earn per 1,000 views after the 55% share. Why RPM is always lower, and how to use both."
+description: "CPM vs RPM explained with worked math: CPM is what advertisers pay, RPM is what you earn per 1,000 views after the 55% share. Why RPM is always lower."
 pubDate: "Oct 14 2026"
 heroImage: "/blog/youtube-cpm-vs-rpm.jpg"
 ---

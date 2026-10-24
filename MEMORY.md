@@ -141,3 +141,18 @@
   went straight into the post grid. Added "The YTCPM Blog" H1 with a
   short intro line above the grid. A sweep of every public page
   confirmed all others have exactly one H1.
+- 2026-10-24 (later): Full on-page SEO audit (all 22 public pages)
+  followed by the fix batch the owner approved: /blog has its own
+  title + unique description (it previously inherited the site
+  defaults and duplicated the homepage description); card links no
+  longer carry the trailing slash; card titles are H2 under the H1
+  (were H4) with lazy card images; 13 over-160-char meta descriptions
+  trimmed (site description, instructions, disclaimer, 9 posts);
+  homepage screenshots (Hero + Showcase) carry width/height (CLS);
+  posts gained a BreadcrumbList schema node, and BlogPosting
+  mainEntityOfPage no longer ends in .html (clean pageUrl). consts.ts
+  now re-exports SITE_TITLE/SITE_DESCRIPTION from config/site.ts so
+  the starter-era duplicate cannot drift again. Owner-side, still
+  open: Cloudflare "Always Use HTTPS" (http currently serves 200
+  without redirecting). www intentionally has no DNS record — the
+  owner wants only https://ytcpm.cyou to exist.

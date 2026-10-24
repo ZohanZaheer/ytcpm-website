@@ -1,6 +1,6 @@
 ---
 title: "YouTube CPM by Country: The Highest-Paying Countries in 2026"
-description: "Full YouTube CPM by country table for 2026: the US leads near $14.67, India sits under $1. See the top 20 countries, estimated RPM, and how to use geography to earn more."
+description: "YouTube CPM by country table for 2026: the US leads near $14.67, India sits under $1. Top 20 countries, estimated RPM, and how geography affects earnings."
 pubDate: "Oct 05 2026"
 heroImage: "/blog/youtube-cpm-by-country.jpg"
 ---

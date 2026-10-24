@@ -4,16 +4,22 @@ import { SHOT_GENERAL, SHOT_YOUTUBE, SHOT_PROXIES } from '../../data/screenshots
 const shots = [
 	{
 		src: SHOT_GENERAL,
+		width: 920,
+		height: 668,
 		title: 'General settings',
 		text: 'Number of browsers, sleep between page loads, the references list and total views.',
 	},
 	{
 		src: SHOT_YOUTUBE,
+		width: 915,
+		height: 647,
 		title: 'YouTube settings',
 		text: 'The options that drive each viewing session, all in one tab.',
 	},
 	{
 		src: SHOT_PROXIES,
+		width: 920,
+		height: 647,
 		title: 'Proxy settings',
 		text: 'Attach your proxy file and let the bot test it before a run.',
 	},
@@ -32,7 +38,7 @@ const shots = [
 			{
 				shots.map((s) => (
 					<figure class="shot">
-						<img src={s.src} alt={`YTCPM Bot — ${s.title}`} loading="lazy" />
+						<img src={s.src} width={s.width} height={s.height} alt={`YTCPM Bot — ${s.title}`} loading="lazy" />
 						<figcaption>
 							<strong>{s.title}</strong>
 							<span>{s.text}</span>

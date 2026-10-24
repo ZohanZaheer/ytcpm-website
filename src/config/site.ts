@@ -10,7 +10,7 @@ export const SITE_URL = 'https://ytcpm.cyou';
 export const SITE_NAME = 'YTCPM Bot';
 export const SITE_ORGANIZATION = 'YTCPM';
 export const SITE_DESCRIPTION =
-	'YTCPM Bot is a standalone Windows app for YouTube CPM workflows — multi-browser automation with proxy, fingerprint and user-agent controls. Download, pricing and setup guide.';
+	'YTCPM Bot is a standalone Windows app for YouTube CPM workflows — multi-browser automation with proxy, fingerprint and user-agent controls.';
 export const SITE_OG_IMAGE = `${SITE_URL}/og-default.jpg`;
 export const SITE_LOCALE = 'en_US';
 export const SUPPORT_HOURS = '6 days a week, 10:00 AM–6:00 PM New York time';

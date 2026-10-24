@@ -1,6 +1,8 @@
-// Place any global data in this file.
-// You can import this data from anywhere in your site by using the `import` keyword.
+// Global data shared across the site. The canonical values live in
+// src/config/site.ts (the single source of truth); this module only
+// re-exports them under the names existing imports already use, so
+// the two can never drift apart.
+import { SITE_NAME, SITE_DESCRIPTION } from './config/site';
 
-export const SITE_TITLE = "YTCPM Bot";
-export const SITE_DESCRIPTION =
-	"YTCPM Bot is a standalone Windows app for YouTube CPM workflows — multi-browser automation with proxy, fingerprint and user-agent controls. Download, pricing and setup guide.";
+export const SITE_TITLE = SITE_NAME;
+export { SITE_DESCRIPTION };

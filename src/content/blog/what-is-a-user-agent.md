@@ -1,6 +1,6 @@
 ---
 title: "What Is a User Agent? Your Browser's ID Card, Explained"
-description: "A user agent is the string your browser sends to every website: browser, version, OS and device in one line. How it is built, where to find yours, and why it matters."
+description: "A user agent is the string your browser sends to every website — browser, version, OS and device in one line. How it is built, and why it matters."
 pubDate: "Oct 21 2026"
 heroImage: "/blog/what-is-a-user-agent.jpg"
 ---

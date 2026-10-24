@@ -10,6 +10,11 @@ type Props = CollectionEntry<'blog'>['data'];
 
 const { title, description, pubDate, updatedDate, heroImage } = Astro.props;
 
+// Canonical page URL for the schema nodes. Under the file build format
+// Astro.url.pathname can carry a trailing ".html"; the live URLs never
+// do (clean URLs), so strip it.
+const pageUrl = new URL(Astro.url.pathname.replace(/\.html$/, ''), Astro.site).href;
+
 // BlogPosting node for the JSON-LD graph (publisher/author are the
 // site Organization, referenced by its stable @id).
 const articleSchema: Record<string, unknown> = {
@@ -21,14 +26,30 @@ const articleSchema: Record<string, unknown> = {
 	dateModified: (updatedDate ?? pubDate).toISOString(),
 	author: { '@id': ORG_ID },
 	publisher: { '@id': ORG_ID },
-	mainEntityOfPage: new URL(Astro.url.pathname, Astro.site).href,
+	mainEntityOfPage: pageUrl,
 	inLanguage: 'en',
+};
+
+// BreadcrumbList node (Home → Blog → this post) so search results can
+// show the breadcrumb path instead of the raw URL.
+const breadcrumbSchema: Record<string, unknown> = {
+	'@type': 'BreadcrumbList',
+	itemListElement: [
+		{ '@type': 'ListItem', position: 1, name: 'Home', item: new URL('/', Astro.site).href },
+		{ '@type': 'ListItem', position: 2, name: 'Blog', item: new URL('/blog', Astro.site).href },
+		{
+			'@type': 'ListItem',
+			position: 3,
+			name: title,
+			item: pageUrl,
+		},
+	],
 };
 ---
 
 <html lang="en">
 	<head>
-		<BaseHead title={title} description={description} image={heroImage} type="article" schema={[articleSchema]} />
+		<BaseHead title={title} description={description} image={heroImage} type="article" schema={[articleSchema, breadcrumbSchema]} />
 		<style>
 			main {
 				width: 100%;
