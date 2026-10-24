@@ -198,6 +198,13 @@ const SCHEMA_SQL = `
 	END $$;
 `;
 
+// The schema step is idempotent DDL, but running it on EVERY operation
+// costs a full extra round trip on every call — and a page render makes
+// several calls. Run it once per isolate (per connection string); if a
+// query ever reports a missing table/column (e.g. the database was
+// reset under a warm isolate), re-arm it so the retry self-heals.
+const schemaApplied = new Set<string>();
+
 async function withClient<T>(connectionString: string, fn: (client: Client) => Promise<T>): Promise<T> {
 	let lastError: unknown;
 	for (let attempt = 0; attempt < 2; attempt++) {
@@ -205,10 +212,16 @@ async function withClient<T>(connectionString: string, fn: (client: Client) => P
 		const client = new PgClient({ connectionString, connectionTimeoutMillis: 8000 });
 		try {
 			await client.connect();
-			await client.query(SCHEMA_SQL);
+			if (!schemaApplied.has(connectionString)) {
+				await client.query(SCHEMA_SQL);
+				schemaApplied.add(connectionString);
+			}
 			return await fn(client);
 		} catch (err) {
 			lastError = err;
+			if (err instanceof Error && /does not exist/i.test(err.message)) {
+				schemaApplied.delete(connectionString);
+			}
 			if (attempt === 0) await new Promise((r) => setTimeout(r, 400));
 		} finally {
 			try {

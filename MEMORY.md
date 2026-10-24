@@ -192,3 +192,17 @@
   pass: Accessibility 100 and SEO 100 on every template, desktop
   Performance 100 on 8/9 templates, mobile 95–100 (the residual is
   local dev-server latency; production is edge-served).
+- 2026-10-24 (later): TTFB fix. Live timings showed the SSR pages
+  were slow (home ~1.3s, pricing ~2.4s TTFB vs ~0.4s for static
+  pages): every DB operation opened a fresh connection AND re-ran
+  the whole schema DDL, and nothing cached the rendered HTML.
+  db.ts now applies the schema once per isolate (re-armed if a query
+  reports a missing table/column); the settings cache TTL rose to
+  60s. A new src/middleware.ts caches the anonymous HTML of /, 
+  /pricing and /download in the Cloudflare Cache API for 120s
+  (session-cookie requests always bypass; x-page-cache header marks
+  HIT/MISS). AdSense no longer loads in <head>: BaseHead injects it
+  on window load + idle or first interaction, so it cannot compete
+  with first paint/LCP. Hero image got fetchpriority="high".
+  Verified locally end-to-end (cache HIT at ~0.03s, test order →
+  admin confirm → confirmed, lockout path, all test data deleted).

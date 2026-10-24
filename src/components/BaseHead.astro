@@ -93,11 +93,34 @@ const ogImageType = image.endsWith('.png') ? 'image/png' : 'image/jpeg';
 <!-- Google Analytics is NOT loaded here: it runs only after the
      visitor accepts cookies in CookieConsent (see Footer). -->
 
-<!-- Google AdSense (public pages only, when a client ID is set) -->
+<!-- Google AdSense (public pages only, when a client ID is set).
+     The ads library is heavy, so it is NOT loaded with the page: this
+     loader injects it once the page has loaded and the browser is
+     idle — or on the visitor's first interaction, whichever comes
+     first. Ads appear moments after the content, and the library no
+     longer competes with first paint / LCP. -->
 {!noindex && ADSENSE_CLIENT_ID && (
-	<script
-		async
-		src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT_ID}`}
-		crossorigin="anonymous"
-	/>
+	<script is:inline define:vars={{ adsClient: ADSENSE_CLIENT_ID }}>
+		(() => {
+			let done = false;
+			const load = () => {
+				if (done) return;
+				done = true;
+				const s = document.createElement('script');
+				s.async = true;
+				s.crossOrigin = 'anonymous';
+				s.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=' + adsClient;
+				document.head.appendChild(s);
+			};
+			const idle = () =>
+				'requestIdleCallback' in window
+					? requestIdleCallback(load, { timeout: 2500 })
+					: setTimeout(load, 1200);
+			if (document.readyState === 'complete') idle();
+			else window.addEventListener('load', idle, { once: true });
+			for (const ev of ['pointerdown', 'keydown', 'scroll']) {
+				window.addEventListener(ev, load, { once: true, passive: true });
+			}
+		})();
+	</script>
 )}

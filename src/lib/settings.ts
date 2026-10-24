@@ -116,7 +116,7 @@ export function mergeSettings(base: SiteSettings, stored: Partial<SiteSettings> 
 }
 
 let cache: { at: number; value: SiteSettings } | null = null;
-const CACHE_MS = 20_000;
+const CACHE_MS = 60_000;
 
 /**
  * Duration in days for a package whose days were never recorded —
