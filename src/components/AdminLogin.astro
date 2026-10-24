@@ -15,6 +15,15 @@ const { error, configured } = Astro.props;
 		)
 	}
 	{
+		error === 'notadmin' && (
+			<p class="msg err">
+				That account is a customer account, not an admin. Sign in with the admin
+				email instead — customers manage their licenses from
+				<a href="/account">their account page</a>.
+			</p>
+		)
+	}
+	{
 		!configured && (
 			<p class="msg warn">
 				Email + password login is not set up on the server yet. Add

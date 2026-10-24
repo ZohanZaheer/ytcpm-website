@@ -4,6 +4,7 @@ import { CRYPTOS, type CryptoCode } from '../../lib/packages';
 import { validateScreenshot, storeImage } from '../../lib/storage';
 import { createOrder } from '../../lib/db';
 import { getEffectiveSettings, findPackage } from '../../lib/settings';
+import { baSessionUser } from '../../lib/baSession';
 
 export const prerender = false;
 
@@ -63,6 +64,10 @@ export const POST: APIRoute = async (ctx) => {
 		Math.random().toString(36).slice(2, 6) +
 		Date.now().toString(36).slice(-6);
 
+	// Link the order to the customer's account when they are signed in,
+	// so it shows in their dashboard (guest orders match by email there).
+	const buyer = await baSessionUser(ctx).catch(() => null);
+
 	try {
 		const stored = await storeImage(env, id, bytes, check.ext, check.type);
 		const network =
@@ -81,6 +86,7 @@ export const POST: APIRoute = async (ctx) => {
 			note,
 			screenshot_driver: stored.driver,
 			screenshot_ref: stored.ref,
+			user_id: buyer?.id ?? null,
 		});
 	} catch (err) {
 		return backToPay(slug, `Could not save your submission: ${(err as Error).message}`);

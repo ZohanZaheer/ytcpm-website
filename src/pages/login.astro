@@ -1,0 +1,132 @@
+---
+import BaseHead from '../components/BaseHead.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import { SITE_TITLE } from '../consts';
+import { baSessionUser } from '../lib/baSession';
+
+export const prerender = false;
+
+// Already signed in? Go straight to the dashboard.
+const user = await baSessionUser(Astro);
+if (user) return Astro.redirect('/account');
+
+const errorCode = Astro.url.searchParams.get('error') ?? '';
+const errors: Record<string, string> = {
+	invalid: 'Incorrect email or password. Please try again.',
+	server: 'Accounts are having a problem right now. Please try again in a little while.',
+};
+const error = errors[errorCode] ?? '';
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<BaseHead
+			title={`Sign in — ${SITE_TITLE}`}
+			description="Sign in to your YTCPM account to see your licenses, purchase dates, expiry and order status."
+		/>
+		<style>
+			main {
+				padding-top: 2.6em;
+			}
+			.card {
+				max-width: 440px;
+				margin: 0 auto;
+				background: var(--surface);
+				border: 1px solid rgb(var(--gray-light));
+				border-radius: 14px;
+				padding: 1.8em 1.9em;
+				box-shadow: var(--box-shadow);
+			}
+			.card h1 {
+				font-size: 1.7em;
+				margin-bottom: 0.25em;
+			}
+			.card .sub {
+				color: rgb(var(--gray-dark));
+				font-size: 0.95em;
+				margin-bottom: 1.3em;
+			}
+			.notice {
+				border-radius: 10px;
+				padding: 0.8em 1em;
+				margin-bottom: 1.1em;
+				font-weight: 600;
+				font-size: 0.93em;
+				background: #fee2e2;
+				color: #991b1b;
+				border: 1px solid #fca5a5;
+			}
+			form {
+				display: grid;
+				gap: 1em;
+			}
+			.field label {
+				display: block;
+				font-weight: 600;
+				font-size: 0.92em;
+				margin-bottom: 0.35em;
+			}
+			.field input {
+				width: 100%;
+				font: inherit;
+				font-size: 0.97em;
+				padding: 0.6em 0.75em;
+				border: 1px solid rgb(var(--gray-light));
+				border-radius: 9px;
+				background: var(--bg);
+				box-sizing: border-box;
+			}
+			.field input:focus {
+				outline: 2px solid var(--accent);
+				outline-offset: 1px;
+				border-color: var(--accent);
+			}
+			button.go {
+				font: inherit;
+				font-weight: 700;
+				background: var(--accent);
+				color: #fff;
+				border: none;
+				border-radius: 999px;
+				padding: 0.75em 1.6em;
+				cursor: pointer;
+			}
+			button.go:hover {
+				background: var(--accent-dark);
+			}
+			.alt {
+				margin-top: 1.2em;
+				font-size: 0.93em;
+				color: rgb(var(--gray-dark));
+			}
+		</style>
+	</head>
+	<body>
+		<Header />
+		<main>
+			<div class="card">
+				<h1>Welcome back</h1>
+				<p class="sub">Sign in to see your licenses, expiry dates and order status.</p>
+				{error && <p class="notice">{error}</p>}
+				<form method="post" action="/api/account/login">
+					<div class="field">
+						<label for="f-email">Email address</label>
+						<input id="f-email" name="email" type="email" required autocomplete="email" />
+					</div>
+					<div class="field">
+						<label for="f-password">Password</label>
+						<input id="f-password" name="password" type="password" required autocomplete="current-password" />
+					</div>
+					<button class="go" type="submit">Sign in</button>
+				</form>
+				<p class="alt">
+					New here? <a href="/signup">Create an account</a> — it takes a minute, and
+					your purchases will be waiting in your dashboard.
+				</p>
+			</div>
+		</main>
+		<Footer />
+	</body>
+</html>

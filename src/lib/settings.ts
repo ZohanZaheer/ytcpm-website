@@ -4,7 +4,13 @@
 // through here so dashboard edits take effect without a redeploy.
 
 import { LICENSE_PACKAGES, type LicensePackage } from './packages';
-import { getSetting, setSetting } from './db';
+import {
+	getSetting,
+	setSetting,
+	listPackageRows,
+	replacePackageRows,
+	type PackageRow,
+} from './db';
 
 export interface SiteSettings {
 	payments: {
@@ -82,6 +88,98 @@ export function mergeSettings(base: SiteSettings, stored: Partial<SiteSettings> 
 let cache: { at: number; value: SiteSettings } | null = null;
 const CACHE_MS = 20_000;
 
+/**
+ * Duration in days for a package whose days were never recorded —
+ * packages saved by older code (settings JSON) have no durationDays.
+ * Inferred from the label so existing licenses still expire correctly;
+ * null stays lifetime.
+ */
+export function inferDurationDays(durationLabel: string): number | null {
+	const l = durationLabel.toLowerCase();
+	if (l.includes('lifetime')) return null;
+	const months = l.match(/(\d+)\s*months?/);
+	if (months) {
+		const n = Number(months[1]);
+		return n >= 12 ? Math.round((n / 12) * 365) : n * 30;
+	}
+	const years = l.match(/(\d+)\s*years?/);
+	if (years) return Number(years[1]) * 365;
+	const days = l.match(/(\d+)\s*days?/);
+	if (days) return Number(days[1]);
+	return null;
+}
+
+function rowToPackage(r: PackageRow): LicensePackage {
+	return {
+		slug: r.slug,
+		duration: r.duration_label,
+		durationDays: r.duration_days,
+		devices: r.devices,
+		priceUsd: r.price_usd,
+		saveNote: r.save_note ?? undefined,
+		popular: r.popular || undefined,
+		active: r.active,
+	};
+}
+
+export function packageToRow(p: LicensePackage, sort: number): PackageRow {
+	return {
+		slug: p.slug,
+		duration_label: p.duration,
+		// Legacy package objects (from the old settings JSON) may lack
+		// durationDays entirely — infer those; an explicit null from
+		// the admin editor means lifetime and is kept.
+		duration_days:
+			(p as { durationDays?: number | null }).durationDays === undefined
+				? inferDurationDays(p.duration)
+				: p.durationDays,
+		devices: p.devices,
+		price_usd: p.priceUsd,
+		save_note: p.saveNote?.trim() ? p.saveNote.trim() : null,
+		popular: !!p.popular,
+		active: p.active !== false,
+		sort,
+	};
+}
+
+// Packages live in their own table. The first time the table is seen
+// empty it is seeded from whatever the settings JSON / defaults hold
+// (a marker row in site_settings records that seeding happened, so an
+// admin can still empty the list deliberately afterwards).
+const PACKAGES_SEEDED_KEY = 'packages_seeded_v1';
+
+async function packagesFromTable(dbUrl: string, fallback: LicensePackage[]): Promise<LicensePackage[]> {
+	const rows = await listPackageRows(dbUrl);
+	if (rows.length > 0) {
+		// Self-heal rows seeded from legacy data without duration days.
+		let healed = false;
+		const fixed = rows.map((r) => {
+			if (r.duration_days === null && !r.duration_label.toLowerCase().includes('lifetime')) {
+				const inferred = inferDurationDays(r.duration_label);
+				if (inferred !== null) {
+					healed = true;
+					return { ...r, duration_days: inferred };
+				}
+			}
+			return r;
+		});
+		if (healed) {
+			try {
+				await replacePackageRows(dbUrl, fixed);
+			} catch {
+				// Display still uses the healed values below.
+			}
+			return fixed.map(rowToPackage);
+		}
+		return rows.map(rowToPackage);
+	}
+	const seeded = await getSetting<boolean>(dbUrl, PACKAGES_SEEDED_KEY);
+	if (seeded) return [];
+	await replacePackageRows(dbUrl, fallback.map((p, i) => packageToRow(p, i)));
+	await setSetting(dbUrl, PACKAGES_SEEDED_KEY, true);
+	return fallback;
+}
+
 /** Effective settings. Falls back to defaults when the DB is unreachable. */
 export async function getEffectiveSettings(
 	dbUrl: string | undefined,
@@ -93,11 +191,23 @@ export async function getEffectiveSettings(
 	try {
 		const stored = await getSetting<Partial<SiteSettings>>(dbUrl, 'site');
 		const merged = mergeSettings(base, stored);
+		try {
+			merged.packages = await packagesFromTable(dbUrl, merged.packages);
+		} catch {
+			// Packages table unavailable — keep the JSON/default list.
+		}
 		cache = { at: Date.now(), value: merged };
 		return merged;
 	} catch {
 		return base;
 	}
+}
+
+/** Save the package list to its table and drop the settings cache. */
+export async function savePackages(dbUrl: string, packages: LicensePackage[]): Promise<void> {
+	await replacePackageRows(dbUrl, packages.map((p, i) => packageToRow(p, i)));
+	await setSetting(dbUrl, PACKAGES_SEEDED_KEY, true);
+	cache = null;
 }
 
 export async function saveSiteSettings(

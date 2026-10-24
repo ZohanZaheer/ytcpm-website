@@ -6,6 +6,7 @@ type AstroLike = any;
 
 import { getEnv } from './env';
 import { SESSION_COOKIE, makeSessionValue, verifySessionValue } from './auth';
+import { baSessionUser } from './baSession';
 
 export async function adminGate(
 	Astro: AstroLike,
@@ -28,6 +29,9 @@ export async function adminGate(
 		});
 		return { email, redirect: Astro.redirect(Astro.url.pathname) };
 	}
+	// better-auth session: admins are accounts with role 'admin'.
+	const baUser = await baSessionUser(Astro);
+	if (baUser?.role === 'admin') return { email: baUser.email };
 	const email = await verifySessionValue(Astro, Astro.cookies.get(SESSION_COOKIE)?.value);
 	return { email };
 }

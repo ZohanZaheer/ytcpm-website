@@ -143,6 +143,7 @@ const description = 'Edit YTCPM license packages, devices and prices.';
 												<tr>
 													<th>Link name</th>
 													<th>Duration</th>
+													<th>Days (blank = lifetime)</th>
 													<th>Devices</th>
 													<th>Price (USD)</th>
 													<th>Save note</th>
@@ -168,6 +169,15 @@ const description = 'Edit YTCPM license packages, devices and prices.';
 																name={`duration[${i}]`}
 																value={p.duration}
 																required
+															/>
+														</td>
+														<td>
+															<input
+																type="number"
+																name={`days[${i}]`}
+																value={p.durationDays ?? ''}
+																min="1"
+																placeholder="Lifetime"
 															/>
 														</td>
 														<td>
@@ -229,7 +239,8 @@ const description = 'Edit YTCPM license packages, devices and prices.';
 									<tr>
 										<td class="slug">(new)</td>
 										<td><input type="text" data-f="duration" required /></td>
-										<td><input type="number" data-f="devices" min="1" required /></td>
+										<td><input type="number" data-f="days" min="1" placeholder="Lifetime" /></td>
+									<td><input type="number" data-f="devices" min="1" required /></td>
 										<td><input type="number" data-f="price" min="0" required /></td>
 										<td><input type="text" data-f="saveNote" placeholder="Save $100" /></td>
 										<td><input type="checkbox" data-f="popular" /></td>

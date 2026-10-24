@@ -1,0 +1,299 @@
+---
+import BaseHead from '../components/BaseHead.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import { SITE_TITLE } from '../consts';
+import { baSessionUser } from '../lib/baSession';
+import { getEnv, getDatabaseUrl } from '../lib/env';
+import { listOrdersForUser, type PaymentOrder } from '../lib/db';
+import { getEffectiveSettings } from '../lib/settings';
+import { formatUsd } from '../lib/packages';
+
+export const prerender = false;
+
+const user = await baSessionUser(Astro);
+if (!user) return Astro.redirect('/login');
+
+interface LicenseView {
+	order: PaymentOrder;
+	state: 'pending' | 'active' | 'expired' | 'rejected';
+	stateLabel: string;
+	ordered: string;
+	activated: string | null;
+	expires: string | null;
+	daysLeft: number | null;
+}
+
+let licenses: LicenseView[] = [];
+let dbError = '';
+const dbUrl = getDatabaseUrl(Astro);
+if (!dbUrl) {
+	dbError = 'Your orders cannot be loaded right now (database not configured).';
+} else {
+	try {
+		const settings = await getEffectiveSettings(dbUrl, (k) => getEnv(Astro, k));
+		const orders = await listOrdersForUser(dbUrl, user.id, user.email);
+		const dateFmt = new Intl.DateTimeFormat('en-US', { dateStyle: 'medium' });
+		const now = Date.now();
+		licenses = orders.map((order) => {
+			const pkg = settings.packages.find((p) => p.slug === order.package_slug);
+			const ordered = dateFmt.format(new Date(order.created_at));
+			if (order.status === 'pending') {
+				return { order, state: 'pending', stateLabel: 'Waiting for payment confirmation', ordered, activated: null, expires: null, daysLeft: null };
+			}
+			if (order.status === 'rejected') {
+				return { order, state: 'rejected', stateLabel: 'Rejected', ordered, activated: null, expires: null, daysLeft: null };
+			}
+			// Confirmed: updated_at is when the admin confirmed the order.
+			const start = new Date(order.updated_at);
+			const days = pkg?.durationDays ?? null;
+			if (days === null) {
+				return { order, state: 'active', stateLabel: 'Active — Lifetime', ordered, activated: dateFmt.format(start), expires: 'Never (Lifetime)', daysLeft: null };
+			}
+			const expiry = new Date(start.getTime() + days * 24 * 3600 * 1000);
+			const daysLeft = Math.ceil((expiry.getTime() - now) / (24 * 3600 * 1000));
+			return {
+				order,
+				state: daysLeft >= 0 ? 'active' : 'expired',
+				stateLabel: daysLeft >= 0 ? 'Active' : 'Expired',
+				ordered,
+				activated: dateFmt.format(start),
+				expires: dateFmt.format(expiry),
+				daysLeft: Math.max(daysLeft, 0),
+			};
+		});
+	} catch {
+		dbError = 'Your orders cannot be loaded right now. Please try again shortly.';
+	}
+}
+
+const hasActive = licenses.some((l) => l.state === 'active');
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<BaseHead
+			title={`My account — ${SITE_TITLE}`}
+			description="Your YTCPM licenses: packages, purchase dates, expiry and order status."
+		/>
+		<style>
+			main {
+				padding: 0;
+			}
+			.band {
+				background: var(--surface);
+				border-bottom: 1px solid rgb(var(--gray-light));
+				padding: 2.4em 0 2em;
+			}
+			.band h1 {
+				font-size: clamp(1.8em, 4vw, 2.4em);
+			}
+			.band .who {
+				color: rgb(var(--gray-dark));
+				margin: 0.2em 0 1.1em;
+			}
+			.actions {
+				display: flex;
+				gap: 0.6em;
+				flex-wrap: wrap;
+				align-items: center;
+			}
+			.btn {
+				font: inherit;
+				font-weight: 700;
+				text-decoration: none;
+				padding: 0.6em 1.3em;
+				border-radius: 999px;
+				font-size: 0.93em;
+				border: 1px solid rgb(var(--gray-light));
+				background: var(--bg);
+				color: rgb(var(--black));
+				cursor: pointer;
+			}
+			.btn:hover {
+				border-color: var(--accent);
+				color: var(--accent-dark);
+			}
+			.btn.primary {
+				background: var(--accent);
+				border-color: var(--accent);
+				color: #fff;
+			}
+			.btn.primary:hover {
+				background: var(--accent-dark);
+				color: #fff;
+			}
+			.body {
+				padding: 2.2em 0 0.5em;
+			}
+			.body h2 {
+				font-size: 1.4em;
+				margin-bottom: 0.9em;
+			}
+			.error {
+				color: #b00020;
+				font-weight: 600;
+			}
+			.lic {
+				background: var(--surface);
+				border: 1px solid rgb(var(--gray-light));
+				border-radius: 14px;
+				padding: 1.2em 1.4em;
+				margin-bottom: 1em;
+				max-width: 860px;
+			}
+			.lic-top {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 0.5em 1em;
+				align-items: baseline;
+				justify-content: space-between;
+			}
+			.lic-top h3 {
+				font-size: 1.12em;
+				margin: 0;
+			}
+			.chip {
+				font-size: 0.78em;
+				font-weight: 700;
+				padding: 0.3em 0.8em;
+				border-radius: 999px;
+				letter-spacing: 0.02em;
+			}
+			.chip.active {
+				background: #dcfce7;
+				color: #15803d;
+			}
+			.chip.pending {
+				background: #fef3c7;
+				color: #92400e;
+			}
+			.chip.expired,
+			.chip.rejected {
+				background: #fee2e2;
+				color: #991b1b;
+			}
+			.facts {
+				display: grid;
+				grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+				gap: 0.7em 1.4em;
+				margin: 0.9em 0;
+			}
+			.facts dt {
+				font-size: 0.78em;
+				text-transform: uppercase;
+				letter-spacing: 0.06em;
+				color: rgb(var(--gray));
+				font-weight: 600;
+			}
+			.facts dd {
+				margin: 0.15em 0 0;
+				font-weight: 600;
+				color: rgb(var(--black));
+			}
+			.lic .links {
+				font-size: 0.92em;
+			}
+			.empty {
+				max-width: 860px;
+				background: var(--peach-soft);
+				border: 1px solid var(--peach);
+				border-radius: 14px;
+				padding: 1.4em 1.5em;
+			}
+			.empty p {
+				margin: 0 0 0.9em;
+			}
+		</style>
+	</head>
+	<body>
+		<Header />
+		<main>
+			<section class="band bleed">
+				<div class="wrap">
+					<h1>My account</h1>
+					<p class="who">
+						Signed in as <strong>{user.name}</strong> ({user.email})
+					</p>
+					<div class="actions">
+						<a class="btn primary" href="/pricing">Buy a license</a>
+						{hasActive && <a class="btn" href="/download">Download the bot</a>}
+						{user.role === 'admin' && <a class="btn" href="/admin">Admin dashboard</a>}
+						<form method="post" action="/api/account/logout">
+							<button class="btn" type="submit">Sign out</button>
+						</form>
+					</div>
+				</div>
+			</section>
+			<section class="body bleed">
+				<div class="wrap">
+					<h2>My licenses &amp; orders</h2>
+					{
+						dbError ? (
+							<p class="error">{dbError}</p>
+						) : licenses.length === 0 ? (
+							<div class="empty">
+								<p>
+									<strong>No licenses yet.</strong> When you buy a plan, it will appear
+									here with its purchase date, expiry and order status. Orders placed
+									as a guest with this email show up here too.
+								</p>
+								<a class="btn primary" href="/pricing">See license plans</a>
+							</div>
+						) : (
+							licenses.map((l) => (
+								<article class="lic">
+									<div class="lic-top">
+										<h3>{l.order.package_label}</h3>
+										<span class={`chip ${l.state}`}>{l.stateLabel}</span>
+									</div>
+									<dl class="facts">
+										<div>
+											<dt>Ordered</dt>
+											<dd>{l.ordered}</dd>
+										</div>
+										<div>
+											<dt>Amount</dt>
+											<dd>
+												{formatUsd(l.order.amount_usd)} · {l.order.crypto}
+											</dd>
+										</div>
+										{l.activated && (
+											<div>
+												<dt>Activated</dt>
+												<dd>{l.activated}</dd>
+											</div>
+										)}
+										{l.expires && (
+											<div>
+												<dt>Expires</dt>
+												<dd>{l.expires}</dd>
+											</div>
+										)}
+										{l.daysLeft !== null && l.state === 'active' && (
+											<div>
+												<dt>Time left</dt>
+												<dd>{l.daysLeft} days</dd>
+											</div>
+										)}
+									</dl>
+									<p class="links">
+										<a href={`/pay/status/${l.order.id}`}>Order details &amp; status</a>
+										{l.state === 'pending' && (
+											<> — we confirm payments by review; the admin contacts you within 24 hours of confirmation.</>
+										)}
+										{l.state === 'expired' && (
+											<> — <a href="/pricing">renew with a new plan</a></>
+										)}
+									</p>
+								</article>
+							))
+						)
+					}
+				</div>
+			</section>
+		</main>
+		<Footer />
+	</body>
+</html>

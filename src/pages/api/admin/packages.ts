@@ -1,6 +1,6 @@
 import type { APIRoute } from 'astro';
 import { getEnv, getDatabaseUrl } from '../../../lib/env';
-import { getEffectiveSettings, saveSiteSettings } from '../../../lib/settings';
+import { getEffectiveSettings, savePackages } from '../../../lib/settings';
 import { isAdminRequest } from '../../../lib/auth';
 import type { LicensePackage } from '../../../lib/packages';
 
@@ -24,7 +24,7 @@ export const POST: APIRoute = async (ctx) => {
 
 	const form = await ctx.request.formData();
 	const env = (key: string) => getEnv(ctx, key);
-	const current = await getEffectiveSettings(dbUrl, env);
+	await getEffectiveSettings(dbUrl, env); // ensures the packages table is seeded before edits
 
 	const rows = new Map<number, Record<string, string>>();
 	for (const [key, value] of form.entries()) {
@@ -53,9 +53,20 @@ export const POST: APIRoute = async (ctx) => {
 		if (!slug) slug = slugify(`${duration}-${devices}`) || `package-${idx + 1}`;
 		if (usedSlugs.has(slug)) slug = `${slug}-${idx + 1}`;
 		usedSlugs.add(slug);
+		// Duration in days drives license expiry in the customer
+		// dashboard; empty means lifetime (never expires).
+		const daysRaw = (row.days ?? '').trim();
+		const durationDays = daysRaw === '' ? null : Math.round(Number(daysRaw));
+		if (durationDays !== null && (!Number.isFinite(durationDays) || durationDays <= 0)) {
+			return new Response(null, {
+				status: 303,
+				headers: { Location: '/admin/packages?error=' + encodeURIComponent(`Row ${idx + 1}: duration days must be a positive number, or empty for lifetime.`) },
+			});
+		}
 		const pkg: LicensePackage = {
 			slug,
 			duration,
+			durationDays,
 			devices: Math.round(devices),
 			priceUsd: Math.round(priceUsd),
 			active: row.active === 'on' || row.active === '1',
@@ -71,6 +82,6 @@ export const POST: APIRoute = async (ctx) => {
 		});
 	}
 
-	await saveSiteSettings(dbUrl, { ...current, packages });
+	await savePackages(dbUrl, packages);
 	return new Response(null, { status: 303, headers: { Location: '/admin/packages?saved=1' } });
 };

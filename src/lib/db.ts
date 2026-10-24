@@ -25,6 +25,7 @@ export interface PaymentOrder {
 	note: string | null;
 	screenshot_driver: string;
 	screenshot_ref: string;
+	user_id: string | null;
 	status: OrderStatus;
 	created_at: string;
 	updated_at: string;
@@ -63,6 +64,68 @@ const SCHEMA_SQL = `
 		status TEXT NOT NULL DEFAULT 'new',
 		created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 	);
+	-- Orders placed by a signed-in customer carry their account id
+	-- (guests stay NULL and are matched by email in the dashboard).
+	ALTER TABLE payment_orders ADD COLUMN IF NOT EXISTS user_id TEXT;
+	-- License packages live in their own table (edited from the admin
+	-- dashboard); site_settings no longer stores them.
+	CREATE TABLE IF NOT EXISTS packages (
+		slug TEXT PRIMARY KEY,
+		duration_label TEXT NOT NULL,
+		duration_days INTEGER,
+		devices INTEGER NOT NULL,
+		price_usd INTEGER NOT NULL,
+		save_note TEXT,
+		popular BOOLEAN NOT NULL DEFAULT false,
+		active BOOLEAN NOT NULL DEFAULT true,
+		sort INTEGER NOT NULL DEFAULT 0,
+		updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+	);
+	-- better-auth tables (email + password accounts for customers and
+	-- the admin; a user with role = 'admin' is the administrator).
+	CREATE TABLE IF NOT EXISTS "user" (
+		id TEXT PRIMARY KEY,
+		name TEXT NOT NULL,
+		email TEXT NOT NULL UNIQUE,
+		"emailVerified" BOOLEAN NOT NULL DEFAULT false,
+		image TEXT,
+		role TEXT DEFAULT 'user',
+		"createdAt" TIMESTAMPTZ NOT NULL DEFAULT now(),
+		"updatedAt" TIMESTAMPTZ NOT NULL DEFAULT now()
+	);
+	CREATE TABLE IF NOT EXISTS "session" (
+		id TEXT PRIMARY KEY,
+		"expiresAt" TIMESTAMPTZ NOT NULL,
+		token TEXT NOT NULL UNIQUE,
+		"ipAddress" TEXT,
+		"userAgent" TEXT,
+		"userId" TEXT NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
+		"createdAt" TIMESTAMPTZ NOT NULL DEFAULT now(),
+		"updatedAt" TIMESTAMPTZ NOT NULL DEFAULT now()
+	);
+	CREATE TABLE IF NOT EXISTS "account" (
+		id TEXT PRIMARY KEY,
+		"accountId" TEXT NOT NULL,
+		"providerId" TEXT NOT NULL,
+		"userId" TEXT NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
+		"accessToken" TEXT,
+		"refreshToken" TEXT,
+		"idToken" TEXT,
+		"accessTokenExpiresAt" TIMESTAMPTZ,
+		"refreshTokenExpiresAt" TIMESTAMPTZ,
+		scope TEXT,
+		password TEXT,
+		"createdAt" TIMESTAMPTZ NOT NULL DEFAULT now(),
+		"updatedAt" TIMESTAMPTZ NOT NULL DEFAULT now()
+	);
+	CREATE TABLE IF NOT EXISTS "verification" (
+		id TEXT PRIMARY KEY,
+		identifier TEXT NOT NULL,
+		value TEXT NOT NULL,
+		"expiresAt" TIMESTAMPTZ NOT NULL,
+		"createdAt" TIMESTAMPTZ NOT NULL DEFAULT now(),
+		"updatedAt" TIMESTAMPTZ NOT NULL DEFAULT now()
+	);
 `;
 
 async function withClient<T>(connectionString: string, fn: (client: Client) => Promise<T>): Promise<T> {
@@ -88,6 +151,13 @@ async function withClient<T>(connectionString: string, fn: (client: Client) => P
 	throw lastError;
 }
 
+/** Run the idempotent schema step (every table, created if missing). */
+export async function ensureSchema(connectionString: string): Promise<void> {
+	await withClient(connectionString, async () => {
+		// withClient always executes SCHEMA_SQL before the callback.
+	});
+}
+
 export async function createOrder(
 	connectionString: string,
 	order: Omit<PaymentOrder, 'status' | 'created_at' | 'updated_at'>,
@@ -96,8 +166,8 @@ export async function createOrder(
 		c.query(
 			`INSERT INTO payment_orders
 			 (id, package_slug, package_label, amount_usd, crypto, network, customer_name,
-			  email, contact, tx_hash, note, screenshot_driver, screenshot_ref)
-			 VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)`,
+			  email, contact, tx_hash, note, screenshot_driver, screenshot_ref, user_id)
+			 VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)`,
 			[
 				order.id,
 				order.package_slug,
@@ -112,6 +182,7 @@ export async function createOrder(
 				order.note,
 				order.screenshot_driver,
 				order.screenshot_ref,
+				order.user_id ?? null,
 			],
 		),
 	);
@@ -213,4 +284,91 @@ export async function setContactMessageStatus(
 
 export async function deleteContactMessage(connectionString: string, id: string): Promise<void> {
 	await withClient(connectionString, (c) => c.query('DELETE FROM contact_messages WHERE id = $1', [id]));
+}
+
+// ---------------------------------------------------------------------------
+// Packages table — the storefront's source of truth for license plans.
+// Rows are mapped to/from LicensePackage in src/lib/settings.ts.
+// ---------------------------------------------------------------------------
+
+export interface PackageRow {
+	slug: string;
+	duration_label: string;
+	duration_days: number | null;
+	devices: number;
+	price_usd: number;
+	save_note: string | null;
+	popular: boolean;
+	active: boolean;
+	sort: number;
+}
+
+export async function listPackageRows(connectionString: string): Promise<PackageRow[]> {
+	const res = await withClient(connectionString, (c) =>
+		c.query('SELECT * FROM packages ORDER BY sort ASC, slug ASC'),
+	);
+	return res.rows as PackageRow[];
+}
+
+/** Replace the whole package list atomically (admin editor saves). */
+export async function replacePackageRows(connectionString: string, rows: PackageRow[]): Promise<void> {
+	await withClient(connectionString, async (c) => {
+		await c.query('BEGIN');
+		try {
+			await c.query('DELETE FROM packages');
+			for (const r of rows) {
+				await c.query(
+					`INSERT INTO packages (slug, duration_label, duration_days, devices, price_usd, save_note, popular, active, sort, updated_at)
+					 VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9, now())`,
+					[r.slug, r.duration_label, r.duration_days, r.devices, r.price_usd, r.save_note, r.popular, r.active, r.sort],
+				);
+			}
+			await c.query('COMMIT');
+		} catch (err) {
+			await c.query('ROLLBACK');
+			throw err;
+		}
+	});
+}
+
+// ---------------------------------------------------------------------------
+// better-auth account helpers (the auth library owns writes; these are
+// for the admin bootstrap, role checks and the customer dashboard).
+// ---------------------------------------------------------------------------
+
+export interface AuthUserRow {
+	id: string;
+	email: string;
+	name: string;
+	role: string;
+}
+
+export async function getAuthUserByEmail(connectionString: string, email: string): Promise<AuthUserRow | null> {
+	const res = await withClient(connectionString, (c) =>
+		c.query('SELECT id, email, name, COALESCE(role, \'user\') AS role FROM "user" WHERE lower(email) = lower($1)', [email]),
+	);
+	return (res.rows[0] as AuthUserRow) ?? null;
+}
+
+export async function setAuthUserRole(connectionString: string, id: string, role: string): Promise<void> {
+	await withClient(connectionString, (c) =>
+		c.query('UPDATE "user" SET role = $2, "updatedAt" = now() WHERE id = $1', [id, role]),
+	);
+}
+
+/** Orders belonging to a customer account: linked by id, or by the
+ * account's email for orders placed as a guest. */
+export async function listOrdersForUser(
+	connectionString: string,
+	userId: string,
+	email: string,
+	limit = 50,
+): Promise<PaymentOrder[]> {
+	const res = await withClient(connectionString, (c) =>
+		c.query(
+			'SELECT * FROM payment_orders WHERE user_id = $1 OR lower(email) = lower($2) ORDER BY created_at DESC LIMIT $3',
+			[userId, email, limit],
+		),
+	);
+	return res.rows as PaymentOrder[];
 }
