@@ -98,3 +98,8 @@
   pages show attempts remaining after a failure and the remaining
   lock time while locked; the Users list/detail show live lock
   status, and the detail page can lift a lock early (Unlock login).
+- 2026-10-24 (later): Google Analytics (GA4) support — `GA_MEASUREMENT_ID`
+  in `src/config/site.ts` (empty = disabled); BaseHead loads gtag.js on
+  public pages only (never admin/account/checkout/auth). Verified with a
+  dummy ID in a local build (renders on /faq, absent on /404). The real
+  Measurement ID still has to be pasted into site.ts by the owner.

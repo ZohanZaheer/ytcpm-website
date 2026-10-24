@@ -24,14 +24,19 @@ export const AUTHOR_NAME = 'Zaheer Ahmad';
 // This site sells no advertising space, so the file declares that
 // there are no authorized digital ad sellers. If ad networks are
 // ever added, their lines go here (one per line).
-//export const ADS_TXT = `# YTCPM (ytcpm.cyou) does not sell advertising space and has no authorized digital ad sellers.`;
-export const ADS_TXT = `google.com, pub-1802003890783048, DIRECT, f08c47fec0942fa0`;
+export const ADS_TXT = `# YTCPM (ytcpm.cyou) does not sell advertising space and has no authorized digital ad sellers.`;
 
 // ---------- Webmaster-tools verification ----------
 // Paste each code; empty = the meta tag is omitted.
 export const SITE_VERIFICATION = {
-	google: 'google-site-verification=DrczNACCe8O46okdHlRXDwvfUPskYV3IIHXuerDlFEA',
-	bing: 'C36695046B1ACEE33EBE6D14A4C3C229',
-	pinterest: 'e47b58eef760f5a391a3a56ab248cb13',
+	google: '',
+	bing: '',
+	pinterest: '',
 	yandex: '',
 };
+
+// ---------- Google Analytics (GA4) ----------
+// Paste the Measurement ID from GA → Admin → Data Streams → the web
+// stream (looks like "G-XXXXXXXXXX"). Empty = analytics is disabled.
+// Loaded on public pages only (never on admin/account/checkout/auth).
+export const GA_MEASUREMENT_ID = '';
