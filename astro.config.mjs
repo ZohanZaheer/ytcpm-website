@@ -1,7 +1,6 @@
 // @ts-check
 import { defineConfig } from "astro/config";
 import mdx from "@astrojs/mdx";
-import sitemap from "@astrojs/sitemap";
 
 import cloudflare from "@astrojs/cloudflare";
 import node from "@astrojs/node";
@@ -47,15 +46,9 @@ export default defineConfig({
 	// hosting asset layer serves the clean URL directly.
 	trailingSlash: "never",
 	build: { format: "file" },
-	integrations: [
-		mdx(),
-		// The XML sitemap lists public pages only — admin, account,
-		// checkout and auth pages stay out of search engines' way.
-		sitemap({
-			filter: (page) =>
-				!/^\/(admin|account|pay|login|signup|404|500)(\/|$)/.test(new URL(page).pathname),
-		}),
-	],
+	// The XML sitemap is a hand-rolled endpoint (src/pages/sitemap.xml.ts)
+	// listing public pages only, so the @astrojs/sitemap plugin is not used.
+	integrations: [mdx()],
 	// Astro sessions are disabled: nothing on this site uses
 	// Astro.session (the admin login uses its own signed cookie), so no
 	// session storage — Cloudflare KV "SESSION" or any other — is set up.

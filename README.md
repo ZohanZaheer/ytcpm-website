@@ -1,64 +1,103 @@
-# Astro Starter Kit: Blog
+# YTCPM Bot — Website
 
-[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/cloudflare/templates/tree/main/astro-blog-starter-template)
+The official website for **YTCPM Bot**, a standalone Windows app for YouTube CPM
+workflows: licensing store, crypto checkout, customer accounts, admin
+dashboard and blog.
 
-![Astro Template Preview](https://github.com/withastro/astro/assets/2244813/ff10799f-a816-4703-b967-c78997e8323d)
+**Live:** https://ytcpm.cyou
 
-<!-- dash-content-start -->
+![YTCPM Bot homepage](docs/images/homepage.png)
 
-Create a blog with Astro and deploy it on Cloudflare Workers as a [static website](https://developers.cloudflare.com/workers/static-assets/).
+## What the site does
 
-Features:
+- **Storefront** — homepage, pricing, download and a full setup guide
+  (prices and the bot version on the homepage come live from the admin
+  dashboard settings).
+- **Crypto checkout** — pick a package, pay in USDT / BTC / ETH, upload the
+  payment screenshot; orders can auto-confirm on-chain (mempool.space /
+  Trongrid / Etherscan) when a transaction hash is provided.
+- **Customer accounts** — registration with full profile details and email
+  verification; a dashboard showing every license with activation/expiry,
+  remaining days and the bot login (visible once the admin marks the
+  license done); profile editing, password change, priority support for
+  active licenses.
+- **Admin dashboard** — orders, bot licenses, support requests, contact
+  messages, packages & prices editor, payment/download settings, and a
+  **Users** section (all customers, per-user details and licenses, manual
+  user creation and license assignment). Admins are separate accounts —
+  customers can never sign in to /admin.
+- **Blog** — guides on YouTube CPM/RPM, proxies, browser fingerprints and
+  user agents, with branded cover images.
+- **SEO & discovery** — canonical URLs, full Open Graph/Twitter cards,
+  JSON-LD structured data (WebSite + Organization + SoftwareApplication,
+  BlogPosting on articles, FAQPage on /faq), plus hand-rolled endpoints:
+  `/sitemap.xml`, `/rss.xml`, `/robots.txt`, `/ads.txt`, `/llms.txt`.
+  All of it is driven by one file: `src/config/site.ts`.
 
-- ✅ Minimal styling (make it your own!)
-- ✅ 100/100 Lighthouse performance
-- ✅ SEO-friendly with canonical URLs and OpenGraph data
-- ✅ Sitemap support
-- ✅ RSS Feed support
-- ✅ Markdown & MDX support
-- ✅ Built-in Observability logging
+## Stack
 
-<!-- dash-content-end -->
+- [Astro](https://astro.build) 7 + TypeScript, SSR with a portable adapter
+- PostgreSQL (orders, accounts, packages, settings — schema is created
+  idempotently by `src/lib/db.ts`)
+- [better-auth](https://www.better-auth.com) for customer accounts; a
+  separate `admin_users` table + signed cookie for admins
+- Resend for verification email; payment screenshots via local disk,
+  S3/R2 or GitHub storage drivers (`src/lib/storage.ts`)
+- Deploys to **Cloudflare Workers** (primary), **Node** or **Vercel**
 
-## Getting Started
-
-Outside of this repo, you can start a new project with this template using [C3](https://developers.cloudflare.com/pages/get-started/c3/) (the `create-cloudflare` CLI):
+## Quick start
 
 ```bash
-npm create cloudflare@latest -- --template=cloudflare/templates/astro-blog-starter-template
+npm install
+cp .env.example .env   # fill in at least DATABASE_URL + admin values
+npm run dev            # local dev server
+npm run build          # production build (Cloudflare target)
 ```
 
-A live public deployment of this template is available at [https://astro-blog-starter-template.templates.workers.dev](https://astro-blog-starter-template.templates.workers.dev)
+Local production-like run (same config Cloudflare uses):
 
-## 🚀 Project Structure
+```bash
+npm run build
+npx wrangler dev -c dist/server/wrangler.json
+```
 
-Astro looks for `.astro` or `.md` files in the `src/pages/` directory. Each page is exposed as a route based on its file name.
+## Configuration
 
-There's nothing special about `src/components/`, but that's where we like to put any Astro/React/Vue/Svelte/Preact components.
+Every environment variable is documented in [`.env.example`](.env.example).
+The full payments/accounts setup — including the Cloudflare
+runtime-variables rule and the go-live checklist — is in
+[`PAYMENTS_SETUP.md`](PAYMENTS_SETUP.md).
 
-The `src/content/` directory contains "collections" of related Markdown and MDX documents. Use `getCollection()` to retrieve posts from `src/content/blog/`, and type-check your frontmatter using an optional schema. See [Astro's Content Collections docs](https://docs.astro.build/en/guides/content-collections/) to learn more.
+## Deployment
 
-Any static assets, like images, can be placed in the `public/` directory.
+| Target     | Command / setup                                                                 |
+| ---------- | ------------------------------------------------------------------------------- |
+| Cloudflare | Push to `main` — Workers Builds deploys automatically (Git-connected).          |
+| Node       | `npm run build:node` then `npm start` (any VPS).                                 |
+| Vercel     | Import the repo — [`vercel.json`](vercel.json) sets the build, clean URLs and headers. |
 
-## 🧞 Commands
+The adapter is chosen at build time by `DEPLOY_TARGET`
+(`cloudflare` default · `node` · `vercel`); see `astro.config.mjs`.
 
-All commands are run from the root of the project, from a terminal:
+## Project map
 
-| Command                           | Action                                           |
-| :-------------------------------- | :----------------------------------------------- |
-| `npm install`                     | Installs dependencies                            |
-| `npm run dev`                     | Starts local dev server at `localhost:4321`      |
-| `npm run build`                   | Build your production site to `./dist/`          |
-| `npm run preview`                 | Preview your build locally, before deploying     |
-| `npm run astro ...`               | Run CLI commands like `astro add`, `astro check` |
-| `npm run astro -- --help`         | Get help using the Astro CLI                     |
-| `npm run build && npm run deploy` | Deploy your production site to Cloudflare        |
-| `npm wrangler tail`               | View real-time logs for all Workers              |
+```
+src/
+  config/site.ts     SEO/discovery single source of truth
+  components/        Header, Footer, shells, home sections, StructuredData
+  content/blog/      Blog posts (Markdown/MDX)
+  lib/               db, settings, packages, auth, storage, mail, profile…
+  pages/             Storefront, account, admin, pay + .ts endpoints
+public/
+  YoutubeCPM.zip     The bot download
+docs/images/         README images
+```
 
-## 👀 Want to learn more?
+Working on this repo? Read [`AGENTS.md`](AGENTS.md) first — conventions,
+push rules and the docs trio (`AGENTS.md` / [`CLAUDE.md`](CLAUDE.md) /
+[`MEMORY.md`](MEMORY.md)) that must stay in sync with the code.
 
-Check out [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
+---
 
-## Credit
-
-This theme is based off of the lovely [Bear Blog](https://github.com/HermanMartinus/bearblog/).
+© YTCPM. The YTCPM Bot is an independent tool and is not affiliated with or
+endorsed by YouTube or Google.

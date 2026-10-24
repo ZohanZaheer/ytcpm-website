@@ -2,11 +2,20 @@
 // Import the global.css file here so that it is included on
 // all pages through the use of the <BaseHead /> component.
 import '../styles/global.css';
+import StructuredData from './StructuredData.astro';
+import { SITE_NAME, SITE_ORGANIZATION, SITE_LOCALE, SITE_VERIFICATION } from '../config/site';
 
 interface Props {
 	title: string;
 	description: string;
 	image?: string;
+	/** Open Graph type ('website' default; 'article' for blog posts). */
+	type?: string;
+	/** Force noindex (error pages). Admin/account/checkout/auth pages
+	 * are detected from the path automatically. */
+	noindex?: boolean;
+	/** Extra JSON-LD nodes appended to the site-wide @graph. */
+	schema?: Record<string, unknown>[];
 }
 
 // Public URLs are clean (no trailing slash, no .html — pages are
@@ -14,7 +23,15 @@ interface Props {
 const cleanPath = Astro.url.pathname.replace(/\.html$/, '').replace(/\/$/, '') || '/';
 const canonicalURL = new URL(cleanPath, Astro.site);
 
-const { title, description, image = '/og-default.jpg' } = Astro.props;
+const { title, description, image = '/og-default.jpg', type = 'website', schema = [] } = Astro.props;
+
+// Private areas are never indexed and carry no structured data.
+const privatePath =
+	/^\/(admin|account|pay)(\/|$)/.test(cleanPath) || cleanPath === '/login' || cleanPath === '/signup';
+const noindex = !!Astro.props.noindex || privatePath;
+
+const ogImage = new URL(image, Astro.site);
+const ogImageType = image.endsWith('.png') ? 'image/png' : 'image/jpeg';
 ---
 
 <!-- Global Metadata -->
@@ -24,6 +41,9 @@ const { title, description, image = '/og-default.jpg' } = Astro.props;
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
 <meta name="generator" content={Astro.generator} />
+<meta name="theme-color" content="#fff7ed" />
+<meta name="author" content={SITE_ORGANIZATION} />
+<meta name="robots" content={noindex ? 'noindex, nofollow' : 'index, follow, max-image-preview:large'} />
 
 <!-- Fonts: Inter (body) + Plus Jakarta Sans (headings) -->
 <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -42,15 +62,32 @@ const { title, description, image = '/og-default.jpg' } = Astro.props;
 <meta name="description" content={description} />
 
 <!-- Open Graph / Facebook -->
-<meta property="og:type" content="website" />
+<meta property="og:type" content={type} />
+<meta property="og:site_name" content={SITE_NAME} />
+<meta property="og:locale" content={SITE_LOCALE} />
 <meta property="og:url" content={canonicalURL} />
 <meta property="og:title" content={title} />
 <meta property="og:description" content={description} />
-<meta property="og:image" content={new URL(image, Astro.url)} />
+<meta property="og:image" content={ogImage} />
+<meta property="og:image:type" content={ogImageType} />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content={title} />
 
 <!-- Twitter -->
-<meta property="twitter:card" content="summary_large_image" />
-<meta property="twitter:url" content={canonicalURL} />
-<meta property="twitter:title" content={title} />
-<meta property="twitter:description" content={description} />
-<meta property="twitter:image" content={new URL(image, Astro.url)} />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:url" content={canonicalURL} />
+<meta name="twitter:title" content={title} />
+<meta name="twitter:description" content={description} />
+<meta name="twitter:image" content={ogImage} />
+<meta name="twitter:image:alt" content={title} />
+
+<!-- Feeds + webmaster verification -->
+{!noindex && <link rel="alternate" type="application/rss+xml" title="YTCPM Blog" href="/rss.xml" />}
+{SITE_VERIFICATION.google && <meta name="google-site-verification" content={SITE_VERIFICATION.google} />}
+{SITE_VERIFICATION.bing && <meta name="msvalidate.01" content={SITE_VERIFICATION.bing} />}
+{SITE_VERIFICATION.pinterest && <meta name="p:domain_verify" content={SITE_VERIFICATION.pinterest} />}
+{SITE_VERIFICATION.yandex && <meta name="yandex-verification" content={SITE_VERIFICATION.yandex} />}
+
+<!-- Structured data (public pages only) -->
+{!noindex && <StructuredData extra={schema} />}

@@ -90,6 +90,19 @@ const groups: { title: string; items: { q: string; a: string }[] }[] = [
 		],
 	},
 ];
+
+// FAQPage node for the JSON-LD graph, generated from the same
+// questions and answers shown on this page.
+const faqSchema: Record<string, unknown> = {
+	'@type': 'FAQPage',
+	mainEntity: groups.flatMap((g) =>
+		g.items.map((item) => ({
+			'@type': 'Question',
+			name: item.q,
+			acceptedAnswer: { '@type': 'Answer', text: item.a },
+		})),
+	),
+};
 ---
 
 <!doctype html>
@@ -98,6 +111,7 @@ const groups: { title: string; items: { q: string; a: string }[] }[] = [
 		<BaseHead
 			title={`FAQ — ${SITE_TITLE}`}
 			description="Answers about YTCPM Bot: getting started, crypto payments, licenses and devices, proxies, fingerprints, user agents and support hours."
+			schema={[faqSchema]}
 		/>
 		<style>
 			main {

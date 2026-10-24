@@ -1,0 +1,65 @@
+---
+// JSON-LD structured data for every public page: the website, the
+// publisher organization and the software itself, as one @graph.
+// Pages may append page-specific nodes (BlogPosting, FAQPage, …)
+// through the `extra` prop — BaseHead forwards them here.
+import { SITE_URL, SITE_NAME, SITE_ORGANIZATION, SITE_DESCRIPTION, SITE_OG_IMAGE, ORG_ID } from '../config/site';
+import { LICENSE_PACKAGES } from '../lib/packages';
+
+interface Props {
+	extra?: Record<string, unknown>[];
+}
+
+const { extra = [] } = Astro.props;
+
+const websiteId = `${SITE_URL}/#website`;
+const softwareId = `${SITE_URL}/#software`;
+
+const prices = LICENSE_PACKAGES.map((p) => p.priceUsd);
+
+const schema = {
+	'@context': 'https://schema.org',
+	'@graph': [
+		{
+			'@type': 'WebSite',
+			'@id': websiteId,
+			name: SITE_NAME,
+			url: SITE_URL,
+			description: SITE_DESCRIPTION,
+			inLanguage: 'en',
+			publisher: { '@id': ORG_ID },
+			about: { '@id': softwareId },
+		},
+		{
+			'@type': 'Organization',
+			'@id': ORG_ID,
+			name: SITE_ORGANIZATION,
+			url: SITE_URL,
+			logo: `${SITE_URL}/apple-touch-icon.png`,
+		},
+		{
+			'@type': 'SoftwareApplication',
+			'@id': softwareId,
+			name: SITE_NAME,
+			url: SITE_URL,
+			description: SITE_DESCRIPTION,
+			applicationCategory: 'BusinessApplication',
+			operatingSystem: 'Windows',
+			image: SITE_OG_IMAGE,
+			author: { '@id': ORG_ID },
+			publisher: { '@id': ORG_ID },
+			offers: {
+				'@type': 'AggregateOffer',
+				priceCurrency: 'USD',
+				lowPrice: Math.min(...prices),
+				highPrice: Math.max(...prices),
+				offerCount: LICENSE_PACKAGES.length,
+				url: `${SITE_URL}/pricing`,
+			},
+		},
+		...extra,
+	],
+};
+---
+
+<script type="application/ld+json" set:html={JSON.stringify(schema).replace(/</g, '\\u003c')} />
