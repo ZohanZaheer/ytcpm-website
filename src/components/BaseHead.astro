@@ -3,7 +3,7 @@
 // all pages through the use of the <BaseHead /> component.
 import '../styles/global.css';
 import StructuredData from './StructuredData.astro';
-import { SITE_NAME, SITE_ORGANIZATION, SITE_LOCALE, SITE_VERIFICATION, GA_MEASUREMENT_ID } from '../config/site';
+import { SITE_NAME, SITE_ORGANIZATION, SITE_LOCALE, SITE_VERIFICATION } from '../config/site';
 
 interface Props {
 	title: string;
@@ -92,17 +92,5 @@ const ogImageType = image.endsWith('.png') ? 'image/png' : 'image/jpeg';
 <!-- Structured data (public pages only) -->
 {!noindex && <StructuredData extra={schema} />}
 
-<!-- Google Analytics (public pages only, when a Measurement ID is set) -->
-{!noindex && GA_MEASUREMENT_ID && (
-	<>
-		<script async src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`} />
-		<script define:vars={{ gaId: GA_MEASUREMENT_ID }}>
-			window.dataLayer = window.dataLayer || [];
-			function gtag() {
-				dataLayer.push(arguments);
-			}
-			gtag('js', new Date());
-			gtag('config', gaId);
-		</script>
-	</>
-)}
+<!-- Google Analytics is NOT loaded here: it runs only after the
+     visitor accepts cookies in CookieConsent (see Footer). -->

@@ -1,0 +1,137 @@
+---
+// Cookie consent banner (GDPR-style). Only renders when a GA
+// Measurement ID is configured in src/config/site.ts.
+// - No choice yet  -> banner with Accept / Decline
+// - Accepted       -> loads GA4
+// - Declined       -> GA never loads
+// GA is loaded from here (not from BaseHead) so analytics only ever
+// runs with the visitor's consent.
+import { GA_MEASUREMENT_ID } from '../config/site';
+---
+
+{GA_MEASUREMENT_ID && (
+	<>
+		<div id="ytcpm-consent" class="consent" hidden>
+			<p>
+				We use cookies to understand how this site is used (Google Analytics).
+				You can accept or decline — the site works the same either way.
+				<a href="/privacy">Privacy Policy</a>
+			</p>
+			<div class="consent-btns">
+				<button id="ytcpm-consent-accept" class="cbtn primary" type="button">Accept</button>
+				<button id="ytcpm-consent-decline" class="cbtn ghost" type="button">Decline</button>
+			</div>
+		</div>
+		<script define:vars={{ GA_ID: GA_MEASUREMENT_ID }}>
+			(function () {
+				var KEY = 'ytcpm-consent';
+				var banner = document.getElementById('ytcpm-consent');
+				if (!banner) return;
+
+				function loadGA() {
+					if (window.gtag) return;
+					var s = document.createElement('script');
+					s.async = true;
+					s.src = 'https://www.googletagmanager.com/gtag/js?id=' + GA_ID;
+					document.head.appendChild(s);
+					window.dataLayer = window.dataLayer || [];
+					window.gtag = function () {
+						dataLayer.push(arguments);
+					};
+					gtag('js', new Date());
+					gtag('config', GA_ID);
+				}
+
+				var choice = null;
+				try {
+					choice = localStorage.getItem(KEY);
+				} catch (e) {}
+
+				if (choice === 'accepted') {
+					loadGA();
+				} else if (choice !== 'declined') {
+					banner.hidden = false;
+				}
+
+				function decide(value) {
+					try {
+						localStorage.setItem(KEY, value);
+					} catch (e) {}
+					banner.hidden = true;
+					if (value === 'accepted') loadGA();
+				}
+
+				document
+					.getElementById('ytcpm-consent-accept')
+					.addEventListener('click', function () {
+						decide('accepted');
+					});
+				document
+					.getElementById('ytcpm-consent-decline')
+					.addEventListener('click', function () {
+						decide('declined');
+					});
+			})();
+		</script>
+	</>
+)}
+
+<style>
+	.consent {
+		position: fixed;
+		left: 1rem;
+		right: 1rem;
+		bottom: 1rem;
+		z-index: 80;
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 0.8em 1.2em;
+		background: var(--surface, #fff);
+		border: 1px solid rgb(var(--gray-light));
+		border-radius: 14px;
+		box-shadow: var(--box-shadow);
+		padding: 1em 1.2em;
+	}
+	.consent[hidden] {
+		display: none;
+	}
+	.consent p {
+		margin: 0;
+		flex: 1 1 320px;
+		font-size: 0.93em;
+		color: rgb(var(--gray-dark));
+	}
+	.consent p a {
+		color: var(--accent);
+		font-weight: 600;
+	}
+	.consent-btns {
+		display: flex;
+		gap: 0.6em;
+		margin-left: auto;
+	}
+	.cbtn {
+		font: inherit;
+		font-weight: 700;
+		font-size: 0.92em;
+		padding: 0.5em 1.3em;
+		border-radius: 999px;
+		border: 1px solid var(--accent);
+		cursor: pointer;
+	}
+	.cbtn.primary {
+		background: var(--accent);
+		color: #fff;
+	}
+	.cbtn.ghost {
+		background: transparent;
+		color: var(--accent);
+	}
+	@media (min-width: 720px) {
+		.consent {
+			left: auto;
+			max-width: 600px;
+		}
+	}
+</style>

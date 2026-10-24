@@ -111,3 +111,12 @@
   renders it as the content attribute) and kept the GA block.
   Lesson: when the remote head has moved, diff the actual files
   before pushing, not just the head.
+- 2026-10-24 (later): Cookie consent (owner's CookieConsent.astro from
+  his Quran Studio project, adapted) — `src/components/CookieConsent.astro`
+  is mounted from the Footer on public pages and owns GA loading: the
+  banner shows Accept/Decline (choice in localStorage `ytcpm-consent`),
+  GA4 loads only after Accept, never after Decline. The unconditional
+  gtag block added with d8e22eb is removed from BaseHead. Privacy page
+  gained a "Cookies and analytics" section (the old "we do not run
+  analytics trackers" line was removed). The owner set the real
+  GA_MEASUREMENT_ID (G-NCM400NB7C) himself in d882f9eb.
