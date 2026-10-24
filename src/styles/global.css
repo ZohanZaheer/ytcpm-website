@@ -50,6 +50,20 @@ main {
 	width: 100vw;
 	margin-left: calc(50% - 50vw);
 }
+/* The page itself must never scroll sideways: full-bleed bands are
+   100vw wide, which includes the scrollbar's share of the window,
+   and one stray wide element used to shift every page on phones.
+   `clip` (not `hidden`) keeps position: sticky working. Wide
+   content scrolls inside its own box instead — see pre below and
+   the info-table rules. */
+html,
+body {
+	overflow-x: clip;
+}
+pre {
+	max-width: 100%;
+	overflow-x: auto;
+}
 /* Centered content container used by the chrome and homepage bands. */
 .wrap {
 	max-width: 1180px;
