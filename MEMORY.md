@@ -103,3 +103,11 @@
   public pages only (never admin/account/checkout/auth). Verified with a
   dummy ID in a local build (renders on /faq, absent on /404). The real
   Measurement ID still has to be pasted into site.ts by the owner.
+- 2026-10-24 (later): Owner filled site.ts himself (commit 6f2f640):
+  ADS_TXT is now his AdSense line and the Google/Bing/Pinterest
+  verification codes are set. The GA commit (d8e22eb) was based on a
+  pre-edit copy and overwrote site.ts; 0987007 restored his values
+  verbatim (Google value normalized to the bare token — the meta tag
+  renders it as the content attribute) and kept the GA block.
+  Lesson: when the remote head has moved, diff the actual files
+  before pushing, not just the head.
