@@ -1,0 +1,94 @@
+---
+import BaseHead from '../components/BaseHead.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import { SITE_TITLE } from '../consts';
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<BaseHead
+			title={`Something went wrong — ${SITE_TITLE}`}
+			description="An error happened on our side. Please try again in a few minutes, or contact us if it keeps happening."
+		/>
+		<style>
+			main {
+				padding: 0;
+			}
+			.band {
+				background: var(--surface);
+				border-bottom: 1px solid rgb(var(--gray-light));
+				padding: 3.4em 0 3em;
+				text-align: center;
+			}
+			.code {
+				font-size: clamp(3.4em, 10vw, 5.2em);
+				font-weight: 800;
+				line-height: 1;
+				color: var(--accent);
+				margin: 0;
+			}
+			.band h1 {
+				font-size: clamp(1.6em, 4vw, 2.2em);
+				margin: 0.35em 0 0.4em;
+			}
+			.band p {
+				color: rgb(var(--gray-dark));
+				max-width: 36em;
+				margin: 0 auto;
+				line-height: 1.65;
+			}
+			.actions {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 0.7em;
+				justify-content: center;
+				margin-top: 1.6em;
+			}
+			.btn {
+				display: inline-block;
+				font-weight: 700;
+				padding: 0.65em 1.5em;
+				border-radius: 999px;
+				border: 1px solid var(--accent);
+				background: var(--accent);
+				color: #fff;
+				text-decoration: none;
+			}
+			.btn.ghost {
+				background: transparent;
+				color: var(--accent);
+			}
+			.hours {
+				padding: 2em 0 0.6em;
+				text-align: center;
+				color: rgb(var(--gray-dark));
+			}
+		</style>
+	</head>
+	<body>
+		<Header />
+		<main>
+			<section class="band bleed">
+				<div class="wrap">
+					<p class="code">500</p>
+					<h1>Something went wrong on our side</h1>
+					<p>
+						Sorry about that — an unexpected error stopped this page from loading. Please
+						try again in a few minutes. If it keeps happening, contact us and tell us what
+						you were doing when it appeared.
+					</p>
+					<div class="actions">
+						<a class="btn" href="/">Go to the homepage</a>
+						<a class="btn ghost" href="/contact">Contact us</a>
+					</div>
+				</div>
+			</section>
+			<p class="hours">
+				Support is available 6 days a week, 10:00 AM–6:00 PM New York time.
+			</p>
+		</main>
+		<Footer />
+	</body>
+</html>

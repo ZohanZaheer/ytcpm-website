@@ -47,7 +47,15 @@ export default defineConfig({
 	// hosting asset layer serves the clean URL directly.
 	trailingSlash: "never",
 	build: { format: "file" },
-	integrations: [mdx(), sitemap()],
+	integrations: [
+		mdx(),
+		// The XML sitemap lists public pages only — admin, account,
+		// checkout and auth pages stay out of search engines' way.
+		sitemap({
+			filter: (page) =>
+				!/^\/(admin|account|pay|login|signup|404|500)(\/|$)/.test(new URL(page).pathname),
+		}),
+	],
 	// Astro sessions are disabled: nothing on this site uses
 	// Astro.session (the admin login uses its own signed cookie), so no
 	// session storage — Cloudflare KV "SESSION" or any other — is set up.

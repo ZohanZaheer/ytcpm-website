@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /account
+Disallow: /pay/
+
+Sitemap: https://ytcpm.cyou/sitemap-index.xml

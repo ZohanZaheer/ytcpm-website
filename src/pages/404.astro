@@ -1,0 +1,112 @@
+---
+import BaseHead from '../components/BaseHead.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import { SITE_TITLE } from '../consts';
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<BaseHead
+			title={`Page not found — ${SITE_TITLE}`}
+			description="The page you are looking for does not exist or has moved. Head back to the homepage, pricing, download or setup instructions."
+		/>
+		<style>
+			main {
+				padding: 0;
+			}
+			.band {
+				background: var(--surface);
+				border-bottom: 1px solid rgb(var(--gray-light));
+				padding: 3.4em 0 3em;
+				text-align: center;
+			}
+			.code {
+				font-size: clamp(3.4em, 10vw, 5.2em);
+				font-weight: 800;
+				line-height: 1;
+				color: var(--accent);
+				margin: 0;
+			}
+			.band h1 {
+				font-size: clamp(1.6em, 4vw, 2.2em);
+				margin: 0.35em 0 0.4em;
+			}
+			.band p {
+				color: rgb(var(--gray-dark));
+				max-width: 34em;
+				margin: 0 auto;
+				line-height: 1.65;
+			}
+			.actions {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 0.7em;
+				justify-content: center;
+				margin-top: 1.6em;
+			}
+			.btn {
+				display: inline-block;
+				font-weight: 700;
+				padding: 0.65em 1.5em;
+				border-radius: 999px;
+				border: 1px solid var(--accent);
+				background: var(--accent);
+				color: #fff;
+				text-decoration: none;
+			}
+			.btn.ghost {
+				background: transparent;
+				color: var(--accent);
+			}
+			.popular {
+				padding: 2.2em 0 0.6em;
+				text-align: center;
+			}
+			.popular p {
+				color: rgb(var(--gray-dark));
+			}
+			.popular nav {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 0.4em 1.4em;
+				justify-content: center;
+				font-weight: 600;
+			}
+		</style>
+	</head>
+	<body>
+		<Header />
+		<main>
+			<section class="band bleed">
+				<div class="wrap">
+					<p class="code">404</p>
+					<h1>This page doesn’t exist</h1>
+					<p>
+						The link may be broken, or the page may have moved. Let’s get you back to
+						somewhere useful:
+					</p>
+					<div class="actions">
+						<a class="btn" href="/">Go to the homepage</a>
+						<a class="btn ghost" href="/pricing">See pricing</a>
+						<a class="btn ghost" href="/download">Download the bot</a>
+					</div>
+				</div>
+			</section>
+			<section class="popular bleed">
+				<div class="wrap">
+					<p>Popular pages:</p>
+					<nav>
+						<a href="/instructions">Setup instructions</a>
+						<a href="/blog">Blog</a>
+						<a href="/faq">FAQ</a>
+						<a href="/about">About</a>
+						<a href="/contact">Contact us</a>
+					</nav>
+				</div>
+			</section>
+		</main>
+		<Footer />
+	</body>
+</html>

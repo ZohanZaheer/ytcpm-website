@@ -1,0 +1,132 @@
+---
+import BaseHead from '../components/BaseHead.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import { SITE_TITLE } from '../consts';
+
+const updated = 'October 24, 2026';
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<BaseHead
+			title={`Disclaimer — ${SITE_TITLE}`}
+			description="YTCPM is an independent tool, not affiliated with YouTube or Google. CPM figures are estimates, earnings are never guaranteed, and using the software responsibly is up to you."
+		/>
+		<style>
+			main {
+				padding: 0;
+			}
+			.band {
+				background: var(--surface);
+				border-bottom: 1px solid rgb(var(--gray-light));
+				padding: 2.8em 0 2.4em;
+			}
+			.band h1 {
+				font-size: clamp(2em, 4.6vw, 2.9em);
+			}
+			.band p {
+				color: rgb(var(--gray-dark));
+			}
+			.body {
+				padding: 2.6em 0 0.5em;
+			}
+			.inner {
+				max-width: none;
+			}
+			.inner h2 {
+				font-size: 1.35em;
+				margin: 1.5em 0 0.5em;
+			}
+			.inner h2:first-child {
+				margin-top: 0;
+			}
+			.inner p,
+			.inner li {
+				line-height: 1.7;
+				color: rgb(var(--gray-dark));
+			}
+			.inner ul {
+				margin: 0.4em 0 1em;
+			}
+		</style>
+	</head>
+	<body>
+		<Header />
+		<main>
+			<section class="band bleed">
+				<div class="wrap">
+					<h1>Disclaimer</h1>
+					<p>Last updated: {updated}</p>
+				</div>
+			</section>
+			<section class="body bleed">
+				<div class="wrap">
+					<div class="inner">
+						<h2>Independent product</h2>
+						<p>
+							YTCPM Bot is an independent software tool. It is <strong>not affiliated
+							with, endorsed by, or sponsored by YouTube or Google</strong>. “YouTube”
+							and “Google” are trademarks of Google LLC; they are used on this site only
+							to describe what the software works with.
+						</p>
+
+						<h2>No guarantee of earnings or results</h2>
+						<p>
+							Nothing on this website is a promise of income. Any CPM, RPM or revenue
+							figures mentioned on the site or in the blog are <strong>estimates based on
+							publicly available information</strong>, shown for education only. Actual
+							rates depend on your channel, audience, country, niche, watch time and many
+							other factors we do not control, and they change over time. Your results
+							may be higher, lower, or zero.
+						</p>
+
+						<h2>Your accounts, your responsibility</h2>
+						<p>
+							You are responsible for how you use the software and for complying with
+							the terms of service, policies and rules of every platform and service you
+							use it with. Automation can conflict with a platform’s rules, and
+							platforms may limit, monetize-restrict or terminate accounts at their own
+							discretion. <strong>We do not promise that any account will stay safe</strong>,
+							and we are not responsible for actions a platform takes on your accounts.
+						</p>
+
+						<h2>Information on this site</h2>
+						<p>
+							We work to keep the documentation, setup instructions and pricing on this
+							site accurate and current, but details — including features, prices,
+							third-party services and their prices — can change without notice. Blog
+							articles reflect information available when they were written and may age;
+							check the dates on each article.
+						</p>
+
+						<h2>Third-party services</h2>
+						<p>
+							The software can work with third-party services such as proxy and
+							fingerprint providers. Those services are run by their own companies,
+							under their own terms and prices; we do not control them and are not
+							responsible for their performance or availability. Where a link to a
+							third-party service is an affiliate link, that is stated on the page.
+						</p>
+
+						<h2>Purchases</h2>
+						<p>
+							License purchases are covered by our <a href="/terms">Terms of Service</a>,
+							including how payments, delivery and refunds work. Please read them
+							before you buy.
+						</p>
+
+						<h2>Questions</h2>
+						<p>
+							If anything in this disclaimer is unclear, ask us through the
+							<a href="/contact">contact page</a> — support is available 6 days a week,
+							10:00 AM–6:00 PM New York time.
+						</p>
+					</div>
+				</div>
+			</section>
+		</main>
+		<Footer />
+	</body>
+</html>

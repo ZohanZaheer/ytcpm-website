@@ -1,0 +1,150 @@
+---
+import BaseHead from '../components/BaseHead.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import { SITE_TITLE } from '../consts';
+import { getCollection } from 'astro:content';
+
+const posts = (await getCollection('blog')).sort(
+	(a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
+);
+
+const mainPages = [
+	{ href: '/', label: 'Home', desc: 'What the YTCPM Bot is and what it does.' },
+	{ href: '/pricing', label: 'Pricing', desc: 'License packages, device counts and prices.' },
+	{ href: '/download', label: 'Download', desc: 'Get the bot and check the file details.' },
+	{ href: '/instructions', label: 'Instructions', desc: 'Step-by-step setup and settings guide.' },
+	{ href: '/blog', label: 'Blog', desc: 'Guides on CPM, proxies, fingerprints and more.' },
+	{ href: '/about', label: 'About', desc: 'About the YTCPM Bot and this site.' },
+	{ href: '/faq', label: 'FAQ', desc: 'Answers to the questions buyers ask most.' },
+	{ href: '/contact', label: 'Contact us', desc: 'Reach the team — 6 days a week, 10 AM–6 PM New York time.' },
+];
+const accountPages = [
+	{ href: '/signup', label: 'Create account', desc: 'Register to buy and manage licenses.' },
+	{ href: '/login', label: 'Sign in', desc: 'Sign in to your account.' },
+	{ href: '/account', label: 'My account', desc: 'Your licenses, expiry dates and bot logins.' },
+];
+const legalPages = [
+	{ href: '/privacy', label: 'Privacy Policy', desc: 'What we collect and why.' },
+	{ href: '/terms', label: 'Terms of Service', desc: 'The rules for buying and using a license.' },
+	{ href: '/disclaimer', label: 'Disclaimer', desc: 'Estimates, responsibility and independence from YouTube/Google.' },
+];
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<BaseHead
+			title={`Sitemap — ${SITE_TITLE}`}
+			description="Every page on the YTCPM website in one place: main pages, account pages, legal pages and all blog posts."
+		/>
+		<style>
+			main {
+				padding: 0;
+			}
+			.band {
+				background: var(--surface);
+				border-bottom: 1px solid rgb(var(--gray-light));
+				padding: 2.8em 0 2.4em;
+			}
+			.band h1 {
+				font-size: clamp(2em, 4.6vw, 2.9em);
+			}
+			.band p {
+				color: rgb(var(--gray-dark));
+			}
+			.body {
+				padding: 2.6em 0 0.5em;
+			}
+			.inner h2 {
+				font-size: 1.35em;
+				margin: 1.5em 0 0.6em;
+			}
+			.inner h2:first-child {
+				margin-top: 0;
+			}
+			.links {
+				list-style: none;
+				margin: 0;
+				padding: 0;
+				display: grid;
+				grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+				gap: 0.7em 2em;
+			}
+			.links li {
+				line-height: 1.55;
+			}
+			.links a {
+				font-weight: 700;
+			}
+			.links span {
+				display: block;
+				color: rgb(var(--gray-dark));
+				font-size: 0.93em;
+			}
+			.posts {
+				line-height: 1.9;
+				margin: 0;
+			}
+			.posts li {
+				color: rgb(var(--gray-dark));
+			}
+		</style>
+	</head>
+	<body>
+		<Header />
+		<main>
+			<section class="band bleed">
+				<div class="wrap">
+					<h1>Sitemap</h1>
+					<p>Every page on this website, in one place.</p>
+				</div>
+			</section>
+			<section class="body bleed">
+				<div class="wrap">
+					<div class="inner">
+						<h2>Main pages</h2>
+						<ul class="links">
+							{mainPages.map((p) => (
+								<li>
+									<a href={p.href}>{p.label}</a>
+									<span>{p.desc}</span>
+								</li>
+							))}
+						</ul>
+
+						<h2>Your account</h2>
+						<ul class="links">
+							{accountPages.map((p) => (
+								<li>
+									<a href={p.href}>{p.label}</a>
+									<span>{p.desc}</span>
+								</li>
+							))}
+						</ul>
+
+						<h2>Legal</h2>
+						<ul class="links">
+							{legalPages.map((p) => (
+								<li>
+									<a href={p.href}>{p.label}</a>
+									<span>{p.desc}</span>
+								</li>
+							))}
+						</ul>
+
+						<h2>Blog posts</h2>
+						<ul class="posts">
+							{posts.map((post) => (
+								<li>
+									<a href={`/blog/${post.slug}`}>{post.data.title}</a>
+								</li>
+							))}
+						</ul>
+					</div>
+				</div>
+			</section>
+		</main>
+		<Footer />
+	</body>
+</html>
