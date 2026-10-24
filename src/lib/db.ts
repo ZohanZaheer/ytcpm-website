@@ -29,6 +29,7 @@ export interface PaymentOrder {
 	bot_username: string | null;
 	bot_password: string | null;
 	fulfilled_at: string | null;
+	fraud_at: string | null;
 	status: OrderStatus;
 	created_at: string;
 	updated_at: string;
@@ -140,6 +141,10 @@ const SCHEMA_SQL = `
 		password_hash TEXT NOT NULL,
 		created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 	);
+	ALTER TABLE admin_users ADD COLUMN IF NOT EXISTS failed_logins INTEGER NOT NULL DEFAULT 0;
+	ALTER TABLE admin_users ADD COLUMN IF NOT EXISTS lock_level INTEGER NOT NULL DEFAULT 0;
+	ALTER TABLE admin_users ADD COLUMN IF NOT EXISTS lock_day TEXT;
+	ALTER TABLE admin_users ADD COLUMN IF NOT EXISTS locked_until TIMESTAMPTZ;
 	-- Extended customer profile collected at registration (the
 	-- better-auth user row holds only name + email).
 	CREATE TABLE IF NOT EXISTS customer_profiles (
@@ -159,6 +164,7 @@ const SCHEMA_SQL = `
 	-- Bot license assignment on an order: credentials the admin gives
 	-- the customer for the bot itself; shown to the customer only
 	-- once fulfilled_at is set (admin marked it done).
+	ALTER TABLE payment_orders ADD COLUMN IF NOT EXISTS fraud_at TIMESTAMPTZ;
 	ALTER TABLE payment_orders ADD COLUMN IF NOT EXISTS bot_username TEXT;
 	ALTER TABLE payment_orders ADD COLUMN IF NOT EXISTS bot_password TEXT;
 	ALTER TABLE payment_orders ADD COLUMN IF NOT EXISTS fulfilled_at TIMESTAMPTZ;
@@ -173,6 +179,23 @@ const SCHEMA_SQL = `
 		status TEXT NOT NULL DEFAULT 'new',
 		created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 	);
+	-- Fraud tracking on better-auth users: each fraud-marked order adds a
+	-- strike; at 3 strikes the account is blocked (blocked_at set) and can
+	-- no longer sign in. The "user" table is created by better-auth, so
+	-- only alter it when it already exists (this schema runs on every
+	-- operation, so the columns appear as soon as the table does).
+	DO $$
+	BEGIN
+		IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'user') THEN
+			ALTER TABLE "user" ADD COLUMN IF NOT EXISTS fraud_count INTEGER NOT NULL DEFAULT 0;
+			ALTER TABLE "user" ADD COLUMN IF NOT EXISTS blocked_at TIMESTAMPTZ;
+			ALTER TABLE "user" ADD COLUMN IF NOT EXISTS block_reason TEXT;
+			ALTER TABLE "user" ADD COLUMN IF NOT EXISTS failed_logins INTEGER NOT NULL DEFAULT 0;
+			ALTER TABLE "user" ADD COLUMN IF NOT EXISTS lock_level INTEGER NOT NULL DEFAULT 0;
+			ALTER TABLE "user" ADD COLUMN IF NOT EXISTS lock_day TEXT;
+			ALTER TABLE "user" ADD COLUMN IF NOT EXISTS locked_until TIMESTAMPTZ;
+		END IF;
+	END $$;
 `;
 
 async function withClient<T>(connectionString: string, fn: (client: Client) => Promise<T>): Promise<T> {
@@ -207,7 +230,7 @@ export async function ensureSchema(connectionString: string): Promise<void> {
 
 export async function createOrder(
 	connectionString: string,
-	order: Omit<PaymentOrder, 'status' | 'created_at' | 'updated_at' | 'bot_username' | 'bot_password' | 'fulfilled_at'>,
+	order: Omit<PaymentOrder, 'status' | 'created_at' | 'updated_at' | 'bot_username' | 'bot_password' | 'fulfilled_at' | 'fraud_at'>,
 ): Promise<void> {
 	await withClient(connectionString, (c) =>
 		c.query(
@@ -256,6 +279,234 @@ export async function setOrderStatus(
 ): Promise<void> {
 	await withClient(connectionString, (c) =>
 		c.query('UPDATE payment_orders SET status = $2, updated_at = now() WHERE id = $1', [id, status]),
+	);
+}
+
+// ---------------------------------------------------------------------
+// Fraud strikes & account blocking. An admin marks an order as fraud;
+// each mark adds one strike to the customer. At FRAUD_LIMIT strikes the
+// account is blocked: sign-in is refused (checked in the login route and
+// at checkout) and any live sessions are deleted.
+// ---------------------------------------------------------------------
+
+export const FRAUD_LIMIT = 3;
+
+export interface FraudInfo {
+	id: string;
+	email: string;
+	fraud_count: number;
+	blocked_at: string | null;
+	block_reason: string | null;
+}
+
+/** Marks an order as fraud. Returns false when it was already marked. */
+export async function markOrderFraud(connectionString: string, id: string): Promise<boolean> {
+	const res = await withClient(connectionString, (c) =>
+		c.query('UPDATE payment_orders SET fraud_at = now(), updated_at = now() WHERE id = $1 AND fraud_at IS NULL', [id]),
+	);
+	return (res.rowCount ?? 0) > 0;
+}
+
+export async function getFraudInfoByEmail(
+	connectionString: string,
+	email: string,
+): Promise<FraudInfo | null> {
+	const res = await withClient(connectionString, (c) =>
+		c.query('SELECT id, email, fraud_count, blocked_at::text AS blocked_at, block_reason FROM "user" WHERE lower(email) = lower($1)', [email]),
+	);
+	return (res.rows[0] as FraudInfo) ?? null;
+}
+
+export async function getFraudInfoById(
+	connectionString: string,
+	userId: string,
+): Promise<FraudInfo | null> {
+	const res = await withClient(connectionString, (c) =>
+		c.query('SELECT id, email, fraud_count, blocked_at::text AS blocked_at, block_reason FROM "user" WHERE id = $1', [userId]),
+	);
+	return (res.rows[0] as FraudInfo) ?? null;
+}
+
+/** Every user's fraud state, for the admin orders/users pages. */
+export async function listFraudInfo(connectionString: string): Promise<FraudInfo[]> {
+	const res = await withClient(connectionString, (c) =>
+		c.query('SELECT id, email, fraud_count, blocked_at::text AS blocked_at, block_reason FROM "user"'),
+	);
+	return res.rows as FraudInfo[];
+}
+
+async function deleteUserSessions(client: Client, userId: string): Promise<void> {
+	// The BA session table exists wherever accounts exist; guard anyway.
+	const reg = await client.query("SELECT to_regclass('session') AS t");
+	if (reg.rows[0]?.t) {
+		await client.query('DELETE FROM "session" WHERE "userId" = $1', [userId]);
+	}
+}
+
+/**
+ * Adds one fraud strike. When the count reaches FRAUD_LIMIT the account
+ * is blocked and its sessions are deleted (the user is signed out
+ * everywhere). Returns the new count and whether this strike blocked.
+ */
+export async function addFraudStrike(
+	connectionString: string,
+	userId: string,
+): Promise<{ count: number; blockedNow: boolean }> {
+	return withClient(connectionString, async (c) => {
+		const res = await c.query(
+			'UPDATE "user" SET fraud_count = fraud_count + 1 WHERE id = $1 RETURNING fraud_count, blocked_at::text AS blocked_at',
+			[userId],
+		);
+		const row = res.rows[0];
+		if (!row) return { count: 0, blockedNow: false };
+		const count = Number(row.fraud_count);
+		if (count >= FRAUD_LIMIT && !row.blocked_at) {
+			await c.query(
+				'UPDATE "user" SET blocked_at = now(), block_reason = $2 WHERE id = $1',
+				[userId, `Blocked after ${FRAUD_LIMIT} fraudulent orders.`],
+			);
+			await deleteUserSessions(c, userId);
+			return { count, blockedNow: true };
+		}
+		return { count, blockedNow: false };
+	});
+}
+
+/** Signs a user out everywhere (used when a blocked user signs in). */
+export async function clearUserSessions(connectionString: string, userId: string): Promise<void> {
+	await withClient(connectionString, (c) => deleteUserSessions(c, userId));
+}
+
+/** Admin unblock: clears the block and resets the strike count. */
+export async function clearUserBlock(connectionString: string, userId: string): Promise<void> {
+	await withClient(connectionString, (c) =>
+		c.query('UPDATE "user" SET fraud_count = 0, blocked_at = NULL, block_reason = NULL WHERE id = $1', [userId]),
+	);
+}
+
+// ---------------------------------------------------------------------
+// Login lockout. Wrong-password attempts are counted per account
+// (customers in "user", admins in admin_users). Reaching the configured
+// max attempts locks the account; the lock length escalates per
+// lockout on the same day (site timezone, America/New_York):
+// 1st = firstHours, 2nd = secondHours, 3rd and later = thirdDays.
+// ---------------------------------------------------------------------
+
+export interface LockoutConfig {
+	maxAttempts: number;
+	firstHours: number;
+	secondHours: number;
+	thirdDays: number;
+}
+
+export interface LoginGuard {
+	id: string;
+	failed_logins: number;
+	lock_level: number;
+	lock_day: string | null;
+	locked_until: string | null;
+}
+
+export type LoginTable = 'user' | 'admin';
+
+const LOGIN_TABLE_SQL: Record<LoginTable, string> = { user: '"user"', admin: 'admin_users' };
+
+/** "Today" for lockout escalation — the site's business timezone. */
+export function lockoutToday(now = new Date()): string {
+	return now.toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
+}
+
+export function isLocked(guard: LoginGuard | null, now = new Date()): boolean {
+	return !!guard?.locked_until && new Date(guard.locked_until).getTime() > now.getTime();
+}
+
+export async function getLoginGuard(
+	connectionString: string,
+	table: LoginTable,
+	email: string,
+): Promise<LoginGuard | null> {
+	const res = await withClient(connectionString, (c) =>
+		c.query(
+			`SELECT id, failed_logins, lock_level, lock_day, locked_until::text AS locked_until FROM ${LOGIN_TABLE_SQL[table]} WHERE lower(email) = lower($1)`,
+			[email],
+		),
+	);
+	return (res.rows[0] as LoginGuard) ?? null;
+}
+
+export async function getLoginGuardById(
+	connectionString: string,
+	table: LoginTable,
+	id: string,
+): Promise<LoginGuard | null> {
+	const res = await withClient(connectionString, (c) =>
+		c.query(
+			`SELECT id, failed_logins, lock_level, lock_day, locked_until::text AS locked_until FROM ${LOGIN_TABLE_SQL[table]} WHERE id = $1`,
+			[id],
+		),
+	);
+	return (res.rows[0] as LoginGuard) ?? null;
+}
+
+/**
+ * Records one wrong-password attempt. Returns the attempts remaining
+ * before the next lock, or the moment the new lock ends when this
+ * attempt triggered it.
+ */
+export async function recordLoginFailure(
+	connectionString: string,
+	table: LoginTable,
+	guard: LoginGuard,
+	cfg: LockoutConfig,
+): Promise<{ attemptsLeft: number; lockedUntil: string | null }> {
+	const today = lockoutToday();
+	// A new day restarts the escalation ladder.
+	const level = guard.lock_day === today ? guard.lock_level : 0;
+	const failed = guard.failed_logins + 1;
+	const t = LOGIN_TABLE_SQL[table];
+	if (failed >= cfg.maxAttempts) {
+		const newLevel = level + 1;
+		const hours =
+			newLevel === 1 ? cfg.firstHours : newLevel === 2 ? cfg.secondHours : cfg.thirdDays * 24;
+		const until = new Date(Date.now() + hours * 3_600_000);
+		await withClient(connectionString, (c) =>
+			c.query(
+				`UPDATE ${t} SET failed_logins = 0, lock_level = $2, lock_day = $3, locked_until = $4 WHERE id = $1`,
+				[guard.id, newLevel, today, until.toISOString()],
+			),
+		);
+		return { attemptsLeft: 0, lockedUntil: until.toISOString() };
+	}
+	await withClient(connectionString, (c) =>
+		c.query(`UPDATE ${t} SET failed_logins = $2, lock_level = $3, lock_day = $4 WHERE id = $1`, [
+			guard.id,
+			failed,
+			level,
+			today,
+		]),
+	);
+	return { attemptsLeft: cfg.maxAttempts - failed, lockedUntil: null };
+}
+
+/** Successful sign-in clears the running attempt counter (the day's
+ * lockout level stays until the day rolls over). */
+export async function resetLoginFailures(
+	connectionString: string,
+	table: LoginTable,
+	id: string,
+): Promise<void> {
+	await withClient(connectionString, (c) =>
+		c.query(`UPDATE ${LOGIN_TABLE_SQL[table]} SET failed_logins = 0 WHERE id = $1`, [id]),
+	);
+}
+
+/** Admin action: lift a login lock immediately and reset the ladder. */
+export async function clearLoginLock(connectionString: string, userId: string): Promise<void> {
+	await withClient(connectionString, (c) =>
+		c.query(
+			'UPDATE "user" SET failed_logins = 0, lock_level = 0, lock_day = NULL, locked_until = NULL WHERE id = $1',
+			[userId],
+		),
 	);
 }
 
@@ -435,10 +686,16 @@ export interface CustomerRow {
 	zip: string | null;
 	orders_total: number;
 	licenses_total: number;
+	fraud_count: number;
+	blocked_at: string | null;
+	failed_logins: number;
+	lock_level: number;
+	locked_until: string | null;
 }
 
 const CUSTOMER_SELECT = `
 	SELECT u.id, u.email, u.name, u."emailVerified" AS email_verified, u."createdAt" AS created_at,
+		u.fraud_count, u.blocked_at::text AS blocked_at, u.failed_logins, u.lock_level, u.locked_until::text AS locked_until,
 		p.username, p.full_name, p.whatsapp, p.telegram, p.country, p.state, p.city, p.address, p.zip,
 		COUNT(o.id)::int AS orders_total,
 		COUNT(o.id) FILTER (WHERE o.status = 'confirmed')::int AS licenses_total
@@ -473,6 +730,10 @@ export interface AdminRow {
 	name: string;
 	password_hash: string;
 	created_at: string;
+	failed_logins: number;
+	lock_level: number;
+	lock_day: string | null;
+	locked_until: string | null;
 }
 
 export async function countAdminUsers(connectionString: string): Promise<number> {

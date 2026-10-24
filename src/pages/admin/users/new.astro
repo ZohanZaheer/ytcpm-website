@@ -1,0 +1,174 @@
+---
+import BaseHead from '../../../components/BaseHead.astro';
+import AdminShell from '../../../components/AdminShell.astro';
+import { adminGate } from '../../../lib/adminGate';
+import { adminConfigured } from '../../../lib/auth';
+
+export const prerender = false;
+
+const gate = await adminGate(Astro);
+if (gate.redirect) return gate.redirect;
+const email = gate.email;
+const error = Astro.url.searchParams.get('error');
+const configured = adminConfigured(Astro);
+const errors: Record<string, string> = {
+	username: '⚠️ Username must be 8–15 characters, letters and numbers only, starting with a letter.',
+	'username-reserved': '⚠️ That username contains a reserved word (like admin or owner) — choose another one.',
+	'username-taken': '⚠️ That username is already taken.',
+	'email-taken': '⚠️ An account with that email already exists.',
+	'whatsapp-taken': '⚠️ That WhatsApp number is already registered.',
+	'telegram-taken': '⚠️ That Telegram username is already registered.',
+	password: '⚠️ Password must be at least 8 characters with a letter, a number and a special character.',
+	email: '⚠️ Please enter a valid email address.',
+	fullname: '⚠️ Please enter the customer’s full name.',
+	country: '⚠️ Please enter a valid country.',
+	state: '⚠️ Please enter a valid state.',
+	city: '⚠️ Please enter a valid city.',
+	address: '⚠️ Please enter a valid address.',
+	zip: '⚠️ Please enter a valid ZIP code.',
+	whatsapp: '⚠️ Please enter a valid WhatsApp number with country code.',
+	telegram: '⚠️ Please enter a valid Telegram username.',
+	server: '⚠️ Something went wrong — please try again.',
+};
+
+const title = 'Add New User (Admin)';
+const description = 'Create a customer account manually.';
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<BaseHead title={title} description={description} />
+		<style>
+			.card {
+				background: var(--surface);
+				border: 1px solid rgb(var(--gray-light));
+				border-radius: 14px;
+				padding: 1.4em 1.6em;
+				box-shadow: var(--box-shadow);
+				margin-bottom: 1.4em;
+			}
+			.card h2 {
+				margin-top: 0;
+				font-size: 1.25em;
+			}
+			.meta {
+				color: rgb(var(--gray-dark));
+				font-size: 0.93em;
+			}
+			.notice {
+				border-radius: 10px;
+				padding: 0.8em 1em;
+				font-weight: 600;
+				background: #ffedd5;
+				color: #9a3412;
+				border: 1px solid #fdba74;
+			}
+			.grid {
+				display: grid;
+				grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+				gap: 0.9em;
+				margin: 1em 0;
+			}
+			.field label {
+				display: block;
+				font-weight: 600;
+				font-size: 0.9em;
+				margin-bottom: 0.3em;
+			}
+			.field input {
+				width: 100%;
+				font: inherit;
+				font-size: 0.95em;
+				padding: 0.55em 0.7em;
+				border: 1px solid rgb(var(--gray-light));
+				border-radius: 9px;
+				background: var(--bg);
+				box-sizing: border-box;
+			}
+			.btn {
+				display: inline-block;
+				font: inherit;
+				font-weight: 700;
+				font-size: 0.92em;
+				padding: 0.5em 1.2em;
+				border-radius: 999px;
+				border: 1px solid var(--accent);
+				background: var(--accent);
+				color: #fff;
+				cursor: pointer;
+				text-decoration: none;
+			}
+		</style>
+	</head>
+	<body>
+		<AdminShell title="Add New User" active="users-new" email={email} error={error} configured={configured}>
+			<p><a href="/admin/users">← All users</a></p>
+			{error && errors[error] && <p class="notice">{errors[error]}</p>}
+
+			<section class="card">
+				<h2>Add a new user</h2>
+				<p class="meta">
+					Creates a customer account right away (marked email-verified — you are vouching for it).
+					Share the password with the customer through a safe channel; they can change it later
+					from their profile page. After creating, you land on the user's page where you can
+					assign a license.
+				</p>
+				<form method="post" action="/api/admin/users">
+					<div class="grid">
+						<div class="field">
+							<label for="a-fullname">Full name *</label>
+							<input id="a-fullname" name="fullName" type="text" required maxlength="80" autocomplete="off" />
+						</div>
+						<div class="field">
+							<label for="a-email">Email *</label>
+							<input id="a-email" name="email" type="email" required maxlength="160" autocomplete="off" />
+						</div>
+						<div class="field">
+							<label for="a-username">Username *</label>
+							<input id="a-username" name="username" type="text" required maxlength="15" autocomplete="off" />
+						</div>
+						<div class="field">
+							<label for="a-password">Password *</label>
+							<input id="a-password" name="password" type="password" required maxlength="128" autocomplete="new-password" />
+						</div>
+						<div class="field">
+							<label for="a-whatsapp">WhatsApp *</label>
+							<input id="a-whatsapp" name="whatsapp" type="tel" required maxlength="24" autocomplete="off" placeholder="+1 555 123 4567" />
+						</div>
+						<div class="field">
+							<label for="a-telegram">Telegram (optional)</label>
+							<input id="a-telegram" name="telegram" type="text" maxlength="36" autocomplete="off" placeholder="@username" />
+						</div>
+						<div class="field">
+							<label for="a-country">Country *</label>
+							<input id="a-country" name="country" type="text" required maxlength="60" autocomplete="off" />
+						</div>
+						<div class="field">
+							<label for="a-state">State *</label>
+							<input id="a-state" name="state" type="text" required maxlength="60" autocomplete="off" />
+						</div>
+						<div class="field">
+							<label for="a-city">City *</label>
+							<input id="a-city" name="city" type="text" required maxlength="60" autocomplete="off" />
+						</div>
+						<div class="field">
+							<label for="a-address">Address *</label>
+							<input id="a-address" name="address" type="text" required maxlength="160" autocomplete="off" />
+						</div>
+						<div class="field">
+							<label for="a-zip">ZIP code *</label>
+							<input id="a-zip" name="zip" type="text" required maxlength="12" autocomplete="off" />
+						</div>
+					</div>
+					<p class="meta">
+						Username: 8–15 characters, letters and numbers only, starting with a letter; reserved
+						words (admin, owner, …) are blocked. Password: at least 8 characters with a letter, a
+						number and a special character.
+					</p>
+					<button class="btn" type="submit">Create user</button>
+				</form>
+			</section>
+		</AdminShell>
+	</body>
+</html>

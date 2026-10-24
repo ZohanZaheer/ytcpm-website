@@ -26,8 +26,44 @@ const errors: Record<string, string> = {
 	invalid: 'Incorrect email or password. Please try again.',
 	missing: 'Please enter your email and password.',
 	server: 'Accounts are having a problem right now. Please try again in a little while.',
+	blocked:
+		'🚫 This account has been blocked due to repeated fraudulent orders. If you believe this is a mistake, please contact us.',
 };
-const error = errors[errorCode] ?? '';
+let error = errors[errorCode] ?? '';
+
+// Lockout + attempt status come in as query params from the login route.
+function lockLeftText(iso: string): string {
+	const ms = new Date(iso).getTime() - Date.now();
+	if (!Number.isFinite(ms) || ms <= 0) return 'a short while';
+	const mins = Math.ceil(ms / 60_000);
+	if (mins < 60) return `${mins} min`;
+	const h = Math.floor(mins / 60);
+	const m = mins % 60;
+	if (h < 24) return m ? `${h}h ${m}m` : `${h}h`;
+	const d = Math.floor(h / 24);
+	const rh = h % 24;
+	return rh ? `${d}d ${rh}h` : `${d}d`;
+}
+if (errorCode === 'locked') {
+	const until = Astro.url.searchParams.get('until') ?? '';
+	error = until
+		? `🔒 Too many failed sign-in attempts — this account is locked. Try again in ${lockLeftText(until)}.`
+		: '🔒 Too many failed sign-in attempts — this account is temporarily locked. Please try again later.';
+}
+if (errorCode === 'invalid') {
+	const leftRaw = Astro.url.searchParams.get('left');
+	const maxRaw = Astro.url.searchParams.get('max');
+	if (leftRaw !== null && maxRaw) {
+		const left = Number(leftRaw);
+		const max = Number(maxRaw);
+		if (Number.isFinite(left) && Number.isFinite(max) && max > 0) {
+			const used = Math.max(0, max - left);
+			error = `Incorrect email or password. Attempt ${used} of ${max} done — ${left} ${
+				left === 1 ? 'try' : 'tries'
+			} remaining before the account locks.`;
+		}
+	}
+}
 ---
 
 <!doctype html>

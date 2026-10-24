@@ -5,15 +5,43 @@ interface Props {
 	configured: boolean;
 }
 const { error, configured } = Astro.props;
+
+// Lockout + attempt status arrive as query params from the login route.
+const untilParam = Astro.url.searchParams.get('until') ?? '';
+const leftRaw = Astro.url.searchParams.get('left');
+const maxRaw = Astro.url.searchParams.get('max');
+function lockLeftText(iso: string): string {
+	const ms = new Date(iso).getTime() - Date.now();
+	if (!Number.isFinite(ms) || ms <= 0) return 'a short while';
+	const mins = Math.ceil(ms / 60_000);
+	if (mins < 60) return `${mins} min`;
+	const h = Math.floor(mins / 60);
+	const m = mins % 60;
+	if (h < 24) return m ? `${h}h ${m}m` : `${h}h`;
+	const d = Math.floor(h / 24);
+	const rh = h % 24;
+	return rh ? `${d}d ${rh}h` : `${d}d`;
+}
+let invalidMsg = 'Incorrect email or password. Please try again.';
+if (leftRaw !== null && maxRaw) {
+	const left = Number(leftRaw);
+	const max = Number(maxRaw);
+	if (Number.isFinite(left) && Number.isFinite(max) && max > 0) {
+		const used = Math.max(0, max - left);
+		invalidMsg = `Incorrect email or password. Attempt ${used} of ${max} done — ${left} ${
+			left === 1 ? 'try' : 'tries'
+		} remaining before the account locks.`;
+	}
+}
+const lockedMsg = untilParam
+	? `🔒 Too many failed sign-in attempts — this account is locked. Try again in ${lockLeftText(untilParam)}.`
+	: '🔒 Too many failed sign-in attempts — this account is temporarily locked. Please try again later.';
 ---
 
 <div class="panel">
 	<h2 class="panel-title">Admin sign-in</h2>
-	{
-		error === 'invalid' && (
-			<p class="msg err">Incorrect email or password. Please try again.</p>
-		)
-	}
+	{error === 'invalid' && <p class="msg err">{invalidMsg}</p>}
+	{error === 'locked' && <p class="msg err">{lockedMsg}</p>}
 	{
 		!configured && (
 			<p class="msg warn">

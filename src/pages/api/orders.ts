@@ -2,7 +2,7 @@ import type { APIRoute } from 'astro';
 import { getEnv, getDatabaseUrl } from '../../lib/env';
 import { CRYPTOS, type CryptoCode } from '../../lib/packages';
 import { validateScreenshot, storeImage } from '../../lib/storage';
-import { createOrder, getProfile } from '../../lib/db';
+import { createOrder, getProfile, getFraudInfoById } from '../../lib/db';
 import { getEffectiveSettings, findPackage } from '../../lib/settings';
 import { baSessionUser, verificationEnforced } from '../../lib/baSession';
 
@@ -42,6 +42,16 @@ export const POST: APIRoute = async (ctx) => {
 	// account). Form values remain a fallback for the legacy guest
 	// path only.
 	const buyer = await baSessionUser(ctx).catch(() => null);
+	if (buyer && dbUrlEarly) {
+		// Fraud-blocked accounts cannot place new orders.
+		const fraud = await getFraudInfoById(dbUrlEarly, buyer.id).catch(() => null);
+		if (fraud?.blocked_at) {
+			return backToPay(
+				slug,
+				'This account has been blocked due to repeated fraudulent orders. Please contact us if you believe this is a mistake.',
+			);
+		}
+	}
 	if (buyer && verificationEnforced(ctx) && !buyer.emailVerified) {
 		return backToPay(
 			slug,

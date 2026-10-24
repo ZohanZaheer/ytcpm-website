@@ -4,7 +4,7 @@ import AdminShell from '../../../components/AdminShell.astro';
 import { getDatabaseUrl, getEnv } from '../../../lib/env';
 import { adminGate } from '../../../lib/adminGate';
 import { adminConfigured } from '../../../lib/auth';
-import { getCustomerById, listOrdersForUser, type CustomerRow, type PaymentOrder } from '../../../lib/db';
+import { getCustomerById, listOrdersForUser, FRAUD_LIMIT, type CustomerRow, type PaymentOrder } from '../../../lib/db';
 import { activePackages, getEffectiveSettings } from '../../../lib/settings';
 
 export const prerender = false;
@@ -23,6 +23,8 @@ const notices: Record<string, string> = {
 	saved: 'Bot login saved (not marked done yet — the customer cannot see it).',
 	creds: '⚠️ To mark a license done, both the bot username and password are required.',
 	reopened: 'License re-opened — the credentials are hidden from the customer again.',
+	unblocked: '✅ Fraud block removed — the customer can sign in again and the strike count is reset.',
+	unlocked: '🔓 Login lock cleared — the customer can sign in right away.',
 };
 const errorTexts: Record<string, string> = {
 	package: '⚠️ Please choose a valid package.',
@@ -55,6 +57,19 @@ if (email) {
 
 const dateFmt = new Intl.DateTimeFormat('en-US', { dateStyle: 'medium' });
 const fmtDay = (iso: string) => dateFmt.format(new Date(iso));
+
+function lockLeftText(iso: string): string {
+	const ms = new Date(iso).getTime() - Date.now();
+	if (!Number.isFinite(ms) || ms <= 0) return 'a short while';
+	const mins = Math.ceil(ms / 60_000);
+	if (mins < 60) return `${mins} min`;
+	const h = Math.floor(mins / 60);
+	const mm = mins % 60;
+	if (h < 24) return mm ? `${h}h ${mm}m` : `${h}h`;
+	const d = Math.floor(h / 24);
+	const rh = h % 24;
+	return rh ? `${d}d ${rh}h` : `${d}d`;
+}
 const now = Date.now();
 function licenseState(o: PaymentOrder): { label: string; cls: string; expires: string | null } {
 	if (o.status === 'pending') return { label: 'Pending payment', cls: 'waiting', expires: null };
@@ -119,6 +134,20 @@ const description = 'Customer details, licenses and bot logins.';
 			.badge.no {
 				background: #fee2e2;
 				color: #991b1b;
+			}
+			.badge.block {
+				background: #fee2e2;
+				color: #991b1b;
+			}
+			.badge.lock {
+				background: #fef3c7;
+				color: #92400e;
+			}
+			.acct-actions {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 0.6em;
+				margin-top: 1em;
 			}
 			dl.details {
 				display: grid;
@@ -253,7 +282,52 @@ const description = 'Customer details, licenses and bot logins.';
 								<dt>Joined</dt>
 								<dd>{fmtDay(customer.created_at)}</dd>
 							</div>
+							<div>
+								<dt>Fraud strikes</dt>
+								<dd>{customer.fraud_count} of {FRAUD_LIMIT}</dd>
+							</div>
+							<div>
+								<dt>Account status</dt>
+								<dd>
+									{customer.blocked_at ? (
+										<span class="badge block">🚫 Blocked — fraud (since {fmtDay(customer.blocked_at)})</span>
+									) : (
+										'Active'
+									)}
+								</dd>
+							</div>
+							<div>
+								<dt>Login lock</dt>
+								<dd>
+									{customer.locked_until && new Date(customer.locked_until) > new Date() ? (
+										<span class="badge lock">
+											🔒 Locked — {lockLeftText(customer.locked_until)} left (until{' '}
+											{new Date(customer.locked_until).toLocaleString()})
+										</span>
+									) : customer.failed_logins > 0 ? (
+										`${customer.failed_logins} failed attempt${customer.failed_logins === 1 ? '' : 's'} on record`
+									) : (
+										'Not locked'
+									)}
+								</dd>
+							</div>
 						</dl>
+						{(customer.blocked_at || (customer.locked_until && new Date(customer.locked_until) > new Date())) && (
+							<div class="acct-actions">
+								{customer.blocked_at && (
+									<form method="post" action="/api/admin/users/unblock">
+										<input type="hidden" name="user_id" value={customer.id} />
+										<button class="btn" type="submit">Unblock account (fraud)</button>
+									</form>
+								)}
+								{customer.locked_until && new Date(customer.locked_until) > new Date() && (
+									<form method="post" action="/api/admin/users/unlock-login">
+										<input type="hidden" name="user_id" value={customer.id} />
+										<button class="btn ghost" type="submit">Unlock login now</button>
+									</form>
+								)}
+							</div>
+						)}
 					</section>
 
 					<section class="card">

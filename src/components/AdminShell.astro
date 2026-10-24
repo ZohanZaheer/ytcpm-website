@@ -9,14 +9,17 @@ import AdminLogin from './AdminLogin.astro';
 
 interface Props {
 	title: string;
-	active: 'dashboard' | 'orders' | 'licenses' | 'requests' | 'packages' | 'settings' | 'messages' | 'users';
+	active: 'dashboard' | 'orders' | 'licenses' | 'requests' | 'packages' | 'settings' | 'messages' | 'users' | 'users-new';
 	email?: string | null;
 	error?: string | null;
 	configured: boolean;
 }
 const { title, active, email, error, configured } = Astro.props;
 
-const groups = [
+const groups: {
+	label: string;
+	links: { id: string; href: string; label: string; icon: string; sub?: boolean }[];
+}[] = [
 	{
 		label: 'Overview',
 		links: [{ id: 'dashboard', href: '/admin', label: 'Dashboard', icon: '▦' }],
@@ -27,7 +30,10 @@ const groups = [
 	},
 	{
 		label: 'Customers',
-		links: [{ id: 'users', href: '/admin/users', label: 'Users', icon: '👥' }],
+		links: [
+			{ id: 'users', href: '/admin/users', label: 'Users', icon: '👥' },
+			{ id: 'users-new', href: '/admin/users/new', label: 'Add New User', icon: '➕', sub: true },
+		],
 	},
 	{
 		label: 'Sales',
@@ -67,7 +73,7 @@ const groups = [
 						<div class="group">
 							<p class="group-label">{g.label}</p>
 							{g.links.map((l) => (
-								<a href={l.href} class={l.id === active ? 'link on' : 'link'}>
+								<a href={l.href} class={`link${l.sub ? ' sub' : ''}${l.id === active ? ' on' : ''}`}>
 									<span class="ico" aria-hidden="true">{l.icon}</span>
 									{l.label}
 									{l.id === active && <span class="chev" aria-hidden="true">›</span>}
@@ -217,6 +223,12 @@ const groups = [
 	.link.on {
 		background: var(--accent);
 		color: #fff;
+	}
+	.link.sub {
+		margin-left: 1.85em;
+		font-size: 0.9em;
+		padding-top: 0.4em;
+		padding-bottom: 0.4em;
 	}
 	.link .ico {
 		width: 1.25em;

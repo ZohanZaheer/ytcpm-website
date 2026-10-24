@@ -26,6 +26,15 @@ export interface SiteSettings {
 		version: string;
 		sha256: string;
 	};
+	/** Login lockout: after maxAttempts wrong passwords the account
+	 * locks; the lock length grows per lockout on the same day
+	 * (1st: firstHours, 2nd: secondHours, 3rd+: thirdDays). */
+	lockout: {
+		maxAttempts: number;
+		firstHours: number;
+		secondHours: number;
+		thirdDays: number;
+	};
 	packages: LicensePackage[];
 }
 
@@ -46,6 +55,12 @@ export function defaultSettings(env: EnvGetter): SiteSettings {
 			version: '3.0.4',
 			sha256: '97e5f3ebffb3b573a3990ab6a969f6204b2c5dcaab08a26415697d38a4deef6f',
 		},
+		lockout: {
+			maxAttempts: 3,
+			firstHours: 1,
+			secondHours: 12,
+			thirdDays: 7,
+		},
 		packages: LICENSE_PACKAGES,
 	};
 }
@@ -59,6 +74,7 @@ export function mergeSettings(base: SiteSettings, stored: Partial<SiteSettings> 
 	const out: SiteSettings = {
 		payments: { ...base.payments },
 		download: { ...base.download },
+		lockout: { ...base.lockout },
 		packages: base.packages,
 	};
 	if (stored.payments) {
@@ -78,6 +94,20 @@ export function mergeSettings(base: SiteSettings, stored: Partial<SiteSettings> 
 		if (nonEmpty(stored.download.sizeLabel)) out.download.sizeLabel = stored.download.sizeLabel;
 		if (nonEmpty(stored.download.version)) out.download.version = stored.download.version;
 		if (nonEmpty(stored.download.sha256)) out.download.sha256 = stored.download.sha256;
+	}
+	if (stored.lockout) {
+		const num = (v: unknown, min: number, max: number): number | null => {
+			const n = typeof v === 'number' ? v : Number(v);
+			return Number.isFinite(n) ? Math.min(max, Math.max(min, Math.round(n))) : null;
+		};
+		const maxAttempts = num(stored.lockout.maxAttempts, 1, 10);
+		if (maxAttempts !== null) out.lockout.maxAttempts = maxAttempts;
+		const firstHours = num(stored.lockout.firstHours, 1, 720);
+		if (firstHours !== null) out.lockout.firstHours = firstHours;
+		const secondHours = num(stored.lockout.secondHours, 1, 720);
+		if (secondHours !== null) out.lockout.secondHours = secondHours;
+		const thirdDays = num(stored.lockout.thirdDays, 1, 30);
+		if (thirdDays !== null) out.lockout.thirdDays = thirdDays;
 	}
 	if (Array.isArray(stored.packages) && stored.packages.length > 0) {
 		out.packages = stored.packages;

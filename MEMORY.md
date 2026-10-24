@@ -71,3 +71,30 @@
   (incl. BETTER_AUTH_SECRET), README rewritten with a homepage
   screenshot, `vercel.json` added, and this docs trio
   (`AGENTS.md` / `CLAUDE.md` / `MEMORY.md`) created.
+
+- 2026-10-24 (later): Admin Users pagination + Add New User page —
+  /admin/users shows 20 users per page with numbered pagination
+  (?page=N, ellipsis window); the add-user form moved to its own page
+  /admin/users/new, linked as an indented "Add New User" submenu under
+  Users in the sidebar (create errors return to that page).
+- 2026-10-24 (later): Fraud strikes & blocking — the Orders page shows
+  each payment screenshot as a small thumbnail that opens in a popup
+  (close button / backdrop / Esc). Each order has a Fraud action:
+  marking it adds a strike to the customer (`payment_orders.fraud_at`,
+  `"user".fraud_count`); at 3 strikes the account is blocked
+  (`blocked_at` + reason), its sessions are deleted, sign-in is refused
+  with a blocked message, and checkout rejects new orders. Strikes and
+  blocked state show on Orders, the Users list and the user detail
+  page, which also has an Unblock action (orders keep their fraud
+  marks as history).
+- 2026-10-24 (later): Login lockout for customers AND admins —
+  wrong-password attempts are counted per account (`failed_logins`,
+  `lock_level`, `lock_day`, `locked_until` on both `"user"` and
+  `admin_users`). Reaching the limit locks the account; the lock
+  escalates per lockout on the same day (America/New_York): 1st →
+  firstHours, 2nd → secondHours, 3rd+ → thirdDays. Defaults 3
+  attempts / 1h / 12h / 7d, editable in Admin → Settings → Login
+  lockout (stored in the `lockout` section of site settings). Sign-in
+  pages show attempts remaining after a failure and the remaining
+  lock time while locked; the Users list/detail show live lock
+  status, and the detail page can lift a lock early (Unlock login).

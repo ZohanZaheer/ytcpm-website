@@ -39,6 +39,20 @@ export const POST: APIRoute = async (ctx) => {
 			version: set(current.download.version, 'version'),
 			sha256: set(current.download.sha256, 'sha256'),
 		},
+		lockout: (() => {
+			// Numbers are clamped again in mergeSettings; invalid input
+			// keeps the current value.
+			const num = (name: string, fallback: number) => {
+				const n = Number(get(name));
+				return Number.isFinite(n) && n > 0 ? Math.round(n) : fallback;
+			};
+			return {
+				maxAttempts: num('lockoutMaxAttempts', current.lockout.maxAttempts),
+				firstHours: num('lockoutFirstHours', current.lockout.firstHours),
+				secondHours: num('lockoutSecondHours', current.lockout.secondHours),
+				thirdDays: num('lockoutThirdDays', current.lockout.thirdDays),
+			};
+		})(),
 		packages: current.packages,
 	};
 

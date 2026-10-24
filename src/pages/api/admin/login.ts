@@ -1,8 +1,18 @@
 import type { APIRoute } from 'astro';
 import { hashPassword, verifyPassword } from 'better-auth/crypto';
 import { checkCredentials, makeSessionValue, sessionCookieHeader, adminConfigured } from '../../../lib/auth';
-import { getDatabaseUrl } from '../../../lib/env';
-import { countAdminUsers, getAdminByEmail, createAdminUser, ensureSchema } from '../../../lib/db';
+import { getDatabaseUrl, getEnv } from '../../../lib/env';
+import {
+	countAdminUsers,
+	getAdminByEmail,
+	createAdminUser,
+	ensureSchema,
+	isLocked,
+	recordLoginFailure,
+	resetLoginFailures,
+	type LoginGuard,
+} from '../../../lib/db';
+import { getEffectiveSettings } from '../../../lib/settings';
 
 export const prerender = false;
 
@@ -46,8 +56,32 @@ export const POST: APIRoute = async (ctx) => {
 				return signedIn(ctx, email);
 			}
 			const admin = await getAdminByEmail(dbUrl, email);
-			if (admin && (await verifyPassword({ hash: admin.password_hash, password }))) {
-				return signedIn(ctx, admin.email);
+			if (admin) {
+				const guard: LoginGuard = {
+					id: admin.id,
+					failed_logins: admin.failed_logins ?? 0,
+					lock_level: admin.lock_level ?? 0,
+					lock_day: admin.lock_day,
+					locked_until: admin.locked_until,
+				};
+				// A locked admin account is refused before the password check.
+				if (isLocked(guard)) {
+					return redirect('/admin?error=locked&until=' + encodeURIComponent(guard.locked_until!));
+				}
+				if (await verifyPassword({ hash: admin.password_hash, password })) {
+					await resetLoginFailures(dbUrl, 'admin', admin.id).catch(() => {});
+					return signedIn(ctx, admin.email);
+				}
+				const env = (key: string) => getEnv(ctx, key);
+				const cfg = (await getEffectiveSettings(dbUrl, env)).lockout;
+				const out = await recordLoginFailure(dbUrl, 'admin', guard, cfg).catch(() => null);
+				if (out?.lockedUntil) {
+					return redirect('/admin?error=locked&until=' + encodeURIComponent(out.lockedUntil));
+				}
+				if (out) {
+					return redirect(`/admin?error=invalid&left=${out.attemptsLeft}&max=${cfg.maxAttempts}`);
+				}
+				return redirect('/admin?error=invalid');
 			}
 			return redirect('/admin?error=invalid');
 		} catch {

@@ -14,7 +14,10 @@ import { validateRegistration } from '../../../lib/profile';
 export const prerender = false;
 
 function backTo(param: 'msg' | 'error', code: string): Response {
-	return new Response(null, { status: 303, headers: { Location: `/admin/users?${param}=` + code } });
+	// Errors return to the Add New User page (the form lives there now);
+	// success goes straight to the new user's detail page (see below).
+	const base = param === 'error' ? '/admin/users/new' : '/admin/users';
+	return new Response(null, { status: 303, headers: { Location: `${base}?${param}=` + code } });
 }
 
 // Admin creates a customer account manually (same validation and

@@ -4,7 +4,7 @@ import AdminShell from '../../components/AdminShell.astro';
 import { getDatabaseUrl } from '../../lib/env';
 import { adminGate } from '../../lib/adminGate';
 import { adminConfigured } from '../../lib/auth';
-import { listCustomers, type CustomerRow } from '../../lib/db';
+import { listCustomers, FRAUD_LIMIT, type CustomerRow } from '../../lib/db';
 
 export const prerender = false;
 
@@ -16,18 +16,6 @@ const configured = adminConfigured(Astro);
 const msg = Astro.url.searchParams.get('msg') ?? '';
 const notices: Record<string, string> = {
 	created: '✅ User created.',
-};
-const errors: Record<string, string> = {
-	username: '⚠️ Username must be 8–15 characters, letters and numbers only, starting with a letter.',
-	'username-reserved': '⚠️ That username contains a reserved word (like admin or owner) — choose another one.',
-	'username-taken': '⚠️ That username is already taken.',
-	'email-taken': '⚠️ An account with that email already exists.',
-	'whatsapp-taken': '⚠️ That WhatsApp number is already registered.',
-	'telegram-taken': '⚠️ That Telegram username is already registered.',
-	password: '⚠️ Password must be at least 8 characters with a letter, a number and a special character.',
-	email: '⚠️ Please enter a valid email address.',
-	fullname: '⚠️ Please enter the customer’s full name.',
-	server: '⚠️ Something went wrong — please try again.',
 };
 
 let customers: CustomerRow[] = [];
@@ -45,7 +33,41 @@ if (email) {
 	}
 }
 
+// Pagination: 20 users per page, ?page=N in the URL.
+const PER_PAGE = 20;
+const totalPages = Math.max(1, Math.ceil(customers.length / PER_PAGE));
+let page = Number.parseInt(Astro.url.searchParams.get('page') ?? '1', 10);
+if (!Number.isFinite(page) || page < 1) page = 1;
+if (page > totalPages) page = totalPages;
+const pageItems = customers.slice((page - 1) * PER_PAGE, page * PER_PAGE);
+function pageList(cur: number, total: number): (number | '…')[] {
+	if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+	const keep = [...new Set([1, 2, cur - 1, cur, cur + 1, total - 1, total])]
+		.filter((n) => n >= 1 && n <= total)
+		.sort((a, b) => a - b);
+	const out: (number | '…')[] = [];
+	keep.forEach((n, i) => {
+		if (i > 0 && n - keep[i - 1] > 1) out.push('…');
+		out.push(n);
+	});
+	return out;
+}
+const pages = pageList(page, totalPages);
+
 const fmtDay = (iso: string) => new Date(iso).toLocaleDateString('en-US', { dateStyle: 'medium' });
+
+function lockLeftText(iso: string): string {
+	const ms = new Date(iso).getTime() - Date.now();
+	if (!Number.isFinite(ms) || ms <= 0) return 'a short while';
+	const mins = Math.ceil(ms / 60_000);
+	if (mins < 60) return `${mins} min`;
+	const h = Math.floor(mins / 60);
+	const mm = mins % 60;
+	if (h < 24) return mm ? `${h}h ${mm}m` : `${h}h`;
+	const d = Math.floor(h / 24);
+	const rh = h % 24;
+	return rh ? `${d}d ${rh}h` : `${d}d`;
+}
 const title = 'Users (Admin)';
 const description = 'All registered customers — view details, add users and assign licenses.';
 ---
@@ -105,28 +127,17 @@ const description = 'All registered customers — view details, add users and as
 				background: #fef3c7;
 				color: #92400e;
 			}
-			.grid {
-				display: grid;
-				grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
-				gap: 0.9em;
-				margin: 1em 0;
+			.badge.block {
+				background: #fee2e2;
+				color: #991b1b;
 			}
-			.field label {
-				display: block;
-				font-weight: 600;
-				font-size: 0.9em;
-				margin-bottom: 0.3em;
+			.badge.lock {
+				background: #fef3c7;
+				color: #92400e;
 			}
-			.field input {
-				width: 100%;
-				font: inherit;
-				font-size: 0.95em;
-				padding: 0.55em 0.7em;
-				border: 1px solid rgb(var(--gray-light));
-				border-radius: 9px;
-				background: var(--bg);
-				box-sizing: border-box;
-			}
+			
+			
+			
 			.btn {
 				display: inline-block;
 				font: inherit;
@@ -144,6 +155,36 @@ const description = 'All registered customers — view details, add users and as
 				background: transparent;
 				color: var(--accent);
 			}
+			.pager {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 0.35em;
+				align-items: center;
+				margin-top: 1.1em;
+			}
+			.pager a,
+			.pager span {
+				display: inline-block;
+				padding: 0.35em 0.8em;
+				border-radius: 999px;
+				border: 1px solid rgb(var(--gray-light));
+				font-weight: 700;
+				font-size: 0.9em;
+				text-decoration: none;
+				color: var(--accent);
+				background: var(--bg);
+			}
+			.pager span.on {
+				background: var(--accent);
+				border-color: var(--accent);
+				color: #fff;
+			}
+			.pager span.off,
+			.pager span.dots {
+				color: rgb(var(--gray));
+				border-color: transparent;
+				background: transparent;
+			}
 			.notice {
 				border-radius: 10px;
 				padding: 0.8em 1em;
@@ -157,12 +198,18 @@ const description = 'All registered customers — view details, add users and as
 	<body>
 		<AdminShell title="Users" active="users" email={email} error={error} configured={configured}>
 			{msg && notices[msg] && <p class="notice">{notices[msg]}</p>}
-			{error && errors[error] && <p class="notice">{errors[error]}</p>}
 			{dbError && <p class="notice">{dbError}</p>}
 
 			<section class="card">
 				<h2>All users ({customers.length})</h2>
 				{customers.length === 0 && !dbError && <p class="meta">No registered users yet.</p>}
+				{customers.length > 0 && (
+					<p class="meta">
+						Showing {(page - 1) * PER_PAGE + 1}–{Math.min(page * PER_PAGE, customers.length)} of{' '}
+						{customers.length} · Page {page} of {totalPages} ·{' '}
+						<a href="/admin/users/new">Add a new user →</a>
+					</p>
+				)}
 				{customers.length > 0 && (
 					<div class="tbl-wrap">
 						<table class="users">
@@ -177,7 +224,7 @@ const description = 'All registered customers — view details, add users and as
 								</tr>
 							</thead>
 							<tbody>
-								{customers.map((c) => (
+								{pageItems.map((c) => (
 									<tr>
 										<td>
 											<a href={`/admin/users/${c.id}`}><strong>{c.full_name ?? c.name}</strong></a>
@@ -191,6 +238,24 @@ const description = 'All registered customers — view details, add users and as
 												<span class="badge">Verified</span>
 											) : (
 												<span class="badge no">Not verified</span>
+											)}
+											{c.blocked_at && (
+												<>
+													<br />
+													<span class="badge block">🚫 Blocked — fraud</span>
+												</>
+											)}
+											{!c.blocked_at && c.fraud_count > 0 && (
+												<>
+													<br />
+													<span class="meta">⚠️ Fraud strikes: {c.fraud_count}/{FRAUD_LIMIT}</span>
+												</>
+											)}
+											{c.locked_until && new Date(c.locked_until) > new Date() && (
+												<>
+													<br />
+													<span class="badge lock">🔒 Login locked · {lockLeftText(c.locked_until)} left</span>
+												</>
 											)}
 										</td>
 										<td>{c.whatsapp ?? '—'}</td>
@@ -207,70 +272,32 @@ const description = 'All registered customers — view details, add users and as
 						</table>
 					</div>
 				)}
+				{totalPages > 1 && (
+					<nav class="pager" aria-label="Users pages">
+						{page > 1 ? (
+							<a href={`/admin/users?page=${page - 1}`}>← Prev</a>
+						) : (
+							<span class="off">← Prev</span>
+						)}
+						{pages.map((n) =>
+							n === '…' ? (
+								<span class="dots">…</span>
+							) : n === page ? (
+								<span class="on">{n}</span>
+							) : (
+								<a href={`/admin/users?page=${n}`}>{n}</a>
+							),
+						)}
+						{page < totalPages ? (
+							<a href={`/admin/users?page=${page + 1}`}>Next →</a>
+						) : (
+							<span class="off">Next →</span>
+						)}
+					</nav>
+				)}
 			</section>
 
-			<section class="card">
-				<h2>Add a new user</h2>
-				<p class="meta">
-					Creates a customer account right away (marked email-verified — you are vouching for it).
-					Share the password with the customer through a safe channel; they can change it later
-					from their profile page.
-				</p>
-				<form method="post" action="/api/admin/users">
-					<div class="grid">
-						<div class="field">
-							<label for="a-username">Username *</label>
-							<input id="a-username" name="username" type="text" required maxlength="15" autocomplete="off" />
-						</div>
-						<div class="field">
-							<label for="a-fullname">Full name *</label>
-							<input id="a-fullname" name="fullName" type="text" required maxlength="80" autocomplete="off" />
-						</div>
-						<div class="field">
-							<label for="a-email">Email *</label>
-							<input id="a-email" name="email" type="email" required maxlength="160" autocomplete="off" />
-						</div>
-						<div class="field">
-							<label for="a-password">Password *</label>
-							<input id="a-password" name="password" type="password" required maxlength="128" autocomplete="new-password" />
-						</div>
-						<div class="field">
-							<label for="a-whatsapp">WhatsApp *</label>
-							<input id="a-whatsapp" name="whatsapp" type="tel" required maxlength="24" autocomplete="off" placeholder="+1 555 123 4567" />
-						</div>
-						<div class="field">
-							<label for="a-telegram">Telegram (optional)</label>
-							<input id="a-telegram" name="telegram" type="text" maxlength="36" autocomplete="off" placeholder="@username" />
-						</div>
-						<div class="field">
-							<label for="a-country">Country *</label>
-							<input id="a-country" name="country" type="text" required maxlength="60" autocomplete="off" />
-						</div>
-						<div class="field">
-							<label for="a-state">State *</label>
-							<input id="a-state" name="state" type="text" required maxlength="60" autocomplete="off" />
-						</div>
-						<div class="field">
-							<label for="a-city">City *</label>
-							<input id="a-city" name="city" type="text" required maxlength="60" autocomplete="off" />
-						</div>
-						<div class="field">
-							<label for="a-address">Address *</label>
-							<input id="a-address" name="address" type="text" required maxlength="160" autocomplete="off" />
-						</div>
-						<div class="field">
-							<label for="a-zip">ZIP code *</label>
-							<input id="a-zip" name="zip" type="text" required maxlength="12" autocomplete="off" />
-						</div>
-					</div>
-					<p class="meta">
-						Username: 8–15 characters, letters and numbers only, starting with a letter; reserved
-						words (admin, owner, …) are blocked. Password: at least 8 characters with a letter, a
-						number and a special character.
-					</p>
-					<button class="btn" type="submit">Create user</button>
-				</form>
-			</section>
+
 		</AdminShell>
 	</body>
 </html>
