@@ -29,25 +29,23 @@ const today = new Date();
 			<a href="/faq">FAQ</a>
 			<a href="/contact">Contact us</a>
 			<a href="/instructions">Setup guide</a>
-			<a href="/admin">Admin sign-in</a>
 		</nav>
 		<div class="col">
 			<h3>Support</h3>
 			<p>Support is available 6 days a week.</p>
-			<p>Night support: 7:00 PM – 7:00 AM.</p>
+			<p>Support hours: 10:00 AM – 6:00 PM (New York, USA).</p>
 			<p>Licenses activate after payment confirmation — usually within 24 hours.</p>
 		</div>
 	</div>
-	<div class="wrap bottom">
-		<p>
-			&copy; {today.getFullYear()} YTCPM. All rights reserved. ·
-			<a href="/privacy">Privacy Policy</a> · <a href="/terms">Terms of Use</a>
-		</p>
-		<p class="fine">
-			YTCPM Bot is an independent tool and is not affiliated with or endorsed
-			by YouTube or Google. Any CPM or earnings figures are estimates, not
-			guarantees.
-		</p>
+	<div class="bottom-band">
+		<div class="wrap bottom">
+			<p>&copy; {today.getFullYear()} YTCPM. All rights reserved.</p>
+			<nav class="bottom-links" aria-label="Legal">
+				<a href="/privacy">Privacy</a>
+				<a href="/terms">Terms</a>
+				<a href="/contact">Contact</a>
+			</nav>
+		</div>
 	</div>
 </footer>
 <style>
@@ -115,13 +113,16 @@ const today = new Date();
 		margin: 0 0 0.5em;
 		color: #cbb59f;
 	}
+	.bottom-band {
+		background: #1d130b;
+	}
 	.bottom {
-		border-top: 1px solid rgba(233, 220, 203, 0.16);
-		padding-top: 1.4em;
-		padding-bottom: 2em;
+		padding-top: 1.1em;
+		padding-bottom: 1.1em;
 		display: flex;
 		flex-wrap: wrap;
-		gap: 0.4em 2em;
+		gap: 0.5em 2em;
+		align-items: center;
 		justify-content: space-between;
 		font-size: 0.88em;
 		color: #a68d73;
@@ -129,14 +130,17 @@ const today = new Date();
 	.bottom p {
 		margin: 0;
 	}
-	.bottom a {
-		color: #e9dccb;
+	.bottom-links {
+		display: flex;
+		gap: 1.7em;
 	}
-	.bottom a:hover {
+	.bottom-links a {
 		color: #fb923c;
+		text-decoration: none;
+		font-weight: 500;
 	}
-	.fine {
-		max-width: 62ch;
+	.bottom-links a:hover {
+		color: #fed7aa;
 	}
 	@media (max-width: 880px) {
 		.cols {

@@ -219,7 +219,6 @@ const hasActive = licenses.some((l) => l.state === 'active');
 					<div class="actions">
 						<a class="btn primary" href="/pricing">Buy a license</a>
 						{hasActive && <a class="btn" href="/download">Download the bot</a>}
-						{user.role === 'admin' && <a class="btn" href="/admin">Admin dashboard</a>}
 						<form method="post" action="/api/account/logout">
 							<button class="btn" type="submit">Sign out</button>
 						</form>
