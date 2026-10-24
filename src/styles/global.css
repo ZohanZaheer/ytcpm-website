@@ -140,46 +140,36 @@ input {
 table {
 	width: 100%;
 }
-/* Info tables (download, instructions, order status): the label/value
-   tables must never push the page wider than the screen. Fixed layout
-   honours the label column's width, long values (file names, version
-   strings, the SHA-256 hash) wrap inside their cell, and on small
-   screens each row stacks — label band on top, value below it. These
-   rules live here once instead of being copied into every page. */
+/* Info tables (download, instructions, order status): these tables
+   keep their natural column widths and scroll INSIDE their own box
+   when they are wider than the space available — the page around
+   them always stays exactly screen-width. Column minimums keep the
+   text readable instead of crushed, and long values (file names,
+   the SHA-256 hash) wrap inside their cell. One shared rule set
+   here instead of a copy in every page. */
 table.info {
-	table-layout: fixed;
+	display: block;
+	overflow-x: auto;
+	-webkit-overflow-scrolling: touch;
+	max-width: 100%;
 }
 table.info th,
 table.info td,
 table.info code {
 	overflow-wrap: anywhere;
 }
+table.info th {
+	min-width: 8.5em;
+}
+table.info td {
+	min-width: 11em;
+}
+table.info td.shown {
+	min-width: 6em;
+}
 @media (max-width: 640px) {
-	/* !important on width/white-space: the pages' own scoped styles set
-	   column widths (38%/34%/22%) that must not survive the stacking. */
-	table.info,
-	table.info tbody,
-	table.info tr,
-	table.info th,
-	table.info td {
-		display: block;
-		width: 100% !important;
-		/* border-box: the 100% width must include the cells' padding
-		   and border, otherwise each stacked block sticks out by
-		   ~26px and its right edge falls off the screen. */
-		box-sizing: border-box;
-	}
 	table.info td.shown {
-		white-space: normal !important;
-	}
-	table.info tr + tr {
-		margin-top: 0.6em;
-	}
-	table.info th {
-		border-bottom: none;
-	}
-	table.info td {
-		border-top: none;
+		white-space: normal;
 	}
 }
 img {

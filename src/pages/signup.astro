@@ -44,10 +44,14 @@ const error = errors[errorCode] ?? '';
 		/>
 		<style>
 			main {
-				padding: 2.6em 1em 0;
+				/* Side space grows with the screen instead of a fixed 1em,
+				   so the card sits inset on phones, not glued to the edges. */
+				padding: 2.6em clamp(20px, 6.5vw, 40px) 0;
 			}
 			.card {
+				width: 100%;
 				max-width: 680px;
+				box-sizing: border-box;
 				margin: 0 auto;
 				background: var(--surface);
 				border: 1px solid rgb(var(--gray-light));
