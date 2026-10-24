@@ -16,6 +16,13 @@ const posts = (await getCollection('blog')).sort(
 	<head>
 		<BaseHead title={SITE_TITLE} description={SITE_DESCRIPTION} />
 		<style>
+			.blog-intro {
+				color: rgb(var(--gray-dark));
+				font-size: 1.1em;
+				max-width: 46em;
+				margin-top: -0.4em;
+				margin-bottom: 1.6em;
+			}
 			ul {
 				display: grid;
 				grid-template-columns: repeat(auto-fill, minmax(min(320px, 100%), 1fr));
@@ -86,6 +93,11 @@ const posts = (await getCollection('blog')).sort(
 		<Header />
 		<main>
 			<div class="wrap">
+			<h1>The YTCPM Blog</h1>
+			<p class="blog-intro">
+				Guides and explainers on YouTube CPM, proxies, browser identity and
+				multi-browser setups — written for YTCPM Bot users and curious creators.
+			</p>
 			<section>
 				<ul>
 					{

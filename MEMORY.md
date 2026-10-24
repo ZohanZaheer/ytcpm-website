@@ -137,3 +137,7 @@
   changes were needed): "Browser Fingerprinting Explained: Why User
   Agents Aren't Enough" (63) and "Residential vs Datacenter vs
   Mobile Proxies: Which Do You Need?" (63).
+- 2026-10-24 (later): /blog had no H1 at all (Bing notice) — the index
+  went straight into the post grid. Added "The YTCPM Blog" H1 with a
+  short intro line above the grid. A sweep of every public page
+  confirmed all others have exactly one H1.
