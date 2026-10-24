@@ -64,6 +64,21 @@ pre {
 	max-width: 100%;
 	overflow-x: auto;
 }
+/* Blog/content tables: multi-column data tables in posts (country
+   benchmarks, niche rates, proxy comparisons) are wider than a
+   phone. On small screens the table scrolls sideways INSIDE the
+   article — the page itself never widens or shifts. */
+@media (max-width: 860px) {
+	.prose table {
+		display: block;
+		overflow-x: auto;
+		-webkit-overflow-scrolling: touch;
+	}
+	.prose th,
+	.prose td {
+		overflow-wrap: break-word;
+	}
+}
 /* Centered content container used by the chrome and homepage bands. */
 .wrap {
 	max-width: 1180px;
