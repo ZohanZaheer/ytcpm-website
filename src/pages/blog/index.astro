@@ -51,6 +51,11 @@ const posts = (await getCollection('blog')).sort(
 			ul li img {
 				margin-bottom: 0.5rem;
 				border-radius: 12px;
+				/* Reserve the box before the (lazy) cover loads — no shift. */
+				width: 100%;
+				height: auto;
+				aspect-ratio: 2 / 1;
+				object-fit: cover;
 			}
 			ul li a {
 				display: block;
@@ -101,10 +106,13 @@ const posts = (await getCollection('blog')).sort(
 			<section>
 				<ul>
 					{
-						posts.map((post) => (
+						posts.map((post, i) => (
 							<li>
 								<a href={`/blog/${post.id}`}>
-									<img width={720} height={360} src={post.data.heroImage} alt={post.data.title} loading="lazy" />
+									<picture>
+											<source type="image/webp" srcset={`${post.data.heroImage.replace('.jpg', '-720.webp')} 720w, ${post.data.heroImage.replace('.jpg', '.webp')} 1200w`} sizes="(max-width: 760px) 100vw, 380px" />
+											<img width={720} height={360} src={post.data.heroImage} alt={post.data.title} loading={i === 0 ? 'eager' : 'lazy'} fetchpriority={i === 0 ? 'high' : undefined} />
+										</picture>
 									<h2 class="title">{post.data.title}</h2>
 									<p class="date">
 										<FormattedDate date={post.data.pubDate} />

@@ -176,3 +176,19 @@
   /llms-full.txt with the complete markdown of all posts — both are
   generated from the content collection, so new posts appear
   automatically.
+- 2026-10-24 (later): PageSpeed pass (owner target: 99+ everywhere).
+  Fonts are self-hosted now (public/fonts, @font-face in global.css,
+  Inter 400/500 + Jakarta 800 preloaded in BaseHead; the Google Fonts
+  stylesheet is gone — it was render-blocking). Screenshots are real
+  files under public/images/shots/ (screenshots.ts holds paths, not
+  data URIs — the instructions page HTML dropped from ~206 KB to a
+  fraction). Blog covers gained WebP variants (full + 720w) served
+  via <picture>/srcset on the index cards and post hero; the first
+  card is eager/fetchpriority=high, the post hero high priority.
+  Accessibility: --accent deepened to #c2410c (hover #9a3412) and
+  --gray to 122,102,84 so orange/gray text passes WCAG AA; inline
+  <code> on its chip uses gray-dark. Instructions step-4 list markup
+  fixed (figures now inside their <li>). Local Lighthouse after the
+  pass: Accessibility 100 and SEO 100 on every template, desktop
+  Performance 100 on 8/9 templates, mobile 95–100 (the residual is
+  local dev-server latency; production is edge-served).

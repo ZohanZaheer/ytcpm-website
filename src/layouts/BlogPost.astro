@@ -95,7 +95,12 @@ const breadcrumbSchema: Record<string, unknown> = {
 			<div class="wrap">
 			<article>
 				<div class="hero-image">
-					{heroImage && <img width={1020} height={510} src={heroImage} alt={title} />}
+					{heroImage && (
+					<picture>
+						<source type="image/webp" srcset={`${heroImage.replace('.jpg', '-720.webp')} 720w, ${heroImage.replace('.jpg', '.webp')} 1200w`} sizes="(max-width: 1080px) 100vw, 1020px" />
+						<img width={1020} height={510} src={heroImage} alt={title} fetchpriority="high" />
+					</picture>
+				)}
 				</div>
 				<div class="prose">
 					<div class="title">

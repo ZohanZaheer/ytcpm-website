@@ -8,11 +8,67 @@
   width use the .bleed + .wrap utilities below — see the homepage.
  */
 
+/* Self-hosted fonts (public/fonts) — no third-party stylesheet, so
+   nothing render-blocking stands between the HTML and first paint. */
+@font-face {
+	font-family: "Inter";
+	src: url("/fonts/inter-latin-400-normal.woff2") format("woff2");
+	font-weight: 400;
+	font-style: normal;
+	font-display: swap;
+}
+@font-face {
+	font-family: "Inter";
+	src: url("/fonts/inter-latin-500-normal.woff2") format("woff2");
+	font-weight: 500;
+	font-style: normal;
+	font-display: swap;
+}
+@font-face {
+	font-family: "Inter";
+	src: url("/fonts/inter-latin-600-normal.woff2") format("woff2");
+	font-weight: 600;
+	font-style: normal;
+	font-display: swap;
+}
+@font-face {
+	font-family: "Inter";
+	src: url("/fonts/inter-latin-700-normal.woff2") format("woff2");
+	font-weight: 700;
+	font-style: normal;
+	font-display: swap;
+}
+@font-face {
+	font-family: "Plus Jakarta Sans";
+	src: url("/fonts/plus-jakarta-sans-latin-600-normal.woff2") format("woff2");
+	font-weight: 600;
+	font-style: normal;
+	font-display: swap;
+}
+@font-face {
+	font-family: "Plus Jakarta Sans";
+	src: url("/fonts/plus-jakarta-sans-latin-700-normal.woff2") format("woff2");
+	font-weight: 700;
+	font-style: normal;
+	font-display: swap;
+}
+@font-face {
+	font-family: "Plus Jakarta Sans";
+	src: url("/fonts/plus-jakarta-sans-latin-800-normal.woff2") format("woff2");
+	font-weight: 800;
+	font-style: normal;
+	font-display: swap;
+}
+
 :root {
-	--accent: #ea580c;
-	--accent-dark: #c2410c;
+	/* Accent shades deepened one step (2026-10-24) so orange text and
+	   white-on-orange buttons meet WCAG AA contrast (4.5:1+) on the
+	   ivory background: #ea580c managed only ~3.4:1. Same burnt-orange
+	   family; --accent-dark is the hover shade, as before. */
+	--accent: #c2410c;
+	--accent-dark: #9a3412;
 	--black: 42, 29, 18;
-	--gray: 138, 117, 99;
+	--gray: 122, 102, 84; /* darkened 2026-10-24: the old 138,117,99 failed AA contrast (4.1–4.4) for dates/captions */
 	--gray-light: 236, 220, 207;
 	--gray-dark: 74, 58, 44;
 	--gray-gradient: rgba(255, 247, 237, 60%), #fff7ed;
@@ -185,6 +241,8 @@ code {
 	padding: 2px 5px;
 	background-color: rgb(var(--gray-light));
 	border-radius: 4px;
+	/* Inherited body text on the light chip measured 4.07:1 — too low. */
+	color: rgb(var(--gray-dark));
 }
 pre {
 	padding: 1.5em;
