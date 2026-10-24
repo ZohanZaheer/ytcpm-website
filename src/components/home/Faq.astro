@@ -1,0 +1,81 @@
+---
+const faqs = [
+	{
+		q: 'Do I need to install anything?',
+		a: 'No installer at all. Download the ZIP, extract it, and run YoutubeCPM.exe from the extracted folder. On the first launch the app downloads its engine (up to 2.0 GB) automatically, then asks you to sign in with your license.',
+	},
+	{
+		q: 'What does my computer need?',
+		a: 'A Windows PC with at least 2.5 GB of free disk space. Each browser the bot runs uses roughly 2 GB of RAM, so set the number of browsers to what your system can handle.',
+	},
+	{
+		q: 'How do I pay, and when is my license active?',
+		a: 'Pick a plan on the pricing page and pay with crypto — USDT (TRC20), BTC or ETH. Send the payment, submit the transaction details and screenshot, and your license is activated after confirmation; the admin contacts you within 24 hours.',
+	},
+	{
+		q: 'What is a “device” in the plans?',
+		a: 'Each plan covers a number of devices for its duration. The device count resets every 10 days while your license is active, and manual reset requests can take up to 24 hours.',
+	},
+	{
+		q: 'Is YTCPM Bot affiliated with YouTube?',
+		a: 'No. YTCPM Bot is an independent tool and is not affiliated with or endorsed by YouTube or Google. Any CPM or earnings figures mentioned are estimates, not guarantees.',
+	},
+];
+---
+
+<section class="faq bleed">
+	<div class="wrap">
+		<p class="eyebrow">FAQ</p>
+		<h2>Questions, answered straight</h2>
+		<div class="list">
+			{
+				faqs.map((f) => (
+					<details class="item">
+						<summary>{f.q}</summary>
+						<p>{f.a}</p>
+					</details>
+				))
+			}
+		</div>
+	</div>
+</section>
+<style>
+	.faq {
+		padding: 3.6em 0 3.2em;
+	}
+	.eyebrow {
+		text-transform: uppercase;
+		letter-spacing: 0.12em;
+		font-size: 0.75em;
+		font-weight: 700;
+		color: var(--accent);
+		margin-bottom: 0.5em;
+	}
+	h2 {
+		font-size: clamp(1.7em, 3.6vw, 2.3em);
+		margin-bottom: 1em;
+	}
+	.list {
+		display: grid;
+		gap: 0.7em;
+		max-width: 860px;
+	}
+	.item {
+		background: var(--surface);
+		border: 1px solid rgb(var(--gray-light));
+		border-radius: 12px;
+		padding: 1em 1.25em;
+	}
+	.item summary {
+		font-family: "Plus Jakarta Sans", sans-serif;
+		font-weight: 700;
+		color: rgb(var(--black));
+		cursor: pointer;
+	}
+	.item p {
+		margin: 0.7em 0 0.2em;
+		font-size: 0.95em;
+		line-height: 1.6;
+		color: rgb(var(--gray-dark));
+	}
+</style>

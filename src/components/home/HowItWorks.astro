@@ -1,0 +1,102 @@
+---
+const steps = [
+	{
+		title: 'Download',
+		text: 'Grab the 17 MB ZIP from the download page — no installer, nothing else to fetch first.',
+	},
+	{
+		title: 'Extract',
+		text: 'Unzip it anywhere. The folder holds the app plus the editable list files (references, user agents, proxies).',
+	},
+	{
+		title: 'Sign in',
+		text: 'First launch downloads the engine (up to 2.0 GB) by itself, then asks for your license login.',
+	},
+	{
+		title: 'Configure',
+		text: 'Set browsers, views, proxies and pacing in the settings window — most people finish in minutes.',
+	},
+	{
+		title: 'Run',
+		text: 'Start the run and watch the results come in; stop and restart anytime — unique lists simply start over.',
+	},
+];
+---
+
+<section class="how bleed">
+	<div class="wrap">
+		<p class="eyebrow">How it works</p>
+		<h2>From download to first run in five steps</h2>
+		<ol class="steps">
+			{
+				steps.map((s, i) => (
+					<li class="step">
+						<span class="num" aria-hidden="true">{i + 1}</span>
+						<h3>{s.title}</h3>
+						<p>{s.text}</p>
+					</li>
+				))
+			}
+		</ol>
+		<p class="more">
+			Prefer pictures? <a href="/instructions">Follow the illustrated guide</a>
+		</p>
+	</div>
+</section>
+<style>
+	.how {
+		padding: 3.6em 0 3.2em;
+	}
+	.eyebrow {
+		text-transform: uppercase;
+		letter-spacing: 0.12em;
+		font-size: 0.75em;
+		font-weight: 700;
+		color: var(--accent);
+		margin-bottom: 0.5em;
+	}
+	h2 {
+		font-size: clamp(1.7em, 3.6vw, 2.3em);
+		margin-bottom: 1.1em;
+	}
+	.steps {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+		gap: 1em;
+	}
+	.step {
+		background: var(--surface);
+		border: 1px solid rgb(var(--gray-light));
+		border-radius: 14px;
+		padding: 1.2em 1.2em 1.1em;
+	}
+	.num {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 34px;
+		height: 34px;
+		border-radius: 50%;
+		background: var(--accent);
+		color: #fff;
+		font-weight: 800;
+		font-family: "Plus Jakarta Sans", sans-serif;
+		margin-bottom: 0.6em;
+	}
+	.step h3 {
+		font-size: 1.05em;
+		margin-bottom: 0.3em;
+	}
+	.step p {
+		margin: 0;
+		font-size: 0.9em;
+		line-height: 1.55;
+		color: rgb(var(--gray-dark));
+	}
+	.more {
+		margin: 1.6em 0 0;
+	}
+</style>

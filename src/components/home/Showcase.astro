@@ -1,0 +1,102 @@
+---
+import { SHOT_GENERAL, SHOT_YOUTUBE, SHOT_PROXIES } from '../../data/screenshots';
+
+const shots = [
+	{
+		src: SHOT_GENERAL,
+		title: 'General settings',
+		text: 'Number of browsers, sleep between page loads, the references list and total views.',
+	},
+	{
+		src: SHOT_YOUTUBE,
+		title: 'YouTube settings',
+		text: 'The options that drive each viewing session, all in one tab.',
+	},
+	{
+		src: SHOT_PROXIES,
+		title: 'Proxy settings',
+		text: 'Attach your proxy file and let the bot test it before a run.',
+	},
+];
+---
+
+<section class="showcase bleed">
+	<div class="wrap">
+		<p class="eyebrow">Inside the app</p>
+		<h2>See the whole app before you download it</h2>
+		<p class="lead">
+			Real screenshots of the current version — what you see here is exactly
+			what runs on your machine.
+		</p>
+		<div class="grid">
+			{
+				shots.map((s) => (
+					<figure class="shot">
+						<img src={s.src} alt={`YTCPM Bot — ${s.title}`} loading="lazy" />
+						<figcaption>
+							<strong>{s.title}</strong>
+							<span>{s.text}</span>
+						</figcaption>
+					</figure>
+				))
+			}
+		</div>
+		<p class="more">
+			Full walkthrough: <a href="/instructions">the step-by-step instructions</a>
+		</p>
+	</div>
+</section>
+<style>
+	.showcase {
+		background: var(--surface);
+		border-top: 1px solid rgb(var(--gray-light));
+		border-bottom: 1px solid rgb(var(--gray-light));
+		padding: 3.6em 0 3.2em;
+	}
+	.eyebrow {
+		text-transform: uppercase;
+		letter-spacing: 0.12em;
+		font-size: 0.75em;
+		font-weight: 700;
+		color: var(--accent);
+		margin-bottom: 0.5em;
+	}
+	h2 {
+		font-size: clamp(1.7em, 3.6vw, 2.3em);
+	}
+	.lead {
+		max-width: 62ch;
+		color: rgb(var(--gray-dark));
+		margin-bottom: 2em;
+	}
+	.grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+		gap: 1em;
+	}
+	.shot {
+		margin: 0;
+		border: 1px solid rgb(var(--gray-light));
+		border-radius: 14px;
+		overflow: hidden;
+		background: var(--bg);
+	}
+	.shot img {
+		display: block;
+		width: 100%;
+		border-radius: 0;
+	}
+	.shot figcaption {
+		padding: 0.9em 1.1em 1.1em;
+		display: grid;
+		gap: 0.2em;
+	}
+	.shot figcaption span {
+		font-size: 0.92em;
+		color: rgb(var(--gray-dark));
+		line-height: 1.55;
+	}
+	.more {
+		margin: 1.6em 0 0;
+	}
+</style>

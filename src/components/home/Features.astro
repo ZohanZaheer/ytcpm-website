@@ -1,0 +1,119 @@
+---
+const features = [
+	{
+		title: 'Parallel browsers',
+		text: 'Run many browsers at the same time and set exactly how many — a good rule is about 2 GB of RAM per browser.',
+		path: 'M4 5h16v4H4zM4 11h10v4H4zM4 17h13v3H4z',
+	},
+	{
+		title: 'Fingerprint support',
+		text: 'Optional premium fingerprint service ($30/month, up to 100 threads/minute) for realistic browser identities — or bring your own user agents instead.',
+		path: 'M12 3a5 5 0 0 1 5 5c0 4-1 6-1 9H8c0-3-1-5-1-9a5 5 0 0 1 5-5z',
+	},
+	{
+		title: 'Proxy support',
+		text: 'Run on your own connection or VPN, or load one proxy per line from a file — including residential proxies (hostname:port:username:password).',
+		path: 'M4 12a8 8 0 0 1 16 0 8 8 0 0 1-16 0zm8-5v10m-5-3 5 3 5-3',
+	},
+	{
+		title: 'User agents, your way',
+		text: 'Built-in default agent, your own list (mixed randomly or used once each per run), or agents loaded automatically from a web page.',
+		path: 'M5 5h14v14H5zM8 9h8M8 13h5',
+	},
+	{
+		title: 'Reference sources',
+		text: 'Decide which websites your traffic appears to come from — a simple editable list, one site per line.',
+		path: 'M6 18 18 6M9 6h9v9',
+	},
+	{
+		title: 'Pacing controls',
+		text: 'Sleep timers between page loads with safe developer minimums (3s / 5s) that you can raise for slower connections or proxies.',
+		path: 'M12 4a8 8 0 1 1 0 16 8 8 0 0 1 0-16zm0 4v4l3 2',
+	},
+];
+---
+
+<section class="features bleed">
+	<div class="wrap">
+		<p class="eyebrow">Features</p>
+		<h2>Everything the bot does, in one window</h2>
+		<p class="lead">
+			Every control lives in the app's settings window — browsers, YouTube and
+			ads options, proxies — with your lists kept in plain text files you can
+			edit anytime.
+		</p>
+		<div class="grid">
+			{
+				features.map((f) => (
+					<article class="card">
+						<span class="icon" aria-hidden="true">
+							<svg viewBox="0 0 24 24" width="22" height="22">
+								<path d={f.path} fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+							</svg>
+						</span>
+						<h3>{f.title}</h3>
+						<p>{f.text}</p>
+					</article>
+				))
+			}
+		</div>
+	</div>
+</section>
+<style>
+	.features {
+		padding: 3.6em 0 3.2em;
+	}
+	.eyebrow {
+		text-transform: uppercase;
+		letter-spacing: 0.12em;
+		font-size: 0.75em;
+		font-weight: 700;
+		color: var(--accent);
+		margin-bottom: 0.5em;
+	}
+	h2 {
+		font-size: clamp(1.7em, 3.6vw, 2.3em);
+		max-width: 22ch;
+	}
+	.lead {
+		max-width: 62ch;
+		color: rgb(var(--gray-dark));
+		margin-bottom: 2em;
+	}
+	.grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+		gap: 1em;
+	}
+	.card {
+		background: var(--surface);
+		border: 1px solid rgb(var(--gray-light));
+		border-radius: 14px;
+		padding: 1.3em 1.4em;
+	}
+	.card:hover {
+		border-color: var(--peach);
+		box-shadow: var(--box-shadow);
+	}
+	.icon {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 42px;
+		height: 42px;
+		border-radius: 11px;
+		background: var(--peach-soft);
+		color: var(--accent-dark);
+		margin-bottom: 0.7em;
+	}
+	.card h3 {
+		font-size: 1.12em;
+		margin-bottom: 0.35em;
+	}
+	.card p {
+		margin: 0;
+		font-size: 0.94em;
+		line-height: 1.6;
+		color: rgb(var(--gray-dark));
+	}
+</style>

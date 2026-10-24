@@ -1,0 +1,146 @@
+---
+interface Props {
+	version: string;
+	fromPrice: number;
+	shot: string;
+}
+const { version, fromPrice, shot } = Astro.props;
+---
+
+<section class="hero bleed">
+	<div class="wrap hero-inner">
+		<p class="chip">Standalone Windows app · Version {version}</p>
+		<h1>Run your YouTube CPM work <span class="hl">on autopilot</span></h1>
+		<p class="sub">
+			YTCPM Bot runs multiple automated browsers with your proxies,
+			fingerprints and user agents — configured once, then launched in a
+			couple of clicks. No installation, no command line.
+		</p>
+		<div class="ctas">
+			<a class="btn btn-primary" href="/pricing">See plans &amp; pricing</a>
+			<a class="btn btn-ghost" href="/download">Download the bot</a>
+		</div>
+		<ul class="stats">
+			<li><strong>From ${fromPrice}</strong> per license</li>
+			<li><strong>Up to 500</strong> devices per plan</li>
+			<li><strong>6 days a week</strong> support, incl. nights</li>
+		</ul>
+		<div class="shot-frame">
+			<div class="shot-bar" aria-hidden="true"><span></span><span></span><span></span></div>
+			<img src={shot} alt="YTCPM Bot main window with the General settings" loading="eager" />
+		</div>
+	</div>
+</section>
+<style>
+	.hero {
+		background:
+			radial-gradient(620px 340px at 85% -60px, rgba(251, 146, 60, 0.28), transparent 70%),
+			radial-gradient(520px 300px at 8% 0, rgba(254, 215, 170, 0.5), transparent 70%),
+			var(--bg);
+		border-bottom: 1px solid rgb(var(--gray-light));
+		overflow: hidden;
+	}
+	.hero-inner {
+		padding-top: 3.6em;
+		padding-bottom: 3.2em;
+		text-align: center;
+	}
+	.chip {
+		display: inline-block;
+		background: var(--surface);
+		border: 1px solid var(--peach);
+		color: var(--accent-dark);
+		font-weight: 600;
+		font-size: 0.8em;
+		padding: 0.35em 0.9em;
+		border-radius: 999px;
+		margin: 0 0 1.2em;
+	}
+	h1 {
+		font-size: clamp(2.1em, 5.6vw, 3.4em);
+		max-width: 16ch;
+		margin: 0 auto 0.45em;
+	}
+	.hl {
+		color: var(--accent);
+	}
+	.sub {
+		max-width: 56ch;
+		margin: 0 auto 1.6em;
+		font-size: 1.06em;
+		color: rgb(var(--gray-dark));
+	}
+	.ctas {
+		display: flex;
+		gap: 0.7em;
+		justify-content: center;
+		flex-wrap: wrap;
+	}
+	.btn {
+		font-weight: 700;
+		text-decoration: none;
+		padding: 0.75em 1.5em;
+		border-radius: 999px;
+		font-size: 0.98em;
+	}
+	.btn-primary {
+		background: var(--accent);
+		color: #fff;
+		box-shadow: 0 8px 22px rgba(234, 88, 12, 0.35);
+	}
+	.btn-primary:hover {
+		background: var(--accent-dark);
+		color: #fff;
+	}
+	.btn-ghost {
+		background: var(--surface);
+		color: rgb(var(--black));
+		border: 1px solid rgb(var(--gray-light));
+	}
+	.btn-ghost:hover {
+		border-color: var(--accent);
+		color: var(--accent-dark);
+	}
+	.stats {
+		list-style: none;
+		display: flex;
+		gap: 0.6em 2.2em;
+		justify-content: center;
+		flex-wrap: wrap;
+		padding: 0;
+		margin: 1.9em 0 2.4em;
+		font-size: 0.92em;
+		color: rgb(var(--gray-dark));
+	}
+	.stats strong {
+		color: rgb(var(--black));
+	}
+	.shot-frame {
+		max-width: 880px;
+		margin: 0 auto;
+		background: var(--surface);
+		border: 1px solid rgb(var(--gray-light));
+		border-radius: 14px;
+		box-shadow: var(--box-shadow);
+		overflow: hidden;
+		text-align: left;
+	}
+	.shot-bar {
+		display: flex;
+		gap: 6px;
+		padding: 10px 12px;
+		border-bottom: 1px solid rgb(var(--gray-light));
+		background: #fffbf5;
+	}
+	.shot-bar span {
+		width: 11px;
+		height: 11px;
+		border-radius: 50%;
+		background: var(--peach);
+	}
+	.shot-frame img {
+		display: block;
+		width: 100%;
+		border-radius: 0;
+	}
+</style>
