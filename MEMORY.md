@@ -206,3 +206,19 @@
   with first paint/LCP. Hero image got fetchpriority="high".
   Verified locally end-to-end (cache HIT at ~0.03s, test order →
   admin confirm → confirmed, lockout path, all test data deleted).
+- 2026-10-24 (later): Best Practices + critical-path round. The
+  owner's live PSI dropped Best Practices to 81 on ONE audit —
+  "Uses deprecated APIs": Google's own AdSense library (lidar.js)
+  registers deprecated unload listeners. Since that code is Google's,
+  AdSense is now consent-gated exactly like GA: BaseHead's loader
+  waits for the 'ytcpm-consent' event (or a stored acceptance) from
+  CookieConsent before injecting the script, still deferred to
+  load+idle/interaction after that. Banner text now mentions ads,
+  and /privacy's Advertising section says ads load only on consent.
+  Also from his PSI insights: all CSS is inlined into the HTML
+  (astro.config build.inlineStylesheets 'always' — the separate
+  files were render-blocking), the font preload set is now the
+  above-the-fold weights (Inter 400/600/700, Jakarta 700/800), and
+  the homepage screenshots have 480w/688w variants with srcset
+  (Hero + Showcase). Local Lighthouse after this round: A11Y/BP/SEO
+  100, zero render-blocking and zero image-delivery findings.

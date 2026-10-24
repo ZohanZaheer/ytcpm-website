@@ -38,7 +38,7 @@ const shots = [
 			{
 				shots.map((s) => (
 					<figure class="shot">
-						<img src={s.src} width={s.width} height={s.height} alt={`YTCPM Bot — ${s.title}`} loading="lazy" />
+						<img src={s.src} srcset={`${s.src.replace('.webp', '-480.webp')} 480w, ${s.src.replace('.webp', '-688.webp')} 688w, ${s.src} ${s.width}w`} sizes="(max-width: 760px) 92vw, 660px" width={s.width} height={s.height} alt={`YTCPM Bot — ${s.title}`} loading="lazy" />
 						<figcaption>
 							<strong>{s.title}</strong>
 							<span>{s.text}</span>

@@ -48,7 +48,9 @@ const ogImageType = image.endsWith('.png') ? 'image/png' : 'image/jpeg';
 <!-- Fonts are self-hosted (@font-face in global.css). Preload the two
      files first paint needs: Inter for body text, Jakarta for headings. -->
 <link rel="preload" href="/fonts/inter-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin />
-<link rel="preload" href="/fonts/inter-latin-500-normal.woff2" as="font" type="font/woff2" crossorigin />
+<link rel="preload" href="/fonts/inter-latin-600-normal.woff2" as="font" type="font/woff2" crossorigin />
+<link rel="preload" href="/fonts/inter-latin-700-normal.woff2" as="font" type="font/woff2" crossorigin />
+<link rel="preload" href="/fonts/plus-jakarta-sans-latin-700-normal.woff2" as="font" type="font/woff2" crossorigin />
 <link rel="preload" href="/fonts/plus-jakarta-sans-latin-800-normal.woff2" as="font" type="font/woff2" crossorigin />
 
 <!-- Canonical URL -->
@@ -94,11 +96,15 @@ const ogImageType = image.endsWith('.png') ? 'image/png' : 'image/jpeg';
      visitor accepts cookies in CookieConsent (see Footer). -->
 
 <!-- Google AdSense (public pages only, when a client ID is set).
-     The ads library is heavy, so it is NOT loaded with the page: this
-     loader injects it once the page has loaded and the browser is
-     idle — or on the visitor's first interaction, whichever comes
-     first. Ads appear moments after the content, and the library no
-     longer competes with first paint / LCP. -->
+     Two gates keep the heavy ads library out of the page's way:
+     1. Consent — like Google Analytics, ads load only after the
+        visitor accepts cookies in the banner (CookieConsent.astro
+        broadcasts the choice as a 'ytcpm-consent' window event).
+     2. Timing — after consent, the script is injected once the page
+        has loaded and the browser is idle, or on the first
+        interaction, so it never competes with first paint / LCP.
+     Side benefit: because the library only ever runs with consent,
+     its own deprecated-API warnings stay out of the page's record. -->
 {!noindex && ADSENSE_CLIENT_ID && (
 	<script is:inline define:vars={{ adsClient: ADSENSE_CLIENT_ID }}>
 		(() => {
@@ -112,14 +118,27 @@ const ogImageType = image.endsWith('.png') ? 'image/png' : 'image/jpeg';
 				s.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=' + adsClient;
 				document.head.appendChild(s);
 			};
-			const idle = () =>
-				'requestIdleCallback' in window
-					? requestIdleCallback(load, { timeout: 2500 })
-					: setTimeout(load, 1200);
-			if (document.readyState === 'complete') idle();
-			else window.addEventListener('load', idle, { once: true });
-			for (const ev of ['pointerdown', 'keydown', 'scroll']) {
-				window.addEventListener(ev, load, { once: true, passive: true });
+			const schedule = () => {
+				const idle = () =>
+					'requestIdleCallback' in window
+						? requestIdleCallback(load, { timeout: 2500 })
+						: setTimeout(load, 1200);
+				if (document.readyState === 'complete') idle();
+				else window.addEventListener('load', idle, { once: true });
+				for (const ev of ['pointerdown', 'keydown', 'scroll']) {
+					window.addEventListener(ev, load, { once: true, passive: true });
+				}
+			};
+			let choice = null;
+			try {
+				choice = localStorage.getItem('ytcpm-consent');
+			} catch (e) {}
+			if (choice === 'accepted') {
+				schedule();
+			} else {
+				window.addEventListener('ytcpm-consent', (e) => {
+					if (e.detail === 'accepted') schedule();
+				});
 			}
 		})();
 	</script>

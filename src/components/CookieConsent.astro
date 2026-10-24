@@ -2,8 +2,9 @@
 // Cookie consent banner (GDPR-style). Only renders when a GA
 // Measurement ID is configured in src/config/site.ts.
 // - No choice yet  -> banner with Accept / Decline
-// - Accepted       -> loads GA4
-// - Declined       -> GA never loads
+// - Accepted       -> loads GA4, and broadcasts the choice so the
+//                     AdSense loader in BaseHead can start too
+// - Declined       -> neither GA nor ads ever load
 // GA is loaded from here (not from BaseHead) so analytics only ever
 // runs with the visitor's consent.
 import { GA_MEASUREMENT_ID } from '../config/site';
@@ -13,7 +14,8 @@ import { GA_MEASUREMENT_ID } from '../config/site';
 	<>
 		<div id="ytcpm-consent" class="consent" hidden>
 			<p>
-				We use cookies to understand how this site is used (Google Analytics).
+				We use cookies to understand how this site is used (Google Analytics)
+				and to show ads (Google AdSense).
 				You can accept or decline — the site works the same either way.
 				<a href="/privacy">Privacy Policy</a>
 			</p>
@@ -27,6 +29,12 @@ import { GA_MEASUREMENT_ID } from '../config/site';
 				var KEY = 'ytcpm-consent';
 				var banner = document.getElementById('ytcpm-consent');
 				if (!banner) return;
+
+				// Let other consent-gated features (the AdSense loader in
+				// BaseHead) react to the visitor's choice.
+				function announce(value) {
+					window.dispatchEvent(new CustomEvent('ytcpm-consent', { detail: value }));
+				}
 
 				function loadGA() {
 					if (window.gtag) return;
@@ -49,6 +57,7 @@ import { GA_MEASUREMENT_ID } from '../config/site';
 
 				if (choice === 'accepted') {
 					loadGA();
+					announce('accepted');
 				} else if (choice !== 'declined') {
 					banner.hidden = false;
 				}
@@ -58,6 +67,7 @@ import { GA_MEASUREMENT_ID } from '../config/site';
 						localStorage.setItem(KEY, value);
 					} catch (e) {}
 					banner.hidden = true;
+					announce(value);
 					if (value === 'accepted') loadGA();
 				}
 

@@ -45,7 +45,14 @@ export default defineConfig({
 	// 'file' emits about.html instead of about/index.html so the
 	// hosting asset layer serves the clean URL directly.
 	trailingSlash: "never",
-	build: { format: "file" },
+	build: {
+		format: "file",
+		// Inline all CSS into the HTML. The stylesheets are a few KB;
+		// as separate files they were render-blocking requests on the
+		// critical path (PageSpeed flagged ~310ms of savings). Every
+		// page now paints with zero CSS requests.
+		inlineStylesheets: "always",
+	},
 	// The XML sitemap is a hand-rolled endpoint (src/pages/sitemap.xml.ts)
 	// listing public pages only, so the @astrojs/sitemap plugin is not used.
 	integrations: [mdx()],
