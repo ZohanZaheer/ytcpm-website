@@ -151,3 +151,16 @@ are platform-neutral.
   filesystem) keep `STORAGE_DRIVER=github` or `s3` — the `local`
   driver needs a writable disk, so use it only on a real server.
 - Local development stays `npm run dev` on any OS.
+
+## 9. Repository notes
+
+- `worker-configuration.d.ts` is a generated file (`npm run cf-typegen`)
+  and is intentionally NOT committed (see .gitignore). Nothing in the
+  code depends on it: configuration is read from `process.env`, so the
+  project type-checks and builds without it. Regenerate it only if you
+  want editor types for Cloudflare bindings while developing.
+- The homepage and site chrome live in components: `src/components/
+  Header.astro`, `Footer.astro`, and `src/components/home/*` (Hero,
+  Features, Showcase, HowItWorks, PricingStrip, Faq, CtaBand). Design
+  tokens (colors, fonts) are in `src/styles/global.css` — change them
+  there and the whole site follows.
