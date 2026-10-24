@@ -188,11 +188,17 @@ const exchanges = [
 				font-weight: 700;
 				background: #fff;
 			}
+			/* The page is full-width; the checkout column itself keeps a
+			   readable measure so form fields don't stretch edge to edge. */
+			section[aria-labelledby="pay-heading"] {
+				max-width: 860px;
+			}
 		</style>
 	</head>
 	<body>
 		<Header />
 		<main>
+			<div class="wrap">
 			<section aria-labelledby="pay-heading">
 				<p class="eyebrow">Checkout</p>
 				<h1 id="pay-heading">Complete Your Payment</h1>
@@ -330,6 +336,7 @@ const exchanges = [
 					</form>
 				)
 			}
+			</div>
 		</main>
 		<Footer />
 		<script is:inline>

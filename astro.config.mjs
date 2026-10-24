@@ -41,6 +41,12 @@ const adapter =
 // https://astro.build/config
 export default defineConfig({
 	site: "https://ytcpm.cyou",
+	// Page URLs never end in a slash: /about, not /about/ (requests to
+	// the slashed form redirect to the clean one). build.format
+	// 'file' emits about.html instead of about/index.html so the
+	// hosting asset layer serves the clean URL directly.
+	trailingSlash: "never",
+	build: { format: "file" },
 	integrations: [mdx(), sitemap()],
 	// Astro sessions are disabled: nothing on this site uses
 	// Astro.session (the admin login uses its own signed cookie), so no
