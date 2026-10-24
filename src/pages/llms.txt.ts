@@ -1,11 +1,20 @@
+import { getCollection } from 'astro:content';
 import { SITE_URL, SITE_NAME, SUPPORT_HOURS } from '../config/site';
 
 export const prerender = true;
 
 // A plain-language summary of the site for AI assistants and LLMs
 // (the llms.txt convention): what the product is, what it costs and
-// where the authoritative pages live.
+// where the authoritative pages live. The blog section is generated
+// from the content collection, so a new post appears here (and in
+// llms-full.txt) automatically on the next build.
 export async function GET() {
+	const posts = (await getCollection('blog')).sort(
+		(a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
+	);
+	const postLines = posts
+		.map((post) => `- [${post.data.title}](${SITE_URL}/blog/${post.id}): ${post.data.description}`)
+		.join('\n');
 	const txt = `# ${SITE_NAME}
 
 > ${SITE_NAME} is a standalone Windows app for YouTube CPM workflows. It runs multiple automated browsers with per-browser proxies, fingerprints and user agents, configured from one settings window. Licenses are sold on this website and paid in cryptocurrency (USDT, BTC, ETH).
@@ -14,6 +23,7 @@ ${SITE_NAME} is an independent tool and is not affiliated with or endorsed by Yo
 
 - Site: ${SITE_URL}
 - Support: ${SUPPORT_HOURS}, via the contact page or the customer dashboard
+- Full text of every page summary and blog post, for AI tools: ${SITE_URL}/llms-full.txt
 
 ## Pages
 
@@ -26,6 +36,10 @@ ${SITE_NAME} is an independent tool and is not affiliated with or endorsed by Yo
 - [About](${SITE_URL}/about): About the bot and this site.
 - [Contact](${SITE_URL}/contact): Contact form for questions and support.
 - [Disclaimer](${SITE_URL}/disclaimer): Independence from YouTube/Google, estimates and user responsibility.
+
+## Blog posts
+
+${postLines}
 `;
 	return new Response(txt, {
 		headers: { 'Content-Type': 'text/plain; charset=utf-8' },

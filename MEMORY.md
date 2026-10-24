@@ -164,3 +164,15 @@
   script + matching ads.txt publisher; content/pages all present.
   Approval itself is Google's call (product-category risk flagged to
   the owner honestly).
+- 2026-10-24 (later): Discovery endpoints upgraded for maximum
+  pickup. sitemap.xml: posts now declare their cover image
+  (image sitemap extension) and static pages no longer carry a
+  build-date <lastmod> (it claimed freshness that was not real;
+  posts keep true updatedDate ?? pubDate). rss.xml: every item now
+  carries the full article as sanitized HTML in <content:encoded>
+  (marked + sanitize-html, relative URLs absolutized) plus channel
+  <lastBuildDate> and <image>. llms.txt: new generated "Blog posts"
+  section listing every post with its description, and a new
+  /llms-full.txt with the complete markdown of all posts — both are
+  generated from the content collection, so new posts appear
+  automatically.
