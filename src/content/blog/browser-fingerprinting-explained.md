@@ -1,5 +1,5 @@
 ---
-title: "Browser Fingerprinting Explained: Why Changing Your User Agent Isn't Enough"
+title: "Browser Fingerprinting Explained: Why User Agents Aren't Enough"
 description: "Browser fingerprinting combines ~50 signals — canvas, WebGL, fonts, screen, timezone — into one ID. How it works, why the user agent is only one piece, and what consistency means."
 pubDate: "Oct 22 2026"
 heroImage: "/blog/browser-fingerprinting-explained.jpg"

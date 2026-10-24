@@ -131,3 +131,9 @@
   Webmaster flagged every post + the index). BlogPost layout and the
   blog index now use the post title as the cover's alt; covers are
   branded title cards, so the title is the accurate description.
+- 2026-10-24 (later): Two post titles exceeded Bing's 70-character
+  title limit and were shortened (keywords and meaning kept; the
+  cover images use their own short display titles, so no cover
+  changes were needed): "Browser Fingerprinting Explained: Why User
+  Agents Aren't Enough" (63) and "Residential vs Datacenter vs
+  Mobile Proxies: Which Do You Need?" (63).
