@@ -153,8 +153,11 @@ const description =
 			.note p {
 				margin: 0;
 			}
+			/* Screenshots keep the size they had in the old layout,
+			   centered on the page — they are app windows, not banners. */
 			.shot {
-				margin: 1.5em 0 0;
+				margin: 1.5em auto 0;
+				max-width: 688px;
 			}
 			.shot img {
 				border-radius: 12px;
