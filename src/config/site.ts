@@ -27,6 +27,15 @@ export const AUTHOR_NAME = 'Zaheer Ahmad';
 //export const ADS_TXT = `# YTCPM (ytcpm.cyou) does not sell advertising space and has no authorized digital ad sellers.`;
 export const ADS_TXT = `google.com, pub-1802003890783048, DIRECT, f08c47fec0942fa0`;
 
+// ---------- Google AdSense ----------
+// Publisher client ID (looks like "ca-pub-XXXXXXXXXXXXXXXX") from
+// AdSense → Account → Settings → Account information. Empty = the
+// AdSense script is not loaded. BaseHead puts the script in the head
+// of every public page (never on admin/account/checkout/auth pages).
+// NOTE: the ads.txt line in ADS_TXT above must carry the SAME
+// publisher number, or AdSense cannot verify the site.
+export const ADSENSE_CLIENT_ID = 'ca-pub-1802003890783048';
+
 // ---------- Webmaster-tools verification ----------
 // Paste each code; empty = the meta tag is omitted.
 export const SITE_VERIFICATION = {
@@ -41,12 +50,3 @@ export const SITE_VERIFICATION = {
 // stream (looks like "G-XXXXXXXXXX"). Empty = analytics is disabled.
 // Loaded on public pages only (never on admin/account/checkout/auth).
 export const GA_MEASUREMENT_ID = 'G-NCM400NB7C';
-
-// ---------- Google AdSense ----------
-// Publisher client ID (looks like "ca-pub-XXXXXXXXXXXXXXXX") from
-// AdSense → Account → Settings → Account information. Empty = the
-// AdSense script is not loaded. BaseHead puts the script in the head
-// of every public page (never on admin/account/checkout/auth pages).
-// NOTE: the ads.txt line in ADS_TXT above must carry the SAME
-// publisher number, or AdSense cannot verify the site.
-export const ADSENSE_CLIENT_ID = 'ca-pub-1802003890783048';
