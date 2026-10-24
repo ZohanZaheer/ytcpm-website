@@ -156,3 +156,11 @@
   open: Cloudflare "Always Use HTTPS" (http currently serves 200
   without redirecting). www intentionally has no DNS record — the
   owner wants only https://ytcpm.cyou to exist.
+- 2026-10-24 (later): Privacy page gained the "Advertising" section
+  AdSense review requires (third-party/Google ad cookies, personalized
+  ads based on prior visits, opt-out via Google Ads Settings and
+  aboutads.info; ads only on public pages) — the last known gap in
+  the site's AdSense readiness. Technical setup verified complete:
+  script + matching ads.txt publisher; content/pages all present.
+  Approval itself is Google's call (product-category risk flagged to
+  the owner honestly).
