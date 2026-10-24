@@ -10,10 +10,23 @@ export const prerender = false;
 const user = await baSessionUser(Astro);
 if (user) return Astro.redirect('/account');
 
+const next = Astro.url.searchParams.get('next') ?? '';
 const errorCode = Astro.url.searchParams.get('error') ?? '';
 const errors: Record<string, string> = {
-	name: 'Please enter your name (at least 2 characters).',
+	username: 'Please choose a username: 3–24 characters, letters, numbers, dot, dash or underscore.',
+	'username-taken': 'This username is already taken — please choose another one.',
 	email: 'Please enter a valid email address.',
+	'email-taken': 'An account with this email already exists — sign in instead.',
+	fullname: 'Please enter your full name.',
+	country: 'Please enter your country.',
+	state: 'Please enter your state / province.',
+	city: 'Please enter your city.',
+	address: 'Please enter your full address.',
+	zip: 'Please enter a valid ZIP / postal code.',
+	whatsapp: 'Please enter a valid WhatsApp number with country code (e.g. +1 555 123 4567).',
+	'whatsapp-taken': 'This WhatsApp number is already registered — sign in instead, or use another number.',
+	telegram: 'Please enter a valid Telegram username (5–32 characters, letters, numbers or underscore).',
+	'telegram-taken': 'This Telegram username is already registered to another account.',
 	password: 'Please choose a password of at least 8 characters.',
 	exists: 'An account with this email already exists — sign in instead.',
 	invalid: 'The sign-up could not be completed. Please check the details and try again.',
@@ -34,7 +47,7 @@ const error = errors[errorCode] ?? '';
 				padding: 2.6em 1em 0;
 			}
 			.card {
-				max-width: 440px;
+				max-width: 680px;
 				margin: 0 auto;
 				background: var(--surface);
 				border: 1px solid rgb(var(--gray-light));
@@ -64,6 +77,24 @@ const error = errors[errorCode] ?? '';
 			form {
 				display: grid;
 				gap: 1em;
+			}
+			.grid2 {
+				display: grid;
+				grid-template-columns: 1fr 1fr;
+				gap: 1em;
+			}
+			.req {
+				color: var(--accent-dark);
+			}
+			.hint {
+				font-size: 0.82em;
+				color: rgb(var(--gray));
+				margin-top: 0.3em;
+			}
+			@media (max-width: 640px) {
+				.grid2 {
+					grid-template-columns: 1fr;
+				}
 			}
 			.field label {
 				display: block;
@@ -113,27 +144,73 @@ const error = errors[errorCode] ?? '';
 				<h1>Create your account</h1>
 				<p class="sub">
 					One account for all your licenses — purchase dates, expiry and order
-					status in one place.
+					status in one place. Fields marked <span class="req">*</span> are required.
+					After registering we email you a verification link — please verify your
+					email before your first purchase.
 				</p>
 				{error && <p class="notice">{error}</p>}
 				<form method="post" action="/api/account/signup">
-					<div class="field">
-						<label for="f-name">Your name</label>
-						<input id="f-name" name="name" type="text" required maxlength="80" autocomplete="name" />
+					{next && <input type="hidden" name="next" value={next} />}
+					<div class="grid2">
+						<div class="field">
+							<label for="f-username">Username <span class="req">*</span></label>
+							<input id="f-username" name="username" type="text" required maxlength="24" autocomplete="username" />
+						</div>
+						<div class="field">
+							<label for="f-fullname">Full name <span class="req">*</span></label>
+							<input id="f-fullname" name="fullName" type="text" required maxlength="80" autocomplete="name" />
+						</div>
+					</div>
+					<div class="grid2">
+						<div class="field">
+							<label for="f-email">Email address <span class="req">*</span></label>
+							<input id="f-email" name="email" type="email" required maxlength="160" autocomplete="email" />
+						</div>
+						<div class="field">
+							<label for="f-password">Password <span class="req">*</span></label>
+							<input id="f-password" name="password" type="password" required minlength="8" maxlength="128" autocomplete="new-password" />
+							<p class="hint">At least 8 characters.</p>
+						</div>
+					</div>
+					<div class="grid2">
+						<div class="field">
+							<label for="f-whatsapp">WhatsApp <span class="req">*</span></label>
+							<input id="f-whatsapp" name="whatsapp" type="tel" required maxlength="24" autocomplete="tel" placeholder="+1 555 123 4567" />
+							<p class="hint">With country code — the admin reaches you here.</p>
+						</div>
+						<div class="field">
+							<label for="f-telegram">Telegram</label>
+							<input id="f-telegram" name="telegram" type="text" maxlength="36" autocomplete="off" placeholder="@username" />
+						</div>
 					</div>
 					<div class="field">
-						<label for="f-email">Email address</label>
-						<input id="f-email" name="email" type="email" required maxlength="160" autocomplete="email" />
+						<label for="f-address">Address <span class="req">*</span></label>
+						<input id="f-address" name="address" type="text" required maxlength="160" autocomplete="street-address" />
 					</div>
-					<div class="field">
-						<label for="f-password">Password (8+ characters)</label>
-						<input id="f-password" name="password" type="password" required minlength="8" autocomplete="new-password" />
+					<div class="grid2">
+						<div class="field">
+							<label for="f-city">City <span class="req">*</span></label>
+							<input id="f-city" name="city" type="text" required maxlength="60" autocomplete="address-level2" />
+						</div>
+						<div class="field">
+							<label for="f-state">State / Province <span class="req">*</span></label>
+							<input id="f-state" name="state" type="text" required maxlength="60" autocomplete="address-level1" />
+						</div>
+					</div>
+					<div class="grid2">
+						<div class="field">
+							<label for="f-zip">ZIP code <span class="req">*</span></label>
+							<input id="f-zip" name="zip" type="text" required maxlength="12" autocomplete="postal-code" />
+						</div>
+						<div class="field">
+							<label for="f-country">Country <span class="req">*</span></label>
+							<input id="f-country" name="country" type="text" required maxlength="60" autocomplete="country-name" />
+						</div>
 					</div>
 					<button class="go" type="submit">Create account</button>
 				</form>
 				<p class="alt">
-					Already have an account? <a href="/login">Sign in</a>. Buying as a guest
-					still works too — orders placed with this email will appear here.
+					Already have an account? <a href={next ? `/login?next=${encodeURIComponent(next)}` : '/login'}>Sign in</a>.
 				</p>
 			</div>
 		</main>

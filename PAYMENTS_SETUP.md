@@ -167,16 +167,51 @@ are platform-neutral.
 
 ## 10. Accounts, admin and packages (better-auth)
 
-- Accounts run on better-auth (email + password) with its tables in
-  the same database: "user", "session", "account", "verification".
-  Customers sign up at /signup and manage licenses at /account;
-  orders placed while signed in store the account id (user_id),
-  guest orders are matched to an account by email.
-- The admin is an account with role = 'admin'. First-time setup is
-  automatic: signing in at /admin with the ADMIN_EMAIL /
-  ADMIN_PASSWORD environment credentials creates the admin account
-  (one-time bootstrap). The old signed-cookie login and the
-  /admin?key=<ADMIN_SECRET> link remain as recovery paths.
+- Customer accounts run on better-auth (email + password) with its
+  tables in the same database: "user", "session", "account",
+  "verification". Registration (/signup) also collects username,
+  full name, country, state/province, city, address, ZIP and
+  WhatsApp (Telegram optional) into `customer_profiles`; email,
+  username, WhatsApp and Telegram are unique and checked before
+  sign-up. Customers manage everything at /account (licenses),
+  /account/profile (details + password change) and
+  /account/support. Orders store the account id (user_id); guest
+  orders are matched to an account by email.
+- Administrators are a SEPARATE table, `admin_users` — admin
+  sign-in only ever reads that table, so a customer account can
+  never sign in to /admin. First-time setup is automatic: while the
+  table is empty, signing in at /admin with the ADMIN_EMAIL /
+  ADMIN_PASSWORD environment credentials creates the first admin
+  (password stored hashed). The /admin?key=<ADMIN_SECRET> link and
+  the environment credentials remain as disaster-recovery logins.
+  Admin sessions are signed cookies (ADMIN_SECRET).
+- Checkout requires an account: /pay/<slug> sends guests to
+  /login?next=… and returns them after sign-in. The payment form
+  takes name/email/contact from the account automatically — only
+  currency, TX hash, screenshot and note are entered. The status
+  page polls until confirmation and then shows a "Go to my
+  dashboard" button to the order's owner.
+- Email verification: registration sends a verification link
+  (better-auth). Delivery needs an email provider — set the
+  Runtime secrets RESEND_API_KEY and EMAIL_FROM (e.g.
+  "YTCPM <noreply@ytcpm.cyou>", via resend.com). Until a provider
+  is configured, purchases are NOT blocked (nothing could be
+  delivered); once it is configured, an unverified email blocks
+  checkout automatically and the dashboard/profile offer a resend.
+- Bot licenses: on /admin/licenses the admin enters the bot
+  username/password for a confirmed order and ticks "Mark done";
+  only then does the customer see the credentials in their
+  dashboard, with the package, devices and days remaining, plus a
+  per-license contact button. Un-assigned confirmed orders show a
+  "being prepared" note.
+- Priority support: customers with an active license send requests
+  from /account/support (license picker + "How can we help?"
+  topics, details prefilled) into `support_requests`; they appear
+  on the ⚡ /admin/requests priority page and as a count on the
+  admin home. The public /contact page is a separate flow.
+- The customer dashboard's right column shows the packages ticked
+  Popular in the admin (highest price first, max 3, min 1 — the
+  top-priced plan is the fallback when none are ticked).
 - BETTER_AUTH_SECRET can be set as a Runtime secret; when absent,
   ADMIN_SECRET is used as the auth secret.
 - License packages live in the `packages` table (the admin editor

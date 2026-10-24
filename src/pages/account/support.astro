@@ -1,0 +1,262 @@
+---
+import BaseHead from '../../components/BaseHead.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import AccountNav from '../../components/AccountNav.astro';
+import { SITE_TITLE } from '../../consts';
+import { getDatabaseUrl } from '../../lib/env';
+import { baSessionUser } from '../../lib/baSession';
+import { getProfile, listOrdersForUser, listSupportRequestsForUser, type PaymentOrder } from '../../lib/db';
+import { getEffectiveSettings, findPackage, type LicensePackage } from '../../lib/settings';
+import { getEnv } from '../../lib/env';
+import { SUPPORT_TOPICS, supportTopicLabel } from '../../lib/support';
+
+export const prerender = false;
+
+const user = await baSessionUser(Astro);
+if (!user) return Astro.redirect('/login?next=/account/support');
+
+const dbUrl = getDatabaseUrl(Astro);
+const profile = dbUrl ? await getProfile(dbUrl, user.id).catch(() => null) : null;
+
+interface License {
+	order: PaymentOrder;
+	pkg: LicensePackage | null;
+	active: boolean;
+}
+let licenses: License[] = [];
+let myRequests: Awaited<ReturnType<typeof listSupportRequestsForUser>> = [];
+if (dbUrl) {
+	const settings = await getEffectiveSettings(dbUrl, (k) => getEnv(Astro, k));
+	const orders = await listOrdersForUser(dbUrl, user.id, user.email).catch(() => []);
+	licenses = orders
+		.filter((o) => o.status === 'confirmed')
+		.map((o) => {
+			const pkg = findPackage(settings, o.package_slug);
+			let active = true;
+			if (pkg?.durationDays != null) {
+				const expiresAt = new Date(o.updated_at).getTime() + pkg.durationDays * 86400000;
+				active = Date.now() <= expiresAt;
+			}
+			return { order: o, pkg, active };
+		});
+	myRequests = await listSupportRequestsForUser(dbUrl, user.id).catch(() => []);
+}
+const activeLicenses = licenses.filter((l) => l.active);
+const preselect = Astro.url.searchParams.get('order') ?? '';
+
+const msg = Astro.url.searchParams.get('msg') ?? '';
+const notices: Record<string, { text: string; ok: boolean }> = {
+	sent: { text: '✅ Your request has been sent. The admin handles these as a priority — please keep an eye on your WhatsApp / Telegram.', ok: true },
+	topic: { text: 'Please choose what you need help with.', ok: false },
+	message: { text: 'Please describe your request (at least a few words).', ok: false },
+	license: { text: 'Please choose one of your active licenses.', ok: false },
+	expired: { text: 'That license has expired — support requests need an active license.', ok: false },
+	error: { text: 'Something went wrong — please try again.', ok: false },
+};
+const notice = notices[msg];
+
+const fmt = (iso: string) =>
+	new Date(iso).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' });
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<BaseHead
+			title={`Support — ${SITE_TITLE}`}
+			description="Priority support for your YTCPM Bot license, from inside your dashboard."
+		/>
+		<style>
+			main {
+				padding-top: 2.2em;
+			}
+			.panel {
+				background: var(--surface);
+				border: 1px solid rgb(var(--gray-light));
+				border-radius: 14px;
+				padding: 1.6em 1.8em;
+				box-shadow: var(--box-shadow);
+				max-width: 760px;
+				margin-bottom: 1.6em;
+			}
+			.panel h1,
+			.panel h2 {
+				margin-top: 0;
+			}
+			.panel h1 {
+				font-size: 1.7em;
+			}
+			.panel h2 {
+				font-size: 1.25em;
+			}
+			form.grid {
+				display: grid;
+				gap: 1em;
+			}
+			.field label {
+				display: block;
+				font-weight: 600;
+				font-size: 0.92em;
+				margin-bottom: 0.35em;
+			}
+			.field input,
+			.field select,
+			.field textarea {
+				width: 100%;
+				font: inherit;
+				font-size: 0.97em;
+				padding: 0.6em 0.75em;
+				border: 1px solid rgb(var(--gray-light));
+				border-radius: 9px;
+				background: var(--bg);
+				box-sizing: border-box;
+			}
+			.field textarea {
+				resize: vertical;
+			}
+			.prefill {
+				background: var(--bg);
+				border: 1px dashed rgb(var(--gray-light));
+				border-radius: 10px;
+				padding: 0.8em 1em;
+				font-size: 0.93em;
+				color: rgb(var(--gray-dark));
+			}
+			.btn {
+				font: inherit;
+				font-weight: 700;
+				background: var(--accent);
+				color: #fff;
+				border: 1px solid var(--accent);
+				border-radius: 999px;
+				padding: 0.65em 1.5em;
+				cursor: pointer;
+				justify-self: start;
+			}
+			.btn:hover {
+				background: var(--accent-dark);
+			}
+			.notice {
+				border-radius: 10px;
+				padding: 0.8em 1em;
+				margin-bottom: 1.1em;
+				font-weight: 600;
+				font-size: 0.93em;
+			}
+			.notice.ok {
+				background: #dcfce7;
+				color: #166534;
+				border: 1px solid #86efac;
+			}
+			.notice.bad {
+				background: #fee2e2;
+				color: #991b1b;
+				border: 1px solid #fca5a5;
+			}
+			.req {
+				border-top: 1px solid rgb(var(--gray-light));
+				padding: 0.9em 0;
+			}
+			.req:first-of-type {
+				border-top: none;
+			}
+			.badge {
+				display: inline-block;
+				font-size: 0.76em;
+				font-weight: 700;
+				border-radius: 999px;
+				padding: 0.12em 0.7em;
+			}
+			.badge.new {
+				background: #fef3c7;
+				color: #92400e;
+			}
+			.badge.done {
+				background: #dcfce7;
+				color: #166534;
+			}
+			.req .meta {
+				color: rgb(var(--gray));
+				font-size: 0.88em;
+			}
+		</style>
+	</head>
+	<body>
+		<Header />
+		<main>
+			<div class="wrap">
+				<AccountNav name={user.name} email={user.email} active="support" />
+
+				<section class="panel">
+					<h1>Support</h1>
+					{notice && <p class={`notice ${notice.ok ? 'ok' : 'bad'}`}>{notice.text}</p>}
+					{activeLicenses.length === 0 ? (
+						<p>
+							This support desk is for customers with an <strong>active license</strong>. Once
+							your license is active it will appear here and you can send priority requests —
+							for anything else, please use the <a href="/contact">contact page</a>.
+						</p>
+					) : (
+						<form class="grid" method="post" action="/api/account/support">
+							<div class="field">
+								<label for="s-license">Which license is this about?</label>
+								<select id="s-license" name="order" required>
+									{activeLicenses.map(({ order }) => (
+										<option value={order.id} selected={order.id === preselect}>
+											{order.package_label} — order {order.id}
+										</option>
+									))}
+								</select>
+							</div>
+							<div class="field">
+								<label for="s-topic">How can we help?</label>
+								<select id="s-topic" name="topic" required>
+									{Object.entries(SUPPORT_TOPICS).map(([value, label]) => (
+										<option value={value}>{label}</option>
+									))}
+								</select>
+							</div>
+							<div class="prefill">
+								<strong>Your details (sent with the request):</strong><br />
+								{profile?.full_name ?? user.name} · {user.email}
+								{profile?.whatsapp ? ` · WhatsApp ${profile.whatsapp}` : ''}
+								{profile?.telegram ? ` · Telegram @${profile.telegram}` : ''}
+							</div>
+							<div class="field">
+								<label for="s-message">Details</label>
+								<textarea
+									id="s-message"
+									name="message"
+									rows="4"
+									required
+									maxlength="2000"
+									placeholder="Tell us what you need — for example the new username you would like, or that you need your devices reset."
+								></textarea>
+							</div>
+							<button class="btn" type="submit">Send request</button>
+						</form>
+					)}
+				</section>
+
+				{myRequests.length > 0 && (
+					<section class="panel">
+						<h2>Your requests</h2>
+						{myRequests.map((r) => (
+							<div class="req">
+								<strong>{supportTopicLabel(r.topic)}</strong>{' '}
+								<span class={`badge ${r.status}`}>{r.status === 'new' ? 'In progress' : 'Done'}</span>
+								<p class="meta">
+									{fmt(r.created_at)}
+									{r.order_id ? ` · order ${r.order_id}` : ''}
+								</p>
+								<p style="margin:0.3em 0 0">{r.message}</p>
+							</div>
+						))}
+					</section>
+				)}
+			</div>
+		</main>
+		<Footer />
+	</body>
+</html>

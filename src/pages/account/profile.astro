@@ -1,0 +1,281 @@
+---
+import BaseHead from '../../components/BaseHead.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import AccountNav from '../../components/AccountNav.astro';
+import { SITE_TITLE } from '../../consts';
+import { getDatabaseUrl } from '../../lib/env';
+import { baSessionUser } from '../../lib/baSession';
+import { getProfile } from '../../lib/db';
+
+export const prerender = false;
+
+const user = await baSessionUser(Astro);
+if (!user) return Astro.redirect('/login?next=/account/profile');
+
+const dbUrl = getDatabaseUrl(Astro);
+const profile = dbUrl ? await getProfile(dbUrl, user.id).catch(() => null) : null;
+
+const saved = Astro.url.searchParams.get('saved') ?? '';
+const saveMessages: Record<string, string> = {
+	'1': 'Your details have been saved.',
+	fullname: 'Please enter your full name.',
+	country: 'Please enter your country.',
+	state: 'Please enter your state / province.',
+	city: 'Please enter your city.',
+	address: 'Please enter your full address.',
+	zip: 'Please enter a valid ZIP / postal code.',
+	whatsapp: 'Please enter a valid WhatsApp number with country code.',
+	'whatsapp-taken': 'This WhatsApp number is already registered to another account.',
+	telegram: 'Please enter a valid Telegram username.',
+	'telegram-taken': 'This Telegram username is already registered to another account.',
+	error: 'Something went wrong — please try again.',
+};
+const saveMsg = saveMessages[saved] ?? '';
+
+const pw = Astro.url.searchParams.get('pw') ?? '';
+const pwMessages: Record<string, string> = {
+	done: 'Your password has been changed.',
+	wrong: 'The current password is not correct.',
+	invalid: 'Please enter your current password and a new password of at least 8 characters.',
+	error: 'The password could not be changed — please try again.',
+};
+const pwMsg = pwMessages[pw] ?? '';
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<BaseHead
+			title={`My profile — ${SITE_TITLE}`}
+			description="Your YTCPM account details and password settings."
+		/>
+		<style>
+			main {
+				padding-top: 2.2em;
+			}
+			.panel {
+				background: var(--surface);
+				border: 1px solid rgb(var(--gray-light));
+				border-radius: 14px;
+				padding: 1.6em 1.8em;
+				box-shadow: var(--box-shadow);
+				max-width: 760px;
+				margin-bottom: 1.6em;
+			}
+			.panel h1,
+			.panel h2 {
+				margin-top: 0;
+			}
+			.panel h1 {
+				font-size: 1.7em;
+			}
+			.panel h2 {
+				font-size: 1.25em;
+			}
+			.fixed {
+				display: grid;
+				grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+				gap: 0.9em 1.6em;
+				margin-bottom: 1.4em;
+			}
+			.fixed div dt {
+				font-size: 0.8em;
+				font-weight: 700;
+				text-transform: uppercase;
+				letter-spacing: 0.05em;
+				color: rgb(var(--gray));
+			}
+			.fixed div dd {
+				margin: 0.15em 0 0;
+				font-weight: 600;
+			}
+			.verified {
+				color: #15803d;
+			}
+			.unverified {
+				color: #b45309;
+			}
+			form.grid {
+				display: grid;
+				gap: 1em;
+			}
+			.grid2 {
+				display: grid;
+				grid-template-columns: 1fr 1fr;
+				gap: 1em;
+			}
+			@media (max-width: 640px) {
+				.grid2 {
+					grid-template-columns: 1fr;
+				}
+			}
+			.field label {
+				display: block;
+				font-weight: 600;
+				font-size: 0.92em;
+				margin-bottom: 0.35em;
+			}
+			.field input {
+				width: 100%;
+				font: inherit;
+				font-size: 0.97em;
+				padding: 0.6em 0.75em;
+				border: 1px solid rgb(var(--gray-light));
+				border-radius: 9px;
+				background: var(--bg);
+				box-sizing: border-box;
+			}
+			.field input:focus {
+				outline: 2px solid var(--accent);
+				outline-offset: 1px;
+				border-color: var(--accent);
+			}
+			.btn {
+				font: inherit;
+				font-weight: 700;
+				background: var(--accent);
+				color: #fff;
+				border: 1px solid var(--accent);
+				border-radius: 999px;
+				padding: 0.65em 1.5em;
+				cursor: pointer;
+				justify-self: start;
+			}
+			.btn:hover {
+				background: var(--accent-dark);
+			}
+			.notice {
+				border-radius: 10px;
+				padding: 0.8em 1em;
+				margin-bottom: 1.1em;
+				font-weight: 600;
+				font-size: 0.93em;
+			}
+			.notice.ok {
+				background: #dcfce7;
+				color: #166534;
+				border: 1px solid #86efac;
+			}
+			.notice.bad {
+				background: #fee2e2;
+				color: #991b1b;
+				border: 1px solid #fca5a5;
+			}
+			.inline-form {
+				display: inline;
+			}
+			.linkbtn {
+				font: inherit;
+				font-size: 0.92em;
+				font-weight: 700;
+				background: none;
+				border: none;
+				color: var(--accent-dark);
+				text-decoration: underline;
+				cursor: pointer;
+				padding: 0;
+			}
+		</style>
+	</head>
+	<body>
+		<Header />
+		<main>
+			<div class="wrap">
+				<AccountNav name={user.name} email={user.email} active="profile" />
+
+				<section class="panel">
+					<h1>My profile</h1>
+					<dl class="fixed">
+						<div>
+							<dt>Username</dt>
+							<dd>{profile?.username ?? '—'}</dd>
+						</div>
+						<div>
+							<dt>Email address</dt>
+							<dd>
+								{user.email}{' '}
+								{user.emailVerified ? (
+									<span class="verified">(verified ✓)</span>
+								) : (
+									<span class="unverified">(not verified)</span>
+								)}
+							</dd>
+						</div>
+					</dl>
+					{!user.emailVerified && (
+						<p>
+							Your email is not verified yet. A verified email is needed before a purchase can be
+							completed.
+							<form class="inline-form" method="post" action="/api/account/resend-verification">
+								<input type="hidden" name="back" value="/account/profile" />
+								<button class="linkbtn" type="submit">Resend the verification email</button>
+							</form>
+						</p>
+					)}
+					{saveMsg && <p class={`notice ${saved === '1' ? 'ok' : 'bad'}`}>{saveMsg}</p>}
+					<form class="grid" method="post" action="/api/account/profile">
+						<div class="grid2">
+							<div class="field">
+								<label for="p-fullname">Full name *</label>
+								<input id="p-fullname" name="fullName" type="text" required maxlength="80" value={profile?.full_name ?? user.name} />
+							</div>
+							<div class="field">
+								<label for="p-whatsapp">WhatsApp *</label>
+								<input id="p-whatsapp" name="whatsapp" type="tel" required maxlength="24" value={profile?.whatsapp ?? ''} placeholder="+1 555 123 4567" />
+							</div>
+						</div>
+						<div class="grid2">
+							<div class="field">
+								<label for="p-telegram">Telegram</label>
+								<input id="p-telegram" name="telegram" type="text" maxlength="36" value={profile?.telegram ? '@' + profile.telegram : ''} placeholder="@username" />
+							</div>
+							<div class="field">
+								<label for="p-country">Country *</label>
+								<input id="p-country" name="country" type="text" required maxlength="60" value={profile?.country ?? ''} />
+							</div>
+						</div>
+						<div class="field">
+							<label for="p-address">Address *</label>
+							<input id="p-address" name="address" type="text" required maxlength="160" value={profile?.address ?? ''} />
+						</div>
+						<div class="grid2">
+							<div class="field">
+								<label for="p-city">City *</label>
+								<input id="p-city" name="city" type="text" required maxlength="60" value={profile?.city ?? ''} />
+							</div>
+							<div class="field">
+								<label for="p-state">State / Province *</label>
+								<input id="p-state" name="state" type="text" required maxlength="60" value={profile?.state ?? ''} />
+							</div>
+						</div>
+						<div class="grid2">
+							<div class="field">
+								<label for="p-zip">ZIP code *</label>
+								<input id="p-zip" name="zip" type="text" required maxlength="12" value={profile?.zip ?? ''} />
+							</div>
+						</div>
+						<button class="btn" type="submit">Save details</button>
+					</form>
+				</section>
+
+				<section class="panel">
+					<h2>Change password</h2>
+					{pwMsg && <p class={`notice ${pw === 'done' ? 'ok' : 'bad'}`}>{pwMsg}</p>}
+					<form class="grid" method="post" action="/api/account/change-password">
+						<div class="field">
+							<label for="pw-current">Current password</label>
+							<input id="pw-current" name="currentPassword" type="password" required autocomplete="current-password" />
+						</div>
+						<div class="field">
+							<label for="pw-new">New password (8+ characters)</label>
+							<input id="pw-new" name="newPassword" type="password" required minlength="8" maxlength="128" autocomplete="new-password" />
+						</div>
+						<button class="btn" type="submit">Change password</button>
+					</form>
+				</section>
+			</div>
+		</main>
+		<Footer />
+	</body>
+</html>

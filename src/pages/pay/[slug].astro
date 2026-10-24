@@ -5,6 +5,7 @@ import Footer from '../../components/Footer.astro';
 import { formatUsd, CRYPTOS, type CryptoCode } from '../../lib/packages';
 import { getEnv, getDatabaseUrl } from '../../lib/env';
 import { getEffectiveSettings, findPackage } from '../../lib/settings';
+import { baSessionUser, verificationEnforced } from '../../lib/baSession';
 import QRCode from 'qrcode';
 
 export const prerender = false;
@@ -17,6 +18,17 @@ const pkg = findPackage(settings, Astro.params.slug ?? '');
 if (!pkg) {
 	return new Response('Package not found.', { status: 404 });
 }
+
+// Checkout requires an account: guests go to sign in / register
+// first and come straight back here afterwards.
+const buyer = await baSessionUser(Astro);
+if (!buyer) {
+	return Astro.redirect('/login?next=' + encodeURIComponent('/pay/' + pkg.slug) + '&notice=buy');
+}
+// …and a verified email (enforced when an email provider is
+// configured, so verification links can really be delivered).
+const mustVerify = verificationEnforced(Astro) && !buyer.emailVerified;
+const verifyState = Astro.url.searchParams.get('verify') ?? '';
 
 const title = `Pay ${formatUsd(pkg.priceUsd)} — ${pkg.duration}, ${pkg.devices} Devices`;
 const description = `Pay for your YTCPM Bot license (${pkg.duration}, ${pkg.devices} devices) with USDT, BTC or ETH, then submit your payment screenshot for activation.`;
@@ -209,11 +221,38 @@ const exchanges = [
 				<p>
 					<a href="/pricing">← Choose a different package</a>
 				</p>
+				<p>
+					Paying as <strong>{buyer.name}</strong> ({buyer.email}) — your account details are
+					used for the order automatically.
+				</p>
 				{error && <p class="error" role="alert">{error}</p>}
 			</section>
 
 			{
-				!anyConfigured ? (
+				mustVerify ? (
+					<section>
+						<div class="warnbox">
+							<p style="margin:0 0 0.8em">
+								<strong>One step first: verify your email.</strong> We sent a verification
+								link to <strong>{buyer.email}</strong>. Open it, then come back — this
+								payment page unlocks automatically once your email is verified.
+							</p>
+							{verifyState === 'sent' && (
+								<p>✅ A new verification link has been sent — check your inbox (and the spam folder).</p>
+							)}
+							{verifyState === 'error' && (
+								<p>⚠️ The email could not be sent just now — please try again in a moment.</p>
+							)}
+							<form method="post" action="/api/account/resend-verification">
+								<input type="hidden" name="back" value={'/pay/' + pkg.slug} />
+								<button class="btn" type="submit">Resend verification email</button>
+							</form>
+							<p style="margin-bottom:0">
+								<a href={'/pay/' + pkg.slug}>I have verified — refresh this page</a>
+							</p>
+						</div>
+					</section>
+				) : !anyConfigured ? (
 					<section>
 						<div class="warnbox">
 							<p style="margin:0">
@@ -298,18 +337,10 @@ const exchanges = [
 								license.
 							</p>
 
-							<label class="field">
-								Full name *
-								<input type="text" name="name" required autocomplete="name" />
-							</label>
-							<label class="field">
-								Email address *
-								<input type="email" name="email" required autocomplete="email" />
-							</label>
-							<label class="field">
-								WhatsApp / Telegram (so admin can reach you faster)
-								<input type="text" name="contact" autocomplete="tel" />
-							</label>
+							<p>
+								Your name, email and WhatsApp / Telegram are taken from your account
+								(<strong>{buyer.email}</strong>) — the admin reaches you on those.
+							</p>
 							<label class="field">
 								Transaction hash / TXID (recommended — enables automatic confirmation)
 								<input type="text" name="tx_hash" placeholder="Paste the transaction hash from your wallet or exchange" />

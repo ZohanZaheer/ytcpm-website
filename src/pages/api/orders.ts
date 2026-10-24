@@ -2,9 +2,9 @@ import type { APIRoute } from 'astro';
 import { getEnv, getDatabaseUrl } from '../../lib/env';
 import { CRYPTOS, type CryptoCode } from '../../lib/packages';
 import { validateScreenshot, storeImage } from '../../lib/storage';
-import { createOrder } from '../../lib/db';
+import { createOrder, getProfile } from '../../lib/db';
 import { getEffectiveSettings, findPackage } from '../../lib/settings';
-import { baSessionUser } from '../../lib/baSession';
+import { baSessionUser, verificationEnforced } from '../../lib/baSession';
 
 export const prerender = false;
 
@@ -37,9 +37,30 @@ export const POST: APIRoute = async (ctx) => {
 	const crypto = String(form.get('crypto') ?? '') as CryptoCode;
 	if (!CRYPTOS.includes(crypto)) return backToPay(slug, 'Please choose a payment currency (USDT, BTC or ETH).');
 
-	const name = String(form.get('name') ?? '').trim();
-	const email = String(form.get('email') ?? '').trim();
-	const contact = String(form.get('contact') ?? '').trim() || null;
+	// Identity comes from the signed-in account — the checkout no
+	// longer asks for name / email / contact (they are on the
+	// account). Form values remain a fallback for the legacy guest
+	// path only.
+	const buyer = await baSessionUser(ctx).catch(() => null);
+	if (buyer && verificationEnforced(ctx) && !buyer.emailVerified) {
+		return backToPay(
+			slug,
+			'Please verify your email address before completing a purchase — check your inbox for the verification link.',
+		);
+	}
+	let name = String(form.get('name') ?? '').trim();
+	let email = String(form.get('email') ?? '').trim();
+	let contact: string | null = String(form.get('contact') ?? '').trim() || null;
+	if (buyer) {
+		const profile = dbUrlEarly ? await getProfile(dbUrlEarly, buyer.id).catch(() => null) : null;
+		name = profile?.full_name ?? buyer.name;
+		email = buyer.email;
+		if (profile) {
+			contact = [profile.whatsapp, profile.telegram ? '@' + profile.telegram : '']
+				.filter(Boolean)
+				.join(' · ');
+		}
+	}
 	const txHash = String(form.get('tx_hash') ?? '').trim() || null;
 	const note = String(form.get('note') ?? '').trim() || null;
 	if (!name) return backToPay(slug, 'Please enter your full name.');
@@ -64,9 +85,8 @@ export const POST: APIRoute = async (ctx) => {
 		Math.random().toString(36).slice(2, 6) +
 		Date.now().toString(36).slice(-6);
 
-	// Link the order to the customer's account when they are signed in,
-	// so it shows in their dashboard (guest orders match by email there).
-	const buyer = await baSessionUser(ctx).catch(() => null);
+	// `buyer` was resolved above; the order links to their account
+	// so it shows in their dashboard.
 
 	try {
 		const stored = await storeImage(env, id, bytes, check.ext, check.type);

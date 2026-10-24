@@ -7,7 +7,7 @@ import AdminLogin from '../../components/AdminLogin.astro';
 import { getEnv, getDatabaseUrl } from '../../lib/env';
 import { adminGate } from '../../lib/adminGate';
 import { adminConfigured } from '../../lib/auth';
-import { listOrders, countNewMessages } from '../../lib/db';
+import { listOrders, countNewMessages, countNewRequests } from '../../lib/db';
 import { getEffectiveSettings } from '../../lib/settings';
 
 export const prerender = false;
@@ -20,6 +20,8 @@ const configured = adminConfigured(Astro);
 
 let counts = { total: 0, pending: 0, confirmed: 0, rejected: 0 };
 let newMessages = 0;
+let newRequests = 0;
+let licensesWaiting = 0;
 let settingsSummary: { usdt: string; network: string; storage: string; version: string } | null = null;
 let dbError = '';
 if (email) {
@@ -36,6 +38,8 @@ if (email) {
 				rejected: orders.filter((o) => o.status === 'rejected').length,
 			};
 			newMessages = await countNewMessages(dbUrl).catch(() => 0);
+			newRequests = await countNewRequests(dbUrl).catch(() => 0);
+			licensesWaiting = orders.filter((o) => o.status === 'confirmed' && !o.fulfilled_at).length;
 			const s = await getEffectiveSettings(dbUrl, (k) => getEnv(Astro, k));
 			settingsSummary = {
 				usdt: s.payments.usdtAddress || '— not set —',
@@ -123,6 +127,14 @@ const description = 'YTCPM admin dashboard.';
 						) : (
 							<>
 								<div class="cards">
+									<a class="card" href="/admin/requests">
+										<div class="num">{newRequests}</div>
+										<div class="lbl">⚡ New support requests (priority)</div>
+									</a>
+									<a class="card" href="/admin/licenses">
+										<div class="num">{licensesWaiting}</div>
+										<div class="lbl">Licenses waiting for bot login</div>
+									</a>
 									<a class="card" href="/admin/orders">
 										<div class="num">{counts.pending}</div>
 										<div class="lbl">Orders waiting for confirmation</div>

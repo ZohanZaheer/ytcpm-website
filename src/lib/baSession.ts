@@ -38,6 +38,7 @@ export interface BaUser {
 	email: string;
 	name: string;
 	role: string;
+	emailVerified: boolean;
 }
 
 /** The better-auth user for this request, or null when signed out. */
@@ -48,10 +49,17 @@ export async function baSessionUser(ctx: CtxLike): Promise<BaUser | null> {
 		const session = await auth.api.getSession({ headers: ctx.request.headers });
 		if (!session) return null;
 		const u = session.user as typeof session.user & { role?: string };
-		return { id: u.id, email: u.email, name: u.name, role: u.role ?? 'user' };
+		return { id: u.id, email: u.email, name: u.name, role: u.role ?? 'user', emailVerified: !!u.emailVerified };
 	} catch {
 		return null;
 	}
+}
+
+/** Email verification is enforced at checkout only when an email
+ * provider is actually configured (verification links can then
+ * really be delivered). See src/lib/mail.ts. */
+export function verificationEnforced(ctx: CtxLike): boolean {
+	return !!(getEnv(ctx, 'RESEND_API_KEY') && getEnv(ctx, 'EMAIL_FROM'));
 }
 
 /** Copy any Set-Cookie headers from a better-auth response onto ours. */

@@ -113,3 +113,44 @@ CREATE TABLE IF NOT EXISTS "verification" (
 	"createdAt" TIMESTAMPTZ NOT NULL DEFAULT now(),
 	"updatedAt" TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+-- Administrators (separate from customer accounts).
+CREATE TABLE IF NOT EXISTS admin_users (
+  id TEXT PRIMARY KEY,
+  email TEXT NOT NULL UNIQUE,
+  name TEXT NOT NULL DEFAULT 'Admin',
+  password_hash TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- Extended customer profile collected at registration.
+CREATE TABLE IF NOT EXISTS customer_profiles (
+  user_id TEXT PRIMARY KEY REFERENCES "user"(id) ON DELETE CASCADE,
+  username TEXT NOT NULL UNIQUE,
+  full_name TEXT NOT NULL,
+  country TEXT NOT NULL,
+  state TEXT NOT NULL,
+  city TEXT NOT NULL,
+  address TEXT NOT NULL,
+  zip TEXT NOT NULL,
+  whatsapp TEXT NOT NULL UNIQUE,
+  telegram TEXT UNIQUE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- Bot license assignment on orders.
+ALTER TABLE payment_orders ADD COLUMN IF NOT EXISTS bot_username TEXT;
+ALTER TABLE payment_orders ADD COLUMN IF NOT EXISTS bot_password TEXT;
+ALTER TABLE payment_orders ADD COLUMN IF NOT EXISTS fulfilled_at TIMESTAMPTZ;
+
+-- Priority support requests from customers with an active license.
+CREATE TABLE IF NOT EXISTS support_requests (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL,
+  order_id TEXT,
+  topic TEXT NOT NULL,
+  message TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'new',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);

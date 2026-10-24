@@ -1,13 +1,15 @@
 ---
 // Dashboard navigation shown on every signed-in admin page.
 interface Props {
-	active: 'dashboard' | 'orders' | 'packages' | 'settings' | 'messages';
+	active: 'dashboard' | 'orders' | 'licenses' | 'requests' | 'packages' | 'settings' | 'messages';
 	email?: string;
 }
 const { active, email } = Astro.props;
 const links = [
 	{ id: 'dashboard', href: '/admin', label: 'Dashboard' },
+	{ id: 'requests', href: '/admin/requests', label: '⚡ Support Requests' },
 	{ id: 'orders', href: '/admin/orders', label: 'Orders' },
+	{ id: 'licenses', href: '/admin/licenses', label: 'Bot Licenses' },
 	{ id: 'packages', href: '/admin/packages', label: 'Packages & Prices' },
 	{ id: 'settings', href: '/admin/settings', label: 'Payment & Download Settings' },
 	{ id: 'messages', href: '/admin/messages', label: 'Messages' },

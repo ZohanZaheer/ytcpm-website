@@ -116,14 +116,6 @@ export async function sessionEmailFromRequest(ctx: CtxLike): Promise<string | nu
 export async function isAdminRequest(
 	ctx: CtxLike & { formSecret?: string },
 ): Promise<boolean> {
-	// better-auth session with the admin role (the primary login now).
-	try {
-		const { baSessionUser } = await import('./baSession');
-		const baUser = await baSessionUser(ctx);
-		if (baUser?.role === 'admin') return true;
-	} catch {
-		// Auth layer unavailable — the checks below are the fallback.
-	}
 	if (await sessionEmailFromRequest(ctx)) return true;
 	const secret = getEnv(ctx, 'ADMIN_SECRET');
 	if (!secret) return false;

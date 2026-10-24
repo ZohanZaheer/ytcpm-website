@@ -3,15 +3,18 @@ import BaseHead from '../components/BaseHead.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import { SITE_TITLE } from '../consts';
-import { baSessionUser } from '../lib/baSession';
+import { baSessionUser, verificationEnforced } from '../lib/baSession';
 import { getEnv, getDatabaseUrl } from '../lib/env';
 import { listOrdersForUser, type PaymentOrder } from '../lib/db';
-import { getEffectiveSettings } from '../lib/settings';
+import { getEffectiveSettings, type LicensePackage } from '../lib/settings';
 import { formatUsd } from '../lib/packages';
 
 export const prerender = false;
 
 const user = await baSessionUser(Astro);
+const mustVerify = !!user && verificationEnforced(Astro) && !user.emailVerified;
+const verifyState = Astro.url.searchParams.get('verify') ?? '';
+const justVerified = Astro.url.searchParams.get('verified') === '1';
 if (!user) return Astro.redirect('/login');
 
 interface LicenseView {
@@ -68,6 +71,27 @@ if (!dbUrl) {
 }
 
 const hasActive = licenses.some((l) => l.state === 'active');
+
+// Right-hand column of the dashboard: the packages the admin has
+// ticked "Popular" (highest price first, at most 3, at least 1 —
+// with the top-priced plan as the fallback when none are ticked).
+let popularPkgs: LicensePackage[] = [];
+try {
+	const dbUrl2 = getDatabaseUrl(Astro);
+	if (dbUrl2) {
+		const s2 = await getEffectiveSettings(dbUrl2, (k) => getEnv(Astro, k));
+		const activePkgs = s2.packages.filter((p) => p.active);
+		const popular = activePkgs
+			.filter((p) => p.popular)
+			.sort((a, b) => b.priceUsd - a.priceUsd)
+			.slice(0, 3);
+		popularPkgs = popular.length > 0
+			? popular
+			: [...activePkgs].sort((a, b) => b.priceUsd - a.priceUsd).slice(0, 1);
+	}
+} catch {
+	popularPkgs = [];
+}
 ---
 
 <!doctype html>
@@ -154,6 +178,63 @@ const hasActive = licenses.some((l) => l.state === 'active');
 				font-size: 1.12em;
 				margin: 0;
 			}
+			.notice {
+				border-radius: 10px;
+				padding: 0.9em 1.1em;
+				margin-bottom: 1.2em;
+				font-weight: 600;
+				font-size: 0.95em;
+			}
+			.notice.ok {
+				background: #dcfce7;
+				color: #166534;
+				border: 1px solid #86efac;
+			}
+			.notice.warn {
+				background: #fef3c7;
+				color: #92400e;
+				border: 1px solid #fcd34d;
+				font-weight: 500;
+			}
+			.creds {
+				margin-top: 1em;
+				background: #fff7ed;
+				border: 1px dashed var(--accent);
+				border-radius: 10px;
+				padding: 0.9em 1.1em;
+			}
+			.creds h3 {
+				margin: 0 0 0.5em;
+				font-size: 1em;
+			}
+			.creds dl {
+				display: grid;
+				grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+				gap: 0.5em 1.4em;
+				margin: 0;
+			}
+			.creds dt {
+				font-size: 0.78em;
+				font-weight: 700;
+				text-transform: uppercase;
+				letter-spacing: 0.05em;
+				color: rgb(var(--gray));
+			}
+			.creds dd {
+				margin: 0.1em 0 0;
+				font-weight: 700;
+			}
+			.creds code {
+				font-size: 1.02em;
+			}
+			.creds .row-actions {
+				margin-top: 0.8em;
+			}
+			.preparing {
+				margin-top: 1em;
+				font-weight: 600;
+				color: #92400e;
+			}
 			.chip {
 				font-size: 0.78em;
 				font-weight: 700;
@@ -195,6 +276,62 @@ const hasActive = licenses.some((l) => l.state === 'active');
 			.lic .links {
 				font-size: 0.92em;
 			}
+			.dash-grid {
+				display: grid;
+				grid-template-columns: minmax(0, 1fr) 320px;
+				gap: 1.8em;
+				align-items: start;
+			}
+			@media (max-width: 920px) {
+				.dash-grid {
+					grid-template-columns: 1fr;
+				}
+			}
+			.dash-side .side-title {
+				margin: 0.2em 0 0.9em;
+				font-size: 1.15em;
+			}
+			.pkg-card {
+				background: var(--surface);
+				border: 1px solid rgb(var(--gray-light));
+				border-radius: 14px;
+				padding: 1.15em 1.25em;
+				box-shadow: var(--box-shadow);
+				margin-bottom: 1em;
+			}
+			.pkg-dur {
+				margin: 0;
+				font-weight: 800;
+				font-size: 1.1em;
+			}
+			.pkg-dev {
+				margin: 0.15em 0 0;
+				color: rgb(var(--gray-dark));
+				font-size: 0.93em;
+			}
+			.pkg-price {
+				margin: 0.45em 0 0;
+				font-size: 1.55em;
+				font-weight: 800;
+				color: var(--accent-dark);
+			}
+			.pkg-save {
+				display: inline-block;
+				margin: 0.5em 0 0;
+				font-size: 0.8em;
+				font-weight: 700;
+				background: #dcfce7;
+				color: #166534;
+				border-radius: 999px;
+				padding: 0.15em 0.8em;
+			}
+			.pkg-buy {
+				display: inline-block;
+				margin-top: 0.8em;
+			}
+			.side-note {
+				font-size: 0.93em;
+			}
 			.empty {
 				max-width: 860px;
 				background: var(--peach-soft);
@@ -218,6 +355,8 @@ const hasActive = licenses.some((l) => l.state === 'active');
 					</p>
 					<div class="actions">
 						<a class="btn primary" href="/pricing">Buy a license</a>
+						<a class="btn" href="/account/profile">My profile</a>
+						<a class="btn" href="/account/support">Support</a>
 						{hasActive && <a class="btn" href="/download">Download the bot</a>}
 						<form method="post" action="/api/account/logout">
 							<button class="btn" type="submit">Sign out</button>
@@ -228,6 +367,26 @@ const hasActive = licenses.some((l) => l.state === 'active');
 			<section class="body bleed">
 				<div class="wrap">
 					<h2>My licenses &amp; orders</h2>
+					{justVerified && (
+						<p class="notice ok">✅ Your email is verified — thank you! You can complete a purchase now.</p>
+					)}
+					{mustVerify && (
+						<div class="notice warn">
+							<p style="margin:0 0 0.6em">
+								<strong>Please verify your email.</strong> We sent a verification link to{' '}
+								<strong>{user.email}</strong> — a verified email is required before a purchase can
+								be completed.
+							</p>
+							{verifyState === 'sent' && <p style="margin:0 0 0.6em">✅ A new link has been sent — check your inbox (and spam folder).</p>}
+							{verifyState === 'error' && <p style="margin:0 0 0.6em">⚠️ The email could not be sent just now — please try again.</p>}
+							<form method="post" action="/api/account/resend-verification">
+								<input type="hidden" name="back" value="/account" />
+								<button class="btn" type="submit">Resend verification email</button>
+							</form>
+						</div>
+					)}
+					<div class="dash-grid">
+						<div class="dash-main">
 					{
 						dbError ? (
 							<p class="error">{dbError}</p>
@@ -285,11 +444,66 @@ const hasActive = licenses.some((l) => l.state === 'active');
 										{l.state === 'expired' && (
 											<> — <a href="/pricing">renew with a new plan</a></>
 										)}
+										{l.state === 'active' && (
+											<> — <a href={`/account/support?order=${l.order.id}`}>Contact about this license</a></>
+										)}
 									</p>
+									{l.order.status === 'confirmed' && (
+										l.order.fulfilled_at && l.order.bot_username ? (
+											<div class="creds">
+												<h3>🤖 Your bot login</h3>
+												<dl>
+													<div>
+														<dt>Username</dt>
+														<dd><code>{l.order.bot_username}</code></dd>
+													</div>
+													<div>
+														<dt>Password</dt>
+														<dd><code>{l.order.bot_password}</code></dd>
+													</div>
+													<div>
+														<dt>License</dt>
+														<dd>{l.order.package_label}</dd>
+													</div>
+													{l.daysLeft !== null && (
+														<div>
+															<dt>Days remaining</dt>
+															<dd>{l.daysLeft} days</dd>
+														</div>
+													)}
+												</dl>
+												<p class="row-actions">
+													<a class="btn" href={`/account/support?order=${l.order.id}`}>
+														Contact about this license
+													</a>
+												</p>
+											</div>
+										) : (
+											<p class="preparing">
+												⏳ Your bot login is being prepared — the admin is assigning your
+												username &amp; password and they will appear here.
+											</p>
+										)
+									)}
 								</article>
 							))
 						)
 					}
+						</div>
+						<aside class="dash-side">
+							<h3 class="side-title">⭐ Popular packages</h3>
+							{popularPkgs.map((p) => (
+								<article class="pkg-card">
+									<p class="pkg-dur">{p.duration}</p>
+									<p class="pkg-dev">{p.devices} devices</p>
+									<p class="pkg-price">{formatUsd(p.priceUsd)}</p>
+									{p.saveNote && <p class="pkg-save">{p.saveNote}</p>}
+									<a class="btn primary pkg-buy" href={'/pay/' + p.slug}>Buy this plan</a>
+								</article>
+							))}
+							<p class="side-note"><a href="/pricing">See all plans →</a></p>
+						</aside>
+					</div>
 				</div>
 			</section>
 		</main>

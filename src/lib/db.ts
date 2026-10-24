@@ -26,6 +26,9 @@ export interface PaymentOrder {
 	screenshot_driver: string;
 	screenshot_ref: string;
 	user_id: string | null;
+	bot_username: string | null;
+	bot_password: string | null;
+	fulfilled_at: string | null;
 	status: OrderStatus;
 	created_at: string;
 	updated_at: string;
@@ -126,6 +129,50 @@ const SCHEMA_SQL = `
 		"createdAt" TIMESTAMPTZ NOT NULL DEFAULT now(),
 		"updatedAt" TIMESTAMPTZ NOT NULL DEFAULT now()
 	);
+	-- Administrators live in their OWN table, fully separate from
+	-- customer accounts: a customer login can never open the admin,
+	-- because admin sign-in only ever reads this table (plus the
+	-- one-time environment bootstrap that creates the first row).
+	CREATE TABLE IF NOT EXISTS admin_users (
+		id TEXT PRIMARY KEY,
+		email TEXT NOT NULL UNIQUE,
+		name TEXT NOT NULL DEFAULT 'Admin',
+		password_hash TEXT NOT NULL,
+		created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+	);
+	-- Extended customer profile collected at registration (the
+	-- better-auth user row holds only name + email).
+	CREATE TABLE IF NOT EXISTS customer_profiles (
+		user_id TEXT PRIMARY KEY REFERENCES "user"(id) ON DELETE CASCADE,
+		username TEXT NOT NULL UNIQUE,
+		full_name TEXT NOT NULL,
+		country TEXT NOT NULL,
+		state TEXT NOT NULL,
+		city TEXT NOT NULL,
+		address TEXT NOT NULL,
+		zip TEXT NOT NULL,
+		whatsapp TEXT NOT NULL UNIQUE,
+		telegram TEXT UNIQUE,
+		created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+		updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+	);
+	-- Bot license assignment on an order: credentials the admin gives
+	-- the customer for the bot itself; shown to the customer only
+	-- once fulfilled_at is set (admin marked it done).
+	ALTER TABLE payment_orders ADD COLUMN IF NOT EXISTS bot_username TEXT;
+	ALTER TABLE payment_orders ADD COLUMN IF NOT EXISTS bot_password TEXT;
+	ALTER TABLE payment_orders ADD COLUMN IF NOT EXISTS fulfilled_at TIMESTAMPTZ;
+	-- Priority support requests from customers with an active
+	-- license, sent from inside their dashboard.
+	CREATE TABLE IF NOT EXISTS support_requests (
+		id TEXT PRIMARY KEY,
+		user_id TEXT NOT NULL,
+		order_id TEXT,
+		topic TEXT NOT NULL,
+		message TEXT NOT NULL,
+		status TEXT NOT NULL DEFAULT 'new',
+		created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+	);
 `;
 
 async function withClient<T>(connectionString: string, fn: (client: Client) => Promise<T>): Promise<T> {
@@ -160,7 +207,7 @@ export async function ensureSchema(connectionString: string): Promise<void> {
 
 export async function createOrder(
 	connectionString: string,
-	order: Omit<PaymentOrder, 'status' | 'created_at' | 'updated_at'>,
+	order: Omit<PaymentOrder, 'status' | 'created_at' | 'updated_at' | 'bot_username' | 'bot_password' | 'fulfilled_at'>,
 ): Promise<void> {
 	await withClient(connectionString, (c) =>
 		c.query(
@@ -353,6 +400,214 @@ export async function getAuthUserByEmail(connectionString: string, email: string
 export async function setAuthUserRole(connectionString: string, id: string, role: string): Promise<void> {
 	await withClient(connectionString, (c) =>
 		c.query('UPDATE "user" SET role = $2, "updatedAt" = now() WHERE id = $1', [id, role]),
+	);
+}
+
+export async function getAuthUserById(connectionString: string, id: string): Promise<AuthUserRow | null> {
+	const res = await withClient(connectionString, (c) =>
+		c.query('SELECT id, email, name, COALESCE(role, \'user\') AS role FROM "user" WHERE id = $1', [id]),
+	);
+	return (res.rows[0] as AuthUserRow) ?? null;
+}
+
+// ---------------------------------------------------------------------------
+// Administrators (separate table — see the schema note in SCHEMA_SQL).
+// ---------------------------------------------------------------------------
+
+export interface AdminRow {
+	id: string;
+	email: string;
+	name: string;
+	password_hash: string;
+	created_at: string;
+}
+
+export async function countAdminUsers(connectionString: string): Promise<number> {
+	const res = await withClient(connectionString, (c) => c.query('SELECT COUNT(*)::int AS n FROM admin_users'));
+	return res.rows[0]?.n ?? 0;
+}
+
+export async function getAdminByEmail(connectionString: string, email: string): Promise<AdminRow | null> {
+	const res = await withClient(connectionString, (c) =>
+		c.query('SELECT * FROM admin_users WHERE lower(email) = lower($1)', [email]),
+	);
+	return (res.rows[0] as AdminRow) ?? null;
+}
+
+export async function createAdminUser(
+	connectionString: string,
+	admin: { email: string; name: string; passwordHash: string },
+): Promise<void> {
+	const id = `adm_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
+	await withClient(connectionString, (c) =>
+		c.query('INSERT INTO admin_users (id, email, name, password_hash) VALUES ($1, $2, $3, $4)', [
+			id,
+			admin.email,
+			admin.name,
+			admin.passwordHash,
+		]),
+	);
+}
+
+// ---------------------------------------------------------------------------
+// Customer profiles (registration details).
+// ---------------------------------------------------------------------------
+
+export interface CustomerProfile {
+	user_id: string;
+	username: string;
+	full_name: string;
+	country: string;
+	state: string;
+	city: string;
+	address: string;
+	zip: string;
+	whatsapp: string;
+	telegram: string | null;
+}
+
+export async function getProfile(connectionString: string, userId: string): Promise<CustomerProfile | null> {
+	const res = await withClient(connectionString, (c) =>
+		c.query('SELECT * FROM customer_profiles WHERE user_id = $1', [userId]),
+	);
+	return (res.rows[0] as CustomerProfile) ?? null;
+}
+
+export async function createProfile(connectionString: string, p: CustomerProfile): Promise<void> {
+	await withClient(connectionString, (c) =>
+		c.query(
+			`INSERT INTO customer_profiles
+			 (user_id, username, full_name, country, state, city, address, zip, whatsapp, telegram)
+			 VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`,
+			[p.user_id, p.username, p.full_name, p.country, p.state, p.city, p.address, p.zip, p.whatsapp, p.telegram],
+		),
+	);
+}
+
+export async function updateProfile(
+	connectionString: string,
+	userId: string,
+	p: Omit<CustomerProfile, 'user_id' | 'username'>,
+): Promise<void> {
+	await withClient(connectionString, (c) =>
+		c.query(
+			`UPDATE customer_profiles SET full_name=$2, country=$3, state=$4, city=$5, address=$6,
+			 zip=$7, whatsapp=$8, telegram=$9, updated_at=now() WHERE user_id=$1`,
+			[userId, p.full_name, p.country, p.state, p.city, p.address, p.zip, p.whatsapp, p.telegram],
+		),
+	);
+}
+
+/** Is a unique profile field already taken? (username/telegram are
+ * case-insensitive; whatsapp is stored normalized as +digits.) */
+export async function profileFieldTaken(
+	connectionString: string,
+	field: 'username' | 'whatsapp' | 'telegram',
+	value: string,
+	exceptUserId?: string,
+): Promise<boolean> {
+	const insensitive = field !== 'whatsapp';
+	const res = await withClient(connectionString, (c) =>
+		c.query(
+			`SELECT 1 FROM customer_profiles
+			 WHERE ${insensitive ? `lower(${field}) = lower($1)` : `${field} = $1`}
+			 ${exceptUserId ? 'AND user_id <> $2' : ''} LIMIT 1`,
+			exceptUserId ? [value, exceptUserId] : [value],
+		),
+	);
+	return res.rows.length > 0;
+}
+
+// ---------------------------------------------------------------------------
+// Bot license assignment + priority support requests.
+// ---------------------------------------------------------------------------
+
+export async function setOrderLicense(
+	connectionString: string,
+	orderId: string,
+	botUsername: string | null,
+	botPassword: string | null,
+	markDone: boolean,
+): Promise<void> {
+	await withClient(connectionString, (c) =>
+		c.query(
+			`UPDATE payment_orders
+			 SET bot_username = $2, bot_password = $3,
+			     fulfilled_at = CASE WHEN $4 THEN COALESCE(fulfilled_at, now()) ELSE fulfilled_at END,
+			     updated_at = now()
+			 WHERE id = $1`,
+			[orderId, botUsername, botPassword, markDone],
+		),
+	);
+}
+
+export async function unfulfillOrder(connectionString: string, orderId: string): Promise<void> {
+	await withClient(connectionString, (c) =>
+		c.query('UPDATE payment_orders SET fulfilled_at = NULL, updated_at = now() WHERE id = $1', [orderId]),
+	);
+}
+
+export type SupportStatus = 'new' | 'done';
+
+export interface SupportRequest {
+	id: string;
+	user_id: string;
+	order_id: string | null;
+	topic: string;
+	message: string;
+	status: SupportStatus;
+	created_at: string;
+}
+
+export async function createSupportRequest(
+	connectionString: string,
+	r: { userId: string; orderId: string | null; topic: string; message: string },
+): Promise<string> {
+	const id = `req_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
+	await withClient(connectionString, (c) =>
+		c.query('INSERT INTO support_requests (id, user_id, order_id, topic, message) VALUES ($1,$2,$3,$4,$5)', [
+			id,
+			r.userId,
+			r.orderId,
+			r.topic,
+			r.message,
+		]),
+	);
+	return id;
+}
+
+export async function listSupportRequests(connectionString: string, limit = 100): Promise<SupportRequest[]> {
+	const res = await withClient(connectionString, (c) =>
+		c.query('SELECT * FROM support_requests ORDER BY created_at DESC LIMIT $1', [limit]),
+	);
+	return res.rows as SupportRequest[];
+}
+
+export async function listSupportRequestsForUser(
+	connectionString: string,
+	userId: string,
+	limit = 20,
+): Promise<SupportRequest[]> {
+	const res = await withClient(connectionString, (c) =>
+		c.query('SELECT * FROM support_requests WHERE user_id = $1 ORDER BY created_at DESC LIMIT $2', [userId, limit]),
+	);
+	return res.rows as SupportRequest[];
+}
+
+export async function countNewRequests(connectionString: string): Promise<number> {
+	const res = await withClient(connectionString, (c) =>
+		c.query("SELECT COUNT(*)::int AS n FROM support_requests WHERE status = 'new'"),
+	);
+	return res.rows[0]?.n ?? 0;
+}
+
+export async function setSupportRequestStatus(
+	connectionString: string,
+	id: string,
+	status: SupportStatus,
+): Promise<void> {
+	await withClient(connectionString, (c) =>
+		c.query('UPDATE support_requests SET status = $2 WHERE id = $1', [id, status]),
 	);
 }
 

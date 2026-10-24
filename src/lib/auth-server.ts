@@ -12,6 +12,7 @@
 // whose role is 'admin' (see the bootstrap in /api/admin/login).
 import { betterAuth } from 'better-auth';
 import { Pool } from 'pg';
+import { sendVerificationEmail } from './mail';
 
 export function createAuth(databaseUrl: string, secret: string) {
 	return betterAuth({
@@ -20,6 +21,17 @@ export function createAuth(databaseUrl: string, secret: string) {
 		emailAndPassword: {
 			enabled: true,
 			minPasswordLength: 8,
+		},
+		// Registration sends a verification link (delivered when an
+		// email provider is configured — see src/lib/mail.ts).
+		// Verification is enforced at checkout, not at sign-in, so a
+		// customer can always reach their dashboard and resend it.
+		emailVerification: {
+			sendOnSignUp: true,
+			autoSignInAfterVerification: true,
+			sendVerificationEmail: async ({ user, url }) => {
+				await sendVerificationEmail({ user, url });
+			},
 		},
 		user: {
 			additionalFields: {

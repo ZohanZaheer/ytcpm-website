@@ -5,6 +5,7 @@ import Footer from '../../../components/Footer.astro';
 import { getDatabaseUrl } from '../../../lib/env';
 import { getOrder } from '../../../lib/db';
 import { formatUsd } from '../../../lib/packages';
+import { baSessionUser } from '../../../lib/baSession';
 
 export const prerender = false;
 
@@ -21,6 +22,13 @@ if (!dbUrl) {
 		dbError = true;
 	}
 }
+
+const viewer = await baSessionUser(Astro).catch(() => null);
+const isOwnerViewer = !!(
+	viewer &&
+	order &&
+	(order.user_id === viewer.id || order.email.toLowerCase() === viewer.email.toLowerCase())
+);
 
 const title = 'Payment Status — YTCPM Bot License';
 const description = 'Check the confirmation status of your YTCPM Bot license payment.';
@@ -54,6 +62,18 @@ const description = 'Check the confirmation status of your YTCPM Bot license pay
 				font-weight: 700;
 				color: rgb(var(--black));
 			}
+			.btn {
+				display: inline-block;
+				font-weight: 700;
+				background: var(--accent);
+				color: #fff;
+				text-decoration: none;
+				border-radius: 999px;
+				padding: 0.65em 1.5em;
+			}
+			.btn:hover {
+				background: var(--accent-dark);
+			}
 			table.info {
 				width: 100%;
 				border-collapse: collapse;
@@ -75,6 +95,7 @@ const description = 'Check the confirmation status of your YTCPM Bot license pay
 	<body>
 		<Header />
 		<main>
+			<div class="wrap">
 			<section aria-labelledby="status-heading">
 				<h1 id="status-heading">Payment Status</h1>
 				{
@@ -102,11 +123,20 @@ const description = 'Check the confirmation status of your YTCPM Bot license pay
 								{order.status === 'confirmed' && (
 									<>
 										<p class="big">✅ Payment confirmed — thank you!</p>
-										<p style="margin-bottom:0">
+										<p>
 											Your license payment is confirmed.{' '}
 											<strong>Our admin will contact you within 24 hours</strong> with your
 											license details. Please keep your order ID safe.
 										</p>
+										{isOwnerViewer ? (
+											<p style="margin-bottom:0">
+												<a class="btn" href="/account">Go to my dashboard →</a>
+											</p>
+										) : (
+											<p style="margin-bottom:0">
+												<a href="/login">Sign in</a> to see this license in your dashboard.
+											</p>
+										)}
 									</>
 								)}
 								{order.status === 'rejected' && (
@@ -158,6 +188,7 @@ const description = 'Check the confirmation status of your YTCPM Bot license pay
 					)
 				}
 			</section>
+			</div>
 		</main>
 		<Footer />
 		{
