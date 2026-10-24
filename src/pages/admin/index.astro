@@ -1,9 +1,6 @@
 ---
 import BaseHead from '../../components/BaseHead.astro';
-import Header from '../../components/Header.astro';
-import Footer from '../../components/Footer.astro';
-import AdminNav from '../../components/AdminNav.astro';
-import AdminLogin from '../../components/AdminLogin.astro';
+import AdminShell from '../../components/AdminShell.astro';
 import { getEnv, getDatabaseUrl } from '../../lib/env';
 import { adminGate } from '../../lib/adminGate';
 import { adminConfigured } from '../../lib/auth';
@@ -112,16 +109,7 @@ const description = 'YTCPM admin dashboard.';
 		</style>
 	</head>
 	<body>
-		<Header />
-		<main>
-			<div class="wrap">
-			<h1>Admin Dashboard</h1>
-			{
-				!email ? (
-					<AdminLogin error={error} configured={configured} />
-				) : (
-					<>
-						<AdminNav active="dashboard" email={email} />
+		<AdminShell title={title} active="dashboard" email={email} error={error} configured={configured}>
 						{dbError ? (
 							<p class="error">{dbError}</p>
 						) : (
@@ -179,11 +167,6 @@ const description = 'YTCPM admin dashboard.';
 								)}
 							</>
 						)}
-					</>
-				)
-			}
-			</div>
-		</main>
-		<Footer />
+		</AdminShell>
 	</body>
 </html>

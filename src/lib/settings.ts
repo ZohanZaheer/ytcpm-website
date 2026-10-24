@@ -181,6 +181,33 @@ async function packagesFromTable(dbUrl: string, fallback: LicensePackage[]): Pro
 }
 
 /** Effective settings. Falls back to defaults when the DB is unreachable. */
+/** Does this customer currently hold an ACTIVE license (a confirmed
+ * order that has not expired)? Drives the Support entry points —
+ * they are only shown while a license is active. */
+export async function userHasActiveLicense(
+	dbUrl: string | null,
+	userId: string,
+	email: string,
+	env: EnvGetter,
+): Promise<boolean> {
+	if (!dbUrl) return false;
+	try {
+		const { listOrdersForUser } = await import('./db');
+		const settings = await getEffectiveSettings(dbUrl, env);
+		const orders = await listOrdersForUser(dbUrl, userId, email);
+		const now = Date.now();
+		return orders.some((o) => {
+			if (o.status !== 'confirmed') return false;
+			const pkg = settings.packages.find((p) => p.slug === o.package_slug);
+			if (!pkg || pkg.durationDays == null) return true; // lifetime (or unknown package treated as lifetime legacy)
+			const expires = new Date(o.updated_at).getTime() + pkg.durationDays * 86400000;
+			return now <= expires;
+		});
+	} catch {
+		return false;
+	}
+}
+
 export async function getEffectiveSettings(
 	dbUrl: string | undefined,
 	env: EnvGetter,

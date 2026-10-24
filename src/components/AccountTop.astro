@@ -1,0 +1,76 @@
+---
+// The customer dashboard's top band — identical on every account
+// page (licenses, profile, support). The Support and Download
+// actions only appear while the customer has an ACTIVE license.
+interface Props {
+	name: string;
+	email: string;
+	hasActive: boolean;
+}
+const { name, email, hasActive } = Astro.props;
+---
+
+<section class="band bleed">
+	<div class="wrap">
+		<h1>My account</h1>
+		<p class="who">
+			Signed in as <strong>{name}</strong> ({email})
+		</p>
+		<div class="actions">
+			<a class="btn primary" href="/pricing">Buy a license</a>
+			<a class="btn" href="/account/profile">My profile</a>
+			{hasActive && <a class="btn" href="/account/support">Support</a>}
+			{hasActive && <a class="btn" href="/download">Download the bot</a>}
+			<form method="post" action="/api/account/logout">
+				<button class="btn" type="submit">Sign out</button>
+			</form>
+		</div>
+	</div>
+</section>
+
+<style>
+	.band {
+		background: var(--surface);
+		border-bottom: 1px solid rgb(var(--gray-light));
+		padding: 2.4em 0 2em;
+	}
+	.band h1 {
+		font-size: clamp(1.8em, 4vw, 2.4em);
+	}
+	.band .who {
+		color: rgb(var(--gray-dark));
+		margin: 0.2em 0 1.1em;
+	}
+	.actions {
+		display: flex;
+		gap: 0.6em;
+		flex-wrap: wrap;
+		align-items: center;
+	}
+	.actions form {
+		display: inline;
+	}
+	.btn {
+		font: inherit;
+		font-weight: 700;
+		text-decoration: none;
+		padding: 0.6em 1.3em;
+		border-radius: 999px;
+		font-size: 0.93em;
+		border: 1px solid rgb(var(--gray-light));
+		background: var(--bg);
+		color: rgb(var(--black));
+		cursor: pointer;
+	}
+	.btn:hover {
+		border-color: var(--accent);
+	}
+	.btn.primary {
+		background: var(--accent);
+		border-color: var(--accent);
+		color: #fff;
+	}
+	.btn.primary:hover {
+		background: var(--accent-dark);
+	}
+</style>

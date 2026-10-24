@@ -1,0 +1,348 @@
+---
+// The admin dashboard shell: dark left sidebar with the menu
+// (grouped like a proper CMS panel), a top bar with the page
+// title, the signed-in admin and Sign out, and the content area.
+// The only front-end link is "View site" (opens in a new tab).
+// When there is no admin session it renders a standalone,
+// centered sign-in screen instead.
+import AdminLogin from './AdminLogin.astro';
+
+interface Props {
+	title: string;
+	active: 'dashboard' | 'orders' | 'licenses' | 'requests' | 'packages' | 'settings' | 'messages';
+	email?: string | null;
+	error?: string | null;
+	configured: boolean;
+}
+const { title, active, email, error, configured } = Astro.props;
+
+const groups = [
+	{
+		label: 'Overview',
+		links: [{ id: 'dashboard', href: '/admin', label: 'Dashboard', icon: '▦' }],
+	},
+	{
+		label: 'Priority',
+		links: [{ id: 'requests', href: '/admin/requests', label: 'Support Requests', icon: '⚡' }],
+	},
+	{
+		label: 'Sales',
+		links: [
+			{ id: 'orders', href: '/admin/orders', label: 'Orders', icon: '🧾' },
+			{ id: 'licenses', href: '/admin/licenses', label: 'Bot Licenses', icon: '🤖' },
+		],
+	},
+	{
+		label: 'Site',
+		links: [
+			{ id: 'packages', href: '/admin/packages', label: 'Packages & Prices', icon: '🏷️' },
+			{ id: 'settings', href: '/admin/settings', label: 'Payment & Download', icon: '⚙️' },
+			{ id: 'messages', href: '/admin/messages', label: 'Messages', icon: '✉️' },
+		],
+	},
+];
+---
+
+{
+	email ? (
+		<div class="shell">
+			<input type="checkbox" id="admin-nav-toggle" class="nav-toggle" aria-hidden="true" tabindex="-1" />
+			<aside class="side">
+				<a class="brand" href="/admin">
+					<span class="brand-mark" aria-hidden="true">
+						<svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+							<path d="M8 5.5v13l11-6.5z" fill="#fff" />
+						</svg>
+					</span>
+					<span class="brand-name">
+						YTCPM <span class="brand-sub">Admin</span>
+					</span>
+				</a>
+				<nav class="side-nav" aria-label="Admin">
+					{groups.map((g) => (
+						<div class="group">
+							<p class="group-label">{g.label}</p>
+							{g.links.map((l) => (
+								<a href={l.href} class={l.id === active ? 'link on' : 'link'}>
+									<span class="ico" aria-hidden="true">{l.icon}</span>
+									{l.label}
+									{l.id === active && <span class="chev" aria-hidden="true">›</span>}
+								</a>
+							))}
+						</div>
+					))}
+				</nav>
+				<div class="side-foot">
+					<a href="/" target="_blank" rel="noopener" class="view-site">
+						↗ View site
+					</a>
+				</div>
+			</aside>
+			<div class="main-col">
+				<header class="topbar">
+					<label for="admin-nav-toggle" class="burger" aria-label="Toggle menu">☰</label>
+					<h1 class="page-title">{title.replace(/\s*\(Admin\)\s*$/, '')}</h1>
+					<div class="top-right">
+						<span class="who">{email}</span>
+						<form method="post" action="/api/admin/logout">
+							<button type="submit" class="signout">Sign out</button>
+						</form>
+					</div>
+				</header>
+				<main class="content">
+					<slot />
+				</main>
+			</div>
+		</div>
+	) : (
+		<div class="login-screen">
+			<div class="login-brand">
+				<span class="brand-mark big" aria-hidden="true">
+					<svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+						<path d="M8 5.5v13l11-6.5z" fill="#fff" />
+					</svg>
+				</span>
+				<strong>YTCPM Admin</strong>
+			</div>
+			<AdminLogin error={error} configured={configured} />
+			<p class="login-back">
+				<a href="/">← Back to the website</a>
+			</p>
+		</div>
+	)
+}
+
+<style>
+	/* ---------- shell frame ---------- */
+	.shell {
+		display: flex;
+		min-height: 100vh;
+		background: var(--bg);
+	}
+	.nav-toggle {
+		position: absolute;
+		opacity: 0;
+		pointer-events: none;
+	}
+	.main-col {
+		flex: 1;
+		min-width: 0;
+		display: flex;
+		flex-direction: column;
+	}
+	.shell .content {
+		flex: 1;
+		width: 100%;
+		margin: 0;
+		padding: 1.7em 2em 2.4em;
+		box-sizing: border-box;
+	}
+
+	/* ---------- sidebar ---------- */
+	.side {
+		width: 248px;
+		flex: none;
+		background: #17100a;
+		color: #d8cbbd;
+		display: flex;
+		flex-direction: column;
+		padding: 1.1em 0.8em;
+		box-sizing: border-box;
+		position: sticky;
+		top: 0;
+		height: 100vh;
+	}
+	.brand {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.6em;
+		text-decoration: none;
+		color: #fff;
+		padding: 0.2em 0.5em 1em;
+	}
+	.brand-mark {
+		flex: none;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 34px;
+		height: 34px;
+		border-radius: 9px;
+		background: linear-gradient(135deg, #f97316, var(--accent-dark));
+	}
+	.brand-name {
+		font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+		font-weight: 800;
+		font-size: 1.12em;
+	}
+	.brand-sub {
+		color: #fb923c;
+	}
+	.side-nav {
+		flex: 1;
+		overflow-y: auto;
+	}
+	.group {
+		margin-bottom: 1.1em;
+	}
+	.group-label {
+		margin: 0 0 0.45em;
+		padding: 0 0.6em;
+		font-size: 0.7em;
+		font-weight: 700;
+		letter-spacing: 0.14em;
+		text-transform: uppercase;
+		color: #8d7d6b;
+	}
+	.link {
+		display: flex;
+		align-items: center;
+		gap: 0.6em;
+		padding: 0.52em 0.65em;
+		border-radius: 9px;
+		color: #d8cbbd;
+		text-decoration: none;
+		font-weight: 600;
+		font-size: 0.96em;
+		margin-bottom: 0.15em;
+	}
+	.link:hover {
+		background: rgba(255, 255, 255, 0.07);
+		color: #fff;
+	}
+	.link.on {
+		background: var(--accent);
+		color: #fff;
+	}
+	.link .ico {
+		width: 1.25em;
+		text-align: center;
+		flex: none;
+	}
+	.link .chev {
+		margin-left: auto;
+		font-weight: 800;
+	}
+	.side-foot {
+		border-top: 1px solid rgba(255, 255, 255, 0.12);
+		padding-top: 0.9em;
+	}
+	.view-site {
+		display: block;
+		padding: 0.5em 0.65em;
+		color: #fb923c;
+		font-weight: 700;
+		text-decoration: none;
+		border-radius: 9px;
+	}
+	.view-site:hover {
+		background: rgba(255, 255, 255, 0.07);
+	}
+
+	/* ---------- top bar ---------- */
+	.topbar {
+		position: sticky;
+		top: 0;
+		z-index: 5;
+		display: flex;
+		align-items: center;
+		gap: 1em;
+		background: var(--surface);
+		border-bottom: 1px solid rgb(var(--gray-light));
+		padding: 0.85em 2em;
+	}
+	.page-title {
+		font-size: 1.28em;
+		margin: 0;
+	}
+	.burger {
+		display: none;
+		font-size: 1.3em;
+		cursor: pointer;
+		padding: 0.1em 0.4em;
+		border: 1px solid rgb(var(--gray-light));
+		border-radius: 8px;
+		background: var(--bg);
+	}
+	.top-right {
+		margin-left: auto;
+		display: inline-flex;
+		align-items: center;
+		gap: 1em;
+	}
+	.who {
+		color: rgb(var(--gray-dark));
+		font-size: 0.93em;
+		font-weight: 600;
+	}
+	.signout {
+		font: inherit;
+		font-weight: 700;
+		font-size: 0.93em;
+		background: var(--bg);
+		border: 1px solid rgb(var(--gray-light));
+		border-radius: 999px;
+		padding: 0.5em 1.15em;
+		cursor: pointer;
+		color: var(--accent-dark);
+	}
+	.signout:hover {
+		border-color: var(--accent);
+	}
+
+	/* ---------- login screen ---------- */
+	.login-screen {
+		min-height: 100vh;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		gap: 1.2em;
+		padding: 2em 1em;
+		box-sizing: border-box;
+		background: var(--bg);
+	}
+	.login-brand {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.6em;
+		font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+		font-size: 1.3em;
+	}
+	.brand-mark.big {
+		width: 42px;
+		height: 42px;
+		border-radius: 11px;
+	}
+	.login-back {
+		font-size: 0.93em;
+	}
+
+	/* ---------- mobile: off-canvas sidebar ---------- */
+	@media (max-width: 880px) {
+		.burger {
+			display: inline-block;
+		}
+		.side {
+			position: fixed;
+			left: 0;
+			top: 0;
+			z-index: 40;
+			transform: translateX(-105%);
+			transition: transform 0.22s ease;
+			box-shadow: 0 20px 50px rgba(23, 16, 10, 0.45);
+		}
+		.nav-toggle:checked ~ .side {
+			transform: none;
+		}
+		.shell .content {
+			padding: 1.3em 1.1em 2em;
+		}
+		.topbar {
+			padding: 0.8em 1.1em;
+		}
+		.who {
+			display: none;
+		}
+	}
+</style>

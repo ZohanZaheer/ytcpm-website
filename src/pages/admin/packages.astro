@@ -1,9 +1,6 @@
 ---
 import BaseHead from '../../components/BaseHead.astro';
-import Header from '../../components/Header.astro';
-import Footer from '../../components/Footer.astro';
-import AdminNav from '../../components/AdminNav.astro';
-import AdminLogin from '../../components/AdminLogin.astro';
+import AdminShell from '../../components/AdminShell.astro';
 import { getEnv, getDatabaseUrl } from '../../lib/env';
 import { adminGate } from '../../lib/adminGate';
 import { adminConfigured } from '../../lib/auth';
@@ -109,16 +106,7 @@ const description = 'Edit YTCPM license packages, devices and prices.';
 		</style>
 	</head>
 	<body>
-		<Header />
-		<main>
-			<div class="wrap">
-			<h1>Packages &amp; Prices</h1>
-			{
-				!email ? (
-					<AdminLogin error={errorParam} configured={configured} />
-				) : (
-					<>
-						<AdminNav active="packages" email={email} />
+		<AdminShell title={title} active="packages" email={email} error={errorParam} configured={configured}>
 						{dbError ? (
 							<p class="error">{dbError}</p>
 						) : (
@@ -264,11 +252,6 @@ const description = 'Edit YTCPM license packages, devices and prices.';
 								</script>
 							</>
 						)}
-					</>
-				)
-			}
-			</div>
-		</main>
-		<Footer />
+		</AdminShell>
 	</body>
 </html>

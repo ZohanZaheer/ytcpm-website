@@ -18,6 +18,11 @@ export function createAuth(databaseUrl: string, secret: string) {
 	return betterAuth({
 		database: new Pool({ connectionString: databaseUrl, max: 1, connectionTimeoutMillis: 8000 }),
 		secret,
+		// The site's public origin. better-auth builds links (email
+		// verification, etc.) from this — without it the deployed
+		// Worker produced RELATIVE links that arrived broken in
+		// inboxes. BETTER_AUTH_URL overrides it on other hosts.
+		baseURL: process.env.BETTER_AUTH_URL ?? 'https://ytcpm.cyou',
 		emailAndPassword: {
 			enabled: true,
 			minPasswordLength: 8,

@@ -1,0 +1,72 @@
+---
+// The customer dashboard's left sidebar menu — identical on every
+// account page. Support is listed only while a license is active.
+interface Props {
+	active: 'licenses' | 'profile' | 'support';
+	hasActive: boolean;
+}
+const { active, hasActive } = Astro.props;
+---
+
+<nav class="side" aria-label="Account">
+	<p class="side-label">Dashboard</p>
+	<a href="/account" class={active === 'licenses' ? 'on' : ''}>🎫 My licenses</a>
+	<a href="/account/profile" class={active === 'profile' ? 'on' : ''}>👤 My profile</a>
+	{hasActive && <a href="/account/support" class={active === 'support' ? 'on' : ''}>💬 Support</a>}
+	<p class="side-label">Licenses</p>
+	<a href="/pricing">🛒 Buy a license</a>
+	{hasActive && <a href="/download">⬇️ Download the bot</a>}
+	<a href="/instructions">📖 Instructions</a>
+</nav>
+
+<style>
+	.side {
+		background: var(--surface);
+		border: 1px solid rgb(var(--gray-light));
+		border-radius: 14px;
+		padding: 1em 0.7em;
+		box-shadow: var(--box-shadow);
+		display: flex;
+		flex-direction: column;
+		gap: 0.15em;
+		align-self: start;
+	}
+	.side-label {
+		margin: 0.5em 0.5em 0.35em;
+		font-size: 0.7em;
+		font-weight: 700;
+		letter-spacing: 0.14em;
+		text-transform: uppercase;
+		color: rgb(var(--gray));
+	}
+	.side-label:first-child {
+		margin-top: 0.1em;
+	}
+	.side a {
+		display: block;
+		padding: 0.55em 0.7em;
+		border-radius: 9px;
+		color: rgb(var(--gray-dark));
+		text-decoration: none;
+		font-weight: 600;
+		font-size: 0.96em;
+	}
+	.side a:hover {
+		background: var(--bg);
+		color: rgb(var(--black));
+	}
+	.side a.on {
+		background: var(--accent);
+		color: #fff;
+	}
+	@media (max-width: 860px) {
+		.side {
+			flex-direction: row;
+			flex-wrap: wrap;
+			align-items: center;
+		}
+		.side-label {
+			width: 100%;
+		}
+	}
+</style>

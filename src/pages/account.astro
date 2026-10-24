@@ -4,6 +4,8 @@ import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import { SITE_TITLE } from '../consts';
 import { baSessionUser, verificationEnforced } from '../lib/baSession';
+import AccountTop from '../components/AccountTop.astro';
+import AccountSide from '../components/AccountSide.astro';
 import { getEnv, getDatabaseUrl } from '../lib/env';
 import { listOrdersForUser, type PaymentOrder } from '../lib/db';
 import { getEffectiveSettings, type LicensePackage } from '../lib/settings';
@@ -104,24 +106,6 @@ try {
 		<style>
 			main {
 				padding: 0;
-			}
-			.band {
-				background: var(--surface);
-				border-bottom: 1px solid rgb(var(--gray-light));
-				padding: 2.4em 0 2em;
-			}
-			.band h1 {
-				font-size: clamp(1.8em, 4vw, 2.4em);
-			}
-			.band .who {
-				color: rgb(var(--gray-dark));
-				margin: 0.2em 0 1.1em;
-			}
-			.actions {
-				display: flex;
-				gap: 0.6em;
-				flex-wrap: wrap;
-				align-items: center;
 			}
 			.btn {
 				font: inherit;
@@ -278,13 +262,24 @@ try {
 			}
 			.dash-grid {
 				display: grid;
-				grid-template-columns: minmax(0, 1fr) 320px;
+				grid-template-columns: 228px minmax(0, 1fr) 320px;
 				gap: 1.8em;
 				align-items: start;
 			}
-			@media (max-width: 920px) {
+			@media (max-width: 1180px) {
+				.dash-grid {
+					grid-template-columns: 228px minmax(0, 1fr);
+				}
+				.dash-side {
+					grid-column: 2;
+				}
+			}
+			@media (max-width: 860px) {
 				.dash-grid {
 					grid-template-columns: 1fr;
+				}
+				.dash-side {
+					grid-column: auto;
 				}
 			}
 			.dash-side .side-title {
@@ -309,15 +304,22 @@ try {
 				color: rgb(var(--gray-dark));
 				font-size: 0.93em;
 			}
+			.pkg-price-row {
+				display: flex;
+				align-items: center;
+				gap: 0.7em;
+				flex-wrap: wrap;
+				margin-top: 0.45em;
+			}
 			.pkg-price {
-				margin: 0.45em 0 0;
+				margin: 0;
 				font-size: 1.55em;
 				font-weight: 800;
 				color: var(--accent-dark);
 			}
 			.pkg-save {
 				display: inline-block;
-				margin: 0.5em 0 0;
+				margin: 0;
 				font-size: 0.8em;
 				font-weight: 700;
 				background: #dcfce7;
@@ -347,23 +349,7 @@ try {
 	<body>
 		<Header />
 		<main>
-			<section class="band bleed">
-				<div class="wrap">
-					<h1>My account</h1>
-					<p class="who">
-						Signed in as <strong>{user.name}</strong> ({user.email})
-					</p>
-					<div class="actions">
-						<a class="btn primary" href="/pricing">Buy a license</a>
-						<a class="btn" href="/account/profile">My profile</a>
-						<a class="btn" href="/account/support">Support</a>
-						{hasActive && <a class="btn" href="/download">Download the bot</a>}
-						<form method="post" action="/api/account/logout">
-							<button class="btn" type="submit">Sign out</button>
-						</form>
-					</div>
-				</div>
-			</section>
+			<AccountTop name={user.name} email={user.email} hasActive={hasActive} />
 			<section class="body bleed">
 				<div class="wrap">
 					<h2>My licenses &amp; orders</h2>
@@ -386,6 +372,7 @@ try {
 						</div>
 					)}
 					<div class="dash-grid">
+						<AccountSide active="licenses" hasActive={hasActive} />
 						<div class="dash-main">
 					{
 						dbError ? (
@@ -496,8 +483,10 @@ try {
 								<article class="pkg-card">
 									<p class="pkg-dur">{p.duration}</p>
 									<p class="pkg-dev">{p.devices} devices</p>
-									<p class="pkg-price">{formatUsd(p.priceUsd)}</p>
-									{p.saveNote && <p class="pkg-save">{p.saveNote}</p>}
+									<div class="pkg-price-row">
+										<p class="pkg-price">{formatUsd(p.priceUsd)}</p>
+										{p.saveNote && <span class="pkg-save">{p.saveNote}</span>}
+									</div>
 									<a class="btn primary pkg-buy" href={'/pay/' + p.slug}>Buy this plan</a>
 								</article>
 							))}

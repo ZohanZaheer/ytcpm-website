@@ -11,11 +11,24 @@ export function isMailConfigured(): boolean {
 	return !!(process.env.RESEND_API_KEY && process.env.EMAIL_FROM);
 }
 
+/** Guarantee an absolute, working verification URL. better-auth
+ * builds it from its baseURL; if a relative path ever comes through
+ * ("/verify-email?token=…"), rebuild it against the site origin and
+ * the /api/auth mount point so the link in the inbox always works. */
+export function absoluteVerifyUrl(url: string): string {
+	if (/^https?:\/\//i.test(url)) return url;
+	const origin = (process.env.BETTER_AUTH_URL ?? 'https://ytcpm.cyou').replace(/\/$/, '');
+	if (url.startsWith('/verify-email')) return origin + '/api/auth' + url;
+	if (url.startsWith('/')) return origin + url;
+	return origin + '/' + url;
+}
+
 export async function sendVerificationEmail(params: {
 	user: { email: string; name?: string | null };
 	url: string;
 }): Promise<void> {
-	const { user, url } = params;
+	const { user } = params;
+	const url = absoluteVerifyUrl(params.url);
 	if (!isMailConfigured()) {
 		// Nowhere to send from yet — the account simply stays
 		// unverified and the dashboard offers a resend once a

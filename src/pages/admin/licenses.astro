@@ -1,9 +1,6 @@
 ---
 import BaseHead from '../../components/BaseHead.astro';
-import Header from '../../components/Header.astro';
-import Footer from '../../components/Footer.astro';
-import AdminNav from '../../components/AdminNav.astro';
-import AdminLogin from '../../components/AdminLogin.astro';
+import AdminShell from '../../components/AdminShell.astro';
 import { getDatabaseUrl } from '../../lib/env';
 import { adminGate } from '../../lib/adminGate';
 import { adminConfigured } from '../../lib/auth';
@@ -148,14 +145,7 @@ const description = 'Assign the bot username and password for confirmed orders.'
 		</style>
 	</head>
 	<body>
-		<Header />
-		<main>
-			<div class="wrap">
-			{!email ? (
-				<AdminLogin error={error} configured={configured} />
-			) : (
-				<>
-					<AdminNav active="licenses" email={email} />
+		<AdminShell title={title} active="licenses" email={email} error={error} configured={configured}>
 					<h1>Bot Licenses</h1>
 					<p>
 						Confirmed orders appear here. Enter the bot username and password you created for
@@ -212,10 +202,6 @@ const description = 'Assign the bot username and password for confirmed orders.'
 							</form>
 						</section>
 					))}
-				</>
-			)}
-			</div>
-		</main>
-		<Footer />
+		</AdminShell>
 	</body>
 </html>

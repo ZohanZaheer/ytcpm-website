@@ -1,9 +1,6 @@
 ---
 import BaseHead from '../../components/BaseHead.astro';
-import Header from '../../components/Header.astro';
-import Footer from '../../components/Footer.astro';
-import AdminNav from '../../components/AdminNav.astro';
-import AdminLogin from '../../components/AdminLogin.astro';
+import AdminShell from '../../components/AdminShell.astro';
 import { getDatabaseUrl } from '../../lib/env';
 import { adminGate } from '../../lib/adminGate';
 import { adminConfigured } from '../../lib/auth';
@@ -112,16 +109,7 @@ const description = 'Messages sent from the YTCPM contact form.';
 		</style>
 	</head>
 	<body>
-		<Header />
-		<main>
-			<div class="wrap">
-			<h1>Contact Messages</h1>
-			{
-				!email ? (
-					<AdminLogin error={error} configured={configured} />
-				) : (
-					<>
-						<AdminNav active="messages" email={email} />
+		<AdminShell title={title} active="messages" email={email} error={error} configured={configured}>
 						{dbError ? (
 							<p class="error">{dbError}</p>
 						) : messages.length === 0 ? (
@@ -152,11 +140,6 @@ const description = 'Messages sent from the YTCPM contact form.';
 								</article>
 							))
 						)}
-					</>
-				)
-			}
-			</div>
-		</main>
-		<Footer />
+		</AdminShell>
 	</body>
 </html>

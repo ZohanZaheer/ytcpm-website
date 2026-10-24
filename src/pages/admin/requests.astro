@@ -1,9 +1,6 @@
 ---
 import BaseHead from '../../components/BaseHead.astro';
-import Header from '../../components/Header.astro';
-import Footer from '../../components/Footer.astro';
-import AdminNav from '../../components/AdminNav.astro';
-import AdminLogin from '../../components/AdminLogin.astro';
+import AdminShell from '../../components/AdminShell.astro';
 import { getDatabaseUrl } from '../../lib/env';
 import { adminGate } from '../../lib/adminGate';
 import { adminConfigured } from '../../lib/auth';
@@ -147,14 +144,7 @@ const description = 'Priority support requests from customers with an active lic
 		</style>
 	</head>
 	<body>
-		<Header />
-		<main>
-			<div class="wrap">
-			{!email ? (
-				<AdminLogin error={error} configured={configured} />
-			) : (
-				<>
-					<AdminNav active="requests" email={email} />
+		<AdminShell title={title} active="requests" email={email} error={error} configured={configured}>
 					<h1>⚡ Support Requests {newCount > 0 && <>({newCount} new)</>}</h1>
 					<p>
 						Priority requests from customers with an active license, sent from inside their
@@ -183,10 +173,6 @@ const description = 'Priority support requests from customers with an active lic
 							</form>
 						</section>
 					))}
-				</>
-			)}
-			</div>
-		</main>
-		<Footer />
+		</AdminShell>
 	</body>
 </html>

@@ -1,9 +1,6 @@
 ---
 import BaseHead from '../../components/BaseHead.astro';
-import Header from '../../components/Header.astro';
-import Footer from '../../components/Footer.astro';
-import AdminNav from '../../components/AdminNav.astro';
-import AdminLogin from '../../components/AdminLogin.astro';
+import AdminShell from '../../components/AdminShell.astro';
 import { getDatabaseUrl } from '../../lib/env';
 import { adminGate } from '../../lib/adminGate';
 import { adminConfigured } from '../../lib/auth';
@@ -105,16 +102,7 @@ const description = 'Review and confirm YTCPM license payment orders.';
 		</style>
 	</head>
 	<body>
-		<Header />
-		<main>
-			<div class="wrap">
-			<h1>Payment Orders</h1>
-			{
-				!email ? (
-					<AdminLogin error={error} configured={configured} />
-				) : (
-					<>
-						<AdminNav active="orders" email={email} />
+		<AdminShell title={title} active="orders" email={email} error={error} configured={configured}>
 						{dbError ? (
 							<p class="error">{dbError}</p>
 						) : orders.length === 0 ? (
@@ -222,11 +210,6 @@ const description = 'Review and confirm YTCPM license payment orders.';
 								</table>
 							</div>
 						)}
-					</>
-				)
-			}
-			</div>
-		</main>
-		<Footer />
+		</AdminShell>
 	</body>
 </html>

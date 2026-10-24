@@ -2,7 +2,8 @@
 import BaseHead from '../../components/BaseHead.astro';
 import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
-import AccountNav from '../../components/AccountNav.astro';
+import AccountTop from '../../components/AccountTop.astro';
+import AccountSide from '../../components/AccountSide.astro';
 import { SITE_TITLE } from '../../consts';
 import { getDatabaseUrl } from '../../lib/env';
 import { baSessionUser } from '../../lib/baSession';
@@ -43,6 +44,7 @@ if (dbUrl) {
 	myRequests = await listSupportRequestsForUser(dbUrl, user.id).catch(() => []);
 }
 const activeLicenses = licenses.filter((l) => l.active);
+const hasActive = activeLicenses.length > 0;
 const preselect = Astro.url.searchParams.get('order') ?? '';
 
 const msg = Astro.url.searchParams.get('msg') ?? '';
@@ -69,8 +71,23 @@ const fmt = (iso: string) =>
 		/>
 		<style>
 			main {
-				padding-top: 2.2em;
+				padding: 0;
 			}
+			.body {
+				padding: 2.2em 0 2.6em;
+			}
+			.acct-grid {
+				display: grid;
+				grid-template-columns: 228px minmax(0, 1fr);
+				gap: 1.8em;
+				align-items: start;
+			}
+			@media (max-width: 860px) {
+				.acct-grid {
+					grid-template-columns: 1fr;
+				}
+			}
+
 			.panel {
 				background: var(--surface);
 				border: 1px solid rgb(var(--gray-light));
@@ -185,8 +202,12 @@ const fmt = (iso: string) =>
 	<body>
 		<Header />
 		<main>
-			<div class="wrap">
-				<AccountNav name={user.name} email={user.email} active="support" />
+			<AccountTop name={user.name} email={user.email} hasActive={hasActive} />
+			<section class="body bleed">
+				<div class="wrap">
+					<div class="acct-grid">
+						<AccountSide active="support" hasActive={hasActive} />
+						<div class="acct-main">
 
 				<section class="panel">
 					<h1>Support</h1>
@@ -255,7 +276,10 @@ const fmt = (iso: string) =>
 						))}
 					</section>
 				)}
-			</div>
+						</div>
+					</div>
+				</div>
+			</section>
 		</main>
 		<Footer />
 	</body>

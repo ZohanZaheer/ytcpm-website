@@ -2,11 +2,14 @@
 import BaseHead from '../../components/BaseHead.astro';
 import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
-import AccountNav from '../../components/AccountNav.astro';
+import AccountTop from '../../components/AccountTop.astro';
+import AccountSide from '../../components/AccountSide.astro';
 import { SITE_TITLE } from '../../consts';
 import { getDatabaseUrl } from '../../lib/env';
 import { baSessionUser } from '../../lib/baSession';
 import { getProfile } from '../../lib/db';
+import { getEnv } from '../../lib/env';
+import { userHasActiveLicense } from '../../lib/settings';
 
 export const prerender = false;
 
@@ -15,6 +18,7 @@ if (!user) return Astro.redirect('/login?next=/account/profile');
 
 const dbUrl = getDatabaseUrl(Astro);
 const profile = dbUrl ? await getProfile(dbUrl, user.id).catch(() => null) : null;
+const hasActive = await userHasActiveLicense(dbUrl, user.id, user.email, (k) => getEnv(Astro, k));
 
 const saved = Astro.url.searchParams.get('saved') ?? '';
 const saveMessages: Record<string, string> = {
@@ -52,8 +56,23 @@ const pwMsg = pwMessages[pw] ?? '';
 		/>
 		<style>
 			main {
-				padding-top: 2.2em;
+				padding: 0;
 			}
+			.body {
+				padding: 2.2em 0 2.6em;
+			}
+			.acct-grid {
+				display: grid;
+				grid-template-columns: 228px minmax(0, 1fr);
+				gap: 1.8em;
+				align-items: start;
+			}
+			@media (max-width: 860px) {
+				.acct-grid {
+					grid-template-columns: 1fr;
+				}
+			}
+
 			.panel {
 				background: var(--surface);
 				border: 1px solid rgb(var(--gray-light));
@@ -181,8 +200,12 @@ const pwMsg = pwMessages[pw] ?? '';
 	<body>
 		<Header />
 		<main>
-			<div class="wrap">
-				<AccountNav name={user.name} email={user.email} active="profile" />
+			<AccountTop name={user.name} email={user.email} hasActive={hasActive} />
+			<section class="body bleed">
+				<div class="wrap">
+					<div class="acct-grid">
+						<AccountSide active="profile" hasActive={hasActive} />
+						<div class="acct-main">
 
 				<section class="panel">
 					<h1>My profile</h1>
@@ -274,7 +297,10 @@ const pwMsg = pwMessages[pw] ?? '';
 						<button class="btn" type="submit">Change password</button>
 					</form>
 				</section>
-			</div>
+						</div>
+					</div>
+				</div>
+			</section>
 		</main>
 		<Footer />
 	</body>
