@@ -1,5 +1,7 @@
 import { SITE_URL } from '../config/site';
 
+export const prerender = true;
+
 export async function GET() {
 	const txt = `User-agent: *
 Allow: /
