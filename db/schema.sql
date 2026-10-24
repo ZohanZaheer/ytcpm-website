@@ -31,3 +31,16 @@ CREATE TABLE IF NOT EXISTS site_settings (
 	value JSONB NOT NULL,
 	updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+-- Messages sent from the public /contact form; read in the admin dashboard.
+CREATE TABLE IF NOT EXISTS contact_messages (
+	id TEXT PRIMARY KEY,
+	name TEXT NOT NULL,
+	email TEXT NOT NULL,
+	topic TEXT NOT NULL,
+	message TEXT NOT NULL,
+	status TEXT NOT NULL DEFAULT 'new', -- new | read
+	created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_contact_messages_created ON contact_messages (created_at DESC);

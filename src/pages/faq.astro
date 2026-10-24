@@ -1,0 +1,203 @@
+---
+import BaseHead from '../components/BaseHead.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import { SITE_TITLE } from '../consts';
+
+const groups: { title: string; items: { q: string; a: string }[] }[] = [
+	{
+		title: 'Getting started',
+		items: [
+			{
+				q: 'What is YTCPM Bot?',
+				a: 'A standalone Windows app that automates YouTube CPM workflows. It runs multiple automated browsers with your proxies, fingerprints and user agents, and tracks total views — everything is configured in one settings window.',
+			},
+			{
+				q: 'Do I need to install anything?',
+				a: 'No installer at all. Download the ZIP (17 MB), extract it, and run YoutubeCPM.exe from the extracted folder. Keep at least 2.5 GB of free disk space.',
+			},
+			{
+				q: 'What happens on the first launch?',
+				a: 'The launcher downloads its engine automatically (up to 2.0 GB in the background), then asks you to sign in with your User ID and password. After that, the main window opens and the settings window appears so you can define your resources.',
+			},
+			{
+				q: 'What does my computer need?',
+				a: 'A Windows PC. Each browser the bot runs uses roughly 2 GB of RAM, so set the number of browsers to what your system can handle.',
+			},
+		],
+	},
+	{
+		title: 'Payments & licenses',
+		items: [
+			{
+				q: 'How do I pay?',
+				a: 'Pick a plan on the pricing page and pay with crypto — USDT (TRC20), BTC or ETH, whichever is shown at checkout. Send the payment, then submit the transaction hash and a screenshot of the payment as proof.',
+			},
+			{
+				q: 'When is my license active?',
+				a: 'Licenses are activated after your payment is confirmed. The admin will contact you within 24 hours of confirmation.',
+			},
+			{
+				q: 'What is a “device” in the plans?',
+				a: 'Each plan covers a number of devices for its duration. The device count resets every 10 days while your license is active, and a manual reset request can take up to 24 hours.',
+			},
+			{
+				q: 'Do I pay in advance?',
+				a: 'Yes — payment is 100% in advance, as shown on the pricing page. Custom and enterprise packages are available on request.',
+			},
+		],
+	},
+	{
+		title: 'Using the bot',
+		items: [
+			{
+				q: 'How many browsers can I run at once?',
+				a: 'As many as your system handles. Set the number of browsers in the General settings — about 2 GB of RAM per browser is a good rule.',
+			},
+			{
+				q: 'Do I need proxies?',
+				a: 'No. With Proxies off, the bot uses your system IP or VPN. With proxies on, it loads one proxy per line from the proxy file in hostname:port:username:password format and tests them before use. A residential tip: repeat the same proxy line 10 times.',
+			},
+			{
+				q: 'What is the fingerprint option?',
+				a: 'A premium fingerprint service ($30/month, API key, up to 100 threads/minute) that gives browsers realistic identities. If Fingerprint is on, a valid API key is required and user agents are not needed. If it is off, the bot uses your user agents instead.',
+			},
+			{
+				q: 'How do user agents work?',
+				a: 'Four modes: Off uses the built-in default agent; Auto loads agents from a web page link; List Mix picks randomly from your User_Agents.txt (repeats possible); List Unique uses each line once per run, then stops when the list runs out unless restarted.',
+			},
+			{
+				q: 'What are references?',
+				a: 'The websites your traffic appears to come from. They live in the editable List_of_Refrences.txt file — one site per line — and can be loaded in the General settings.',
+			},
+			{
+				q: 'Can I slow the bot down?',
+				a: 'Yes. The sleep timers between page loads have developer minimums (3 seconds / 5 seconds) for safety. You may increase them for slow internet or proxies, but not decrease them below the minimums.',
+			},
+		],
+	},
+	{
+		title: 'Support',
+		items: [
+			{
+				q: 'When is support available?',
+				a: 'Support is available 6 days a week, with night support from 7:00 PM to 7:00 AM. The fastest way to reach us is the contact page.',
+			},
+			{
+				q: 'Is YTCPM Bot affiliated with YouTube?',
+				a: 'No. YTCPM Bot is an independent tool and is not affiliated with or endorsed by YouTube or Google. Any CPM or earnings figures mentioned are estimates, not guarantees.',
+			},
+		],
+	},
+];
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<BaseHead
+			title={`FAQ — ${SITE_TITLE}`}
+			description="Answers about YTCPM Bot: getting started, crypto payments, licenses and devices, proxies, fingerprints, user agents and support hours."
+		/>
+		<style>
+			main {
+				padding: 0;
+			}
+			.band {
+				background: var(--surface);
+				border-bottom: 1px solid rgb(var(--gray-light));
+				padding: 2.8em 0 2.4em;
+			}
+			.band h1 {
+				font-size: clamp(2em, 4.6vw, 2.9em);
+			}
+			.band p {
+				max-width: 58ch;
+				color: rgb(var(--gray-dark));
+			}
+			.body {
+				padding: 2.6em 0 0.5em;
+			}
+			.inner {
+				max-width: 860px;
+			}
+			h2 {
+				font-size: 1.45em;
+				margin: 1.4em 0 0.8em;
+			}
+			.inner > h2:first-child {
+				margin-top: 0;
+			}
+			.item {
+				background: var(--surface);
+				border: 1px solid rgb(var(--gray-light));
+				border-radius: 12px;
+				padding: 1em 1.25em;
+				margin-bottom: 0.7em;
+			}
+			.item summary {
+				font-family: "Plus Jakarta Sans", sans-serif;
+				font-weight: 700;
+				color: rgb(var(--black));
+				cursor: pointer;
+			}
+			.item p {
+				margin: 0.7em 0 0.2em;
+				font-size: 0.96em;
+				line-height: 1.65;
+				color: rgb(var(--gray-dark));
+			}
+			.ask {
+				margin-top: 2.2em;
+				background: var(--peach-soft);
+				border: 1px solid var(--peach);
+				border-radius: 12px;
+				padding: 1.1em 1.3em;
+			}
+			.ask p {
+				margin: 0;
+			}
+		</style>
+	</head>
+	<body>
+		<Header />
+		<main>
+			<section class="band bleed">
+				<div class="wrap">
+					<h1>Frequently asked questions</h1>
+					<p>
+						Straight answers about the bot, payments and licenses. Anything else —
+						<a href="/contact">send us a message</a>.
+					</p>
+				</div>
+			</section>
+			<section class="body bleed">
+				<div class="wrap">
+					<div class="inner">
+						{
+							groups.map((g) => (
+								<>
+									<h2>{g.title}</h2>
+									{g.items.map((f) => (
+										<details class="item">
+											<summary>{f.q}</summary>
+											<p>{f.a}</p>
+										</details>
+									))}
+								</>
+							))
+						}
+						<div class="ask">
+							<p>
+								<strong>Still stuck?</strong> The <a href="/instructions">step-by-step
+								instructions</a> cover setup with screenshots, or <a href="/contact">contact
+								support</a> — available 6 days a week.
+							</p>
+						</div>
+					</div>
+				</div>
+			</section>
+		</main>
+		<Footer />
+	</body>
+</html>

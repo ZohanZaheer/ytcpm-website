@@ -26,8 +26,9 @@ const today = new Date();
 		<nav class="col" aria-label="Resources">
 			<h3>Resources</h3>
 			<a href="/blog">Blog</a>
+			<a href="/faq">FAQ</a>
+			<a href="/contact">Contact us</a>
 			<a href="/instructions">Setup guide</a>
-			<a href="/pricing">License plans</a>
 			<a href="/admin">Admin sign-in</a>
 		</nav>
 		<div class="col">
@@ -38,7 +39,10 @@ const today = new Date();
 		</div>
 	</div>
 	<div class="wrap bottom">
-		<p>&copy; {today.getFullYear()} YTCPM. All rights reserved.</p>
+		<p>
+			&copy; {today.getFullYear()} YTCPM. All rights reserved. ·
+			<a href="/privacy">Privacy Policy</a> · <a href="/terms">Terms of Use</a>
+		</p>
 		<p class="fine">
 			YTCPM Bot is an independent tool and is not affiliated with or endorsed
 			by YouTube or Google. Any CPM or earnings figures are estimates, not
@@ -124,6 +128,12 @@ const today = new Date();
 	}
 	.bottom p {
 		margin: 0;
+	}
+	.bottom a {
+		color: #e9dccb;
+	}
+	.bottom a:hover {
+		color: #fb923c;
 	}
 	.fine {
 		max-width: 62ch;

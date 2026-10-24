@@ -1,0 +1,149 @@
+---
+import BaseHead from '../components/BaseHead.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import { SITE_TITLE } from '../consts';
+
+const updated = 'October 23, 2026';
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<BaseHead
+			title={`Terms of Use — ${SITE_TITLE}`}
+			description="The terms for buying and using YTCPM Bot: licenses, devices, crypto payments, activation, support and acceptable use."
+		/>
+		<style>
+			main {
+				padding: 0;
+			}
+			.band {
+				background: var(--surface);
+				border-bottom: 1px solid rgb(var(--gray-light));
+				padding: 2.8em 0 2.4em;
+			}
+			.band h1 {
+				font-size: clamp(2em, 4.6vw, 2.9em);
+			}
+			.band p {
+				color: rgb(var(--gray-dark));
+			}
+			.body {
+				padding: 2.6em 0 0.5em;
+			}
+			.inner {
+				max-width: 760px;
+			}
+			.inner h2 {
+				font-size: 1.35em;
+				margin: 1.5em 0 0.5em;
+			}
+			.inner h2:first-child {
+				margin-top: 0;
+			}
+			.inner p,
+			.inner li {
+				line-height: 1.7;
+				color: rgb(var(--gray-dark));
+			}
+			.inner ul {
+				margin: 0.4em 0 1em;
+			}
+		</style>
+	</head>
+	<body>
+		<Header />
+		<main>
+			<section class="band bleed">
+				<div class="wrap">
+					<h1>Terms of Use</h1>
+					<p>Last updated: {updated}</p>
+				</div>
+			</section>
+			<section class="body bleed">
+				<div class="wrap">
+					<div class="inner">
+						<h2>1. The product</h2>
+						<p>
+							YTCPM Bot is a standalone Windows application. Buying a plan gives you
+							a license to use the software for the duration and number of devices
+							of that plan, as shown on the <a href="/pricing">pricing page</a>. The
+							current version and download are on the <a href="/download">download
+							page</a>. Your license is for your own use — please don't redistribute
+							the software or share your sign-in credentials.
+						</p>
+
+						<h2>2. Payment</h2>
+						<p>
+							Payment is 100% in advance, in one of the cryptocurrencies shown at
+							checkout (USDT, BTC or ETH), at the USD prices listed for each plan.
+							An order is confirmed when the payment is verified. Send payments only
+							to the address shown on your order page — a payment sent to a wrong
+							address or network cannot be recovered by us.
+						</p>
+
+						<h2>3. Activation</h2>
+						<p>
+							After your payment is confirmed, your license is activated and the
+							admin contacts you within 24 hours. Activation requires the correct
+							order details and payment proof, so submit them carefully.
+						</p>
+
+						<h2>4. Devices and resets</h2>
+						<p>
+							Each plan covers the number of devices stated for it. The device count
+							resets every 10 days while your license is active. If you change
+							hardware and need a manual reset, contact support — a manual reset can
+							take up to 24 hours.
+						</p>
+
+						<h2>5. Support</h2>
+						<p>
+							Support is available 6 days a week, with night support from 7:00 PM to
+							7:00 AM, through the <a href="/contact">contact page</a>.
+						</p>
+
+						<h2>6. Acceptable use</h2>
+						<p>
+							You are responsible for your own accounts, content and activity, and
+							for complying with the law and with the terms of any third-party
+							platform you use the software with. Don't use the software for
+							unlawful purposes.
+						</p>
+
+						<h2>7. No affiliation, no earnings guarantee</h2>
+						<p>
+							YTCPM Bot is an independent tool and is not affiliated with or
+							endorsed by YouTube or Google. CPM figures and results depend on many
+							factors outside our control; any figures mentioned on this site are
+							estimates, not guarantees of earnings or results.
+						</p>
+
+						<h2>8. Availability and changes</h2>
+						<p>
+							We may update the software and this website, and features may change
+							over time. We work to keep the service available but don't guarantee
+							uninterrupted access.
+						</p>
+
+						<h2>9. Liability</h2>
+						<p>
+							The software is provided "as is". To the extent allowed by law, our
+							liability for any claim connected with the software or this site is
+							limited to the amount you paid for your current license.
+						</p>
+
+						<h2>10. Changes to these terms</h2>
+						<p>
+							If these terms change, the new version will be posted on this page
+							with an updated date. Questions about the terms: use the
+							<a href="/contact">contact page</a>.
+						</p>
+					</div>
+				</div>
+			</section>
+		</main>
+		<Footer />
+	</body>
+</html>

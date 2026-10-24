@@ -12,7 +12,11 @@ export async function adminGate(
 ): Promise<{ email: string | null; redirect?: Response }> {
 	const key = Astro.url.searchParams.get('key');
 	const secret = getEnv(Astro, 'ADMIN_SECRET');
-	if (key && secret && key === secret) {
+	// URL query decoding turns '+' into a space; the generated secret
+	// never contains spaces, so restore '+' before comparing — a
+	// hand-pasted ?key= link otherwise breaks for secrets with '+'.
+	const keyOk = !!key && !!secret && (key === secret || key.replace(/ /g, '+') === secret);
+	if (keyOk) {
 		const email = getEnv(Astro, 'ADMIN_EMAIL') ?? 'admin';
 		const value = await makeSessionValue(Astro, email);
 		Astro.cookies.set(SESSION_COOKIE, value, {

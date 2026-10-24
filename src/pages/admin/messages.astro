@@ -1,0 +1,160 @@
+---
+import BaseHead from '../../components/BaseHead.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import AdminNav from '../../components/AdminNav.astro';
+import AdminLogin from '../../components/AdminLogin.astro';
+import { getDatabaseUrl } from '../../lib/env';
+import { adminGate } from '../../lib/adminGate';
+import { adminConfigured } from '../../lib/auth';
+import { listContactMessages, type ContactMessage } from '../../lib/db';
+
+export const prerender = false;
+
+const gate = await adminGate(Astro);
+if (gate.redirect) return gate.redirect;
+const email = gate.email;
+const error = Astro.url.searchParams.get('error');
+const configured = adminConfigured(Astro);
+
+let messages: ContactMessage[] = [];
+let dbError = '';
+if (email) {
+	const dbUrl = getDatabaseUrl(Astro);
+	if (!dbUrl) {
+		dbError = 'The database is not configured on the server yet (DATABASE_URL).';
+	} else {
+		try {
+			messages = await listContactMessages(dbUrl, 100);
+		} catch {
+			dbError = 'Could not read messages from the database.';
+		}
+	}
+}
+
+const fmt = (iso: string) =>
+	new Date(iso).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' });
+
+const title = 'Contact Messages (Admin)';
+const description = 'Messages sent from the YTCPM contact form.';
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<BaseHead title={title} description={description} />
+		<style>
+			.error {
+				color: #b00020;
+				font-weight: 600;
+			}
+			.msg {
+				border: 1px solid rgb(var(--gray-light));
+				border-radius: 10px;
+				padding: 1em 1.1em;
+				margin-bottom: 1em;
+				background: var(--surface);
+			}
+			.msg.unread {
+				border-color: var(--accent);
+			}
+			.msg-head {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 0.4em 1em;
+				align-items: baseline;
+				margin-bottom: 0.4em;
+			}
+			.msg-head .topic {
+				background: var(--peach-soft);
+				color: var(--accent-dark);
+				font-size: 0.78em;
+				font-weight: 700;
+				padding: 0.2em 0.65em;
+				border-radius: 999px;
+			}
+			.msg-head .when {
+				color: rgb(var(--gray));
+				font-size: 0.85em;
+			}
+			.msg-head .badge-new {
+				color: var(--accent-dark);
+				font-weight: 700;
+				font-size: 0.85em;
+			}
+			.msg-body {
+				white-space: pre-wrap;
+				overflow-wrap: anywhere;
+				margin: 0.3em 0 0.8em;
+			}
+			.msg-actions {
+				display: flex;
+				gap: 0.5em;
+			}
+			.msg-actions button {
+				font: inherit;
+				font-size: 0.85em;
+				font-weight: 600;
+				border: 1px solid rgb(var(--gray-light));
+				background: var(--bg);
+				border-radius: 999px;
+				padding: 0.35em 0.95em;
+				cursor: pointer;
+			}
+			.msg-actions button:hover {
+				border-color: var(--accent);
+				color: var(--accent-dark);
+			}
+			.msg-actions button.danger:hover {
+				border-color: #b00020;
+				color: #b00020;
+			}
+		</style>
+	</head>
+	<body>
+		<Header />
+		<main>
+			<h1>Contact Messages</h1>
+			{
+				!email ? (
+					<AdminLogin error={error} configured={configured} />
+				) : (
+					<>
+						<AdminNav active="messages" email={email} />
+						{dbError ? (
+							<p class="error">{dbError}</p>
+						) : messages.length === 0 ? (
+							<p>No messages yet. Messages sent from the <a href="/contact">contact page</a> will appear here.</p>
+						) : (
+							messages.map((m) => (
+								<article class={`msg ${m.status === 'new' ? 'unread' : ''}`}>
+									<div class="msg-head">
+										<strong>{m.name}</strong>
+										<a href={`mailto:${m.email}`}>{m.email}</a>
+										<span class="topic">{m.topic}</span>
+										<span class="when">{fmt(m.created_at)}</span>
+										{m.status === 'new' && <span class="badge-new">● New</span>}
+									</div>
+									<p class="msg-body">{m.message}</p>
+									<div class="msg-actions">
+										<form method="post" action="/api/admin/messages">
+											<input type="hidden" name="id" value={m.id} />
+											<input type="hidden" name="action" value={m.status === 'new' ? 'read' : 'new'} />
+											<button type="submit">{m.status === 'new' ? 'Mark as read' : 'Mark as new'}</button>
+										</form>
+										<form method="post" action="/api/admin/messages">
+											<input type="hidden" name="id" value={m.id} />
+											<input type="hidden" name="action" value="delete" />
+											<button type="submit" class="danger">Delete</button>
+										</form>
+									</div>
+								</article>
+							))
+						)}
+					</>
+				)
+			}
+		</main>
+		<Footer />
+	</body>
+</html>

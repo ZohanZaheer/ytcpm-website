@@ -54,6 +54,15 @@ const SCHEMA_SQL = `
 		value JSONB NOT NULL,
 		updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 	);
+	CREATE TABLE IF NOT EXISTS contact_messages (
+		id TEXT PRIMARY KEY,
+		name TEXT NOT NULL,
+		email TEXT NOT NULL,
+		topic TEXT NOT NULL,
+		message TEXT NOT NULL,
+		status TEXT NOT NULL DEFAULT 'new',
+		created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+	);
 `;
 
 async function withClient<T>(connectionString: string, fn: (client: Client) => Promise<T>): Promise<T> {
@@ -147,4 +156,61 @@ export async function setSetting(connectionString: string, key: string, value: u
 			[key, JSON.stringify(value)],
 		),
 	);
+}
+
+export type ContactStatus = 'new' | 'read';
+
+export interface ContactMessage {
+	id: string;
+	name: string;
+	email: string;
+	topic: string;
+	message: string;
+	status: ContactStatus;
+	created_at: string;
+}
+
+export async function createContactMessage(
+	connectionString: string,
+	msg: { name: string; email: string; topic: string; message: string },
+): Promise<string> {
+	const id = `msg_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
+	await withClient(connectionString, (c) =>
+		c.query('INSERT INTO contact_messages (id, name, email, topic, message) VALUES ($1, $2, $3, $4, $5)', [
+			id,
+			msg.name,
+			msg.email,
+			msg.topic,
+			msg.message,
+		]),
+	);
+	return id;
+}
+
+export async function listContactMessages(connectionString: string, limit = 100): Promise<ContactMessage[]> {
+	const res = await withClient(connectionString, (c) =>
+		c.query('SELECT * FROM contact_messages ORDER BY created_at DESC LIMIT $1', [limit]),
+	);
+	return res.rows as ContactMessage[];
+}
+
+export async function countNewMessages(connectionString: string): Promise<number> {
+	const res = await withClient(connectionString, (c) =>
+		c.query("SELECT COUNT(*)::int AS n FROM contact_messages WHERE status = 'new'"),
+	);
+	return res.rows[0]?.n ?? 0;
+}
+
+export async function setContactMessageStatus(
+	connectionString: string,
+	id: string,
+	status: ContactStatus,
+): Promise<void> {
+	await withClient(connectionString, (c) =>
+		c.query('UPDATE contact_messages SET status = $2 WHERE id = $1', [id, status]),
+	);
+}
+
+export async function deleteContactMessage(connectionString: string, id: string): Promise<void> {
+	await withClient(connectionString, (c) => c.query('DELETE FROM contact_messages WHERE id = $1', [id]));
 }

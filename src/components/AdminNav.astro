@@ -1,7 +1,7 @@
 ---
 // Dashboard navigation shown on every signed-in admin page.
 interface Props {
-	active: 'dashboard' | 'orders' | 'packages' | 'settings';
+	active: 'dashboard' | 'orders' | 'packages' | 'settings' | 'messages';
 	email?: string;
 }
 const { active, email } = Astro.props;
@@ -10,6 +10,7 @@ const links = [
 	{ id: 'orders', href: '/admin/orders', label: 'Orders' },
 	{ id: 'packages', href: '/admin/packages', label: 'Packages & Prices' },
 	{ id: 'settings', href: '/admin/settings', label: 'Payment & Download Settings' },
+	{ id: 'messages', href: '/admin/messages', label: 'Messages' },
 ];
 ---
 

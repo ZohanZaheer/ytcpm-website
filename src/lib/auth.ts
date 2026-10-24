@@ -121,7 +121,8 @@ export async function isAdminRequest(
 	if (!secret) return false;
 	if (ctx.formSecret && timingSafeEqual(ctx.formSecret, secret)) return true;
 	const key = ctx.url?.searchParams.get('key');
-	if (key && timingSafeEqual(key, secret)) return true;
+	// '+' decodes to a space in query strings; the secret has no spaces.
+	if (key && (timingSafeEqual(key, secret) || timingSafeEqual(key.replace(/ /g, '+'), secret))) return true;
 	return false;
 }
 
