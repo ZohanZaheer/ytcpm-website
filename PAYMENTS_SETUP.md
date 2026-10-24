@@ -164,3 +164,23 @@ are platform-neutral.
   Features, Showcase, HowItWorks, PricingStrip, Faq, CtaBand). Design
   tokens (colors, fonts) are in `src/styles/global.css` — change them
   there and the whole site follows.
+
+## 10. Accounts, admin and packages (better-auth)
+
+- Accounts run on better-auth (email + password) with its tables in
+  the same database: "user", "session", "account", "verification".
+  Customers sign up at /signup and manage licenses at /account;
+  orders placed while signed in store the account id (user_id),
+  guest orders are matched to an account by email.
+- The admin is an account with role = 'admin'. First-time setup is
+  automatic: signing in at /admin with the ADMIN_EMAIL /
+  ADMIN_PASSWORD environment credentials creates the admin account
+  (one-time bootstrap). The old signed-cookie login and the
+  /admin?key=<ADMIN_SECRET> link remain as recovery paths.
+- BETTER_AUTH_SECRET can be set as a Runtime secret; when absent,
+  ADMIN_SECRET is used as the auth secret.
+- License packages live in the `packages` table (the admin editor
+  writes there; the storefront reads from there). `duration_days`
+  drives license expiry in the customer dashboard; NULL = lifetime.
+  Packages saved by older versions are seeded/migrated automatically,
+  with days inferred from the duration label when missing.
