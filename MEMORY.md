@@ -127,3 +127,7 @@
   publisher (pub-1802003890783048); the owner was asked to confirm
   which AdSense account is the right one, since script and ads.txt
   must match for verification.
+- 2026-10-24 (later): Blog cover images had empty alt text (Bing
+  Webmaster flagged every post + the index). BlogPost layout and the
+  blog index now use the post title as the cover's alt; covers are
+  branded title cards, so the title is the accurate description.
