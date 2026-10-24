@@ -180,6 +180,16 @@ const error = errors[errorCode] ?? '';
 					{next && <input type="hidden" name="next" value={next} />}
 					<div class="grid2">
 						<div class="field">
+							<label for="f-fullname">Full name <span class="req">*</span></label>
+							<input id="f-fullname" name="fullName" type="text" required maxlength="80" autocomplete="name" />
+						</div>
+						<div class="field">
+							<label for="f-email">Email address <span class="req">*</span></label>
+							<input id="f-email" name="email" type="email" required maxlength="160" autocomplete="email" />
+						</div>
+					</div>
+					<div class="grid2">
+						<div class="field">
 							<label for="f-username">Username <span class="req">*</span></label>
 							<input id="f-username" name="username" type="text" required maxlength="15" autocomplete="username" />
 							<ul class="rules" id="u-rules">
@@ -188,16 +198,6 @@ const error = errors[errorCode] ?? '';
 								<li data-u="chars">Letters and numbers only</li>
 								<li data-u="free">Not a reserved word (admin, owner, …)</li>
 							</ul>
-						</div>
-						<div class="field">
-							<label for="f-fullname">Full name <span class="req">*</span></label>
-							<input id="f-fullname" name="fullName" type="text" required maxlength="80" autocomplete="name" />
-						</div>
-					</div>
-					<div class="grid2">
-						<div class="field">
-							<label for="f-email">Email address <span class="req">*</span></label>
-							<input id="f-email" name="email" type="email" required maxlength="160" autocomplete="email" />
 						</div>
 						<div class="field">
 							<label for="f-password">Password <span class="req">*</span></label>
