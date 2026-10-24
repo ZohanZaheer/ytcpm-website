@@ -42,6 +42,10 @@ body {
    (or full-bleed bands) — there is no narrow prose column anymore. */
 main {
 	width: 100%;
+	/* border-box: a page's own side padding (login/signup) must come
+	   OUT of the 100% width, not add to it — with content-box sizing
+	   the padded main grew past the screen and pushed its card out. */
+	box-sizing: border-box;
 	margin: 0 auto;
 	padding: 2.6em 0;
 }
