@@ -49,4 +49,4 @@ export const GA_MEASUREMENT_ID = 'G-NCM400NB7C';
 // of every public page (never on admin/account/checkout/auth pages).
 // NOTE: the ads.txt line in ADS_TXT above must carry the SAME
 // publisher number, or AdSense cannot verify the site.
-export const ADSENSE_CLIENT_ID = 'ca-pub-8198067510150459';
+export const ADSENSE_CLIENT_ID = 'ca-pub-1802003890783048';
