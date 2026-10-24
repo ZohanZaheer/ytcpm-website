@@ -120,3 +120,10 @@
   gained a "Cookies and analytics" section (the old "we do not run
   analytics trackers" line was removed). The owner set the real
   GA_MEASUREMENT_ID (G-NCM400NB7C) himself in d882f9eb.
+- 2026-10-24 (later): AdSense option in site.ts — `ADSENSE_CLIENT_ID`
+  renders the adsbygoogle script in the head of every public page via
+  BaseHead (noindex areas excluded). Value as supplied by the owner:
+  ca-pub-8198067510150459 — note this DIFFERS from the ads.txt
+  publisher (pub-1802003890783048); the owner was asked to confirm
+  which AdSense account is the right one, since script and ads.txt
+  must match for verification.
