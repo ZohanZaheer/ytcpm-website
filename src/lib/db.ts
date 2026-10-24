@@ -410,6 +410,59 @@ export async function getAuthUserById(connectionString: string, id: string): Pro
 	return (res.rows[0] as AuthUserRow) ?? null;
 }
 
+/** Mark an account's email verified (used when the admin creates the
+ * account personally and vouches for the address). */
+export async function setAuthUserEmailVerified(connectionString: string, id: string): Promise<void> {
+	await withClient(connectionString, (c) =>
+		c.query('UPDATE "user" SET "emailVerified" = true, "updatedAt" = now() WHERE id = $1', [id]),
+	);
+}
+
+export interface CustomerRow {
+	id: string;
+	email: string;
+	name: string;
+	email_verified: boolean;
+	created_at: string;
+	username: string | null;
+	full_name: string | null;
+	whatsapp: string | null;
+	telegram: string | null;
+	country: string | null;
+	state: string | null;
+	city: string | null;
+	address: string | null;
+	zip: string | null;
+	orders_total: number;
+	licenses_total: number;
+}
+
+const CUSTOMER_SELECT = `
+	SELECT u.id, u.email, u.name, u."emailVerified" AS email_verified, u."createdAt" AS created_at,
+		p.username, p.full_name, p.whatsapp, p.telegram, p.country, p.state, p.city, p.address, p.zip,
+		COUNT(o.id)::int AS orders_total,
+		COUNT(o.id) FILTER (WHERE o.status = 'confirmed')::int AS licenses_total
+	FROM "user" u
+	LEFT JOIN customer_profiles p ON p.user_id = u.id
+	LEFT JOIN payment_orders o ON o.user_id = u.id OR lower(o.email) = lower(u.email)`;
+
+/** Every registered customer with their profile and order counts,
+ * newest first — the admin Users list. */
+export async function listCustomers(connectionString: string): Promise<CustomerRow[]> {
+	const res = await withClient(connectionString, (c) =>
+		c.query(CUSTOMER_SELECT + ' GROUP BY u.id, p.user_id ORDER BY u."createdAt" DESC'),
+	);
+	return res.rows as CustomerRow[];
+}
+
+/** One customer by account id (the admin user-detail page). */
+export async function getCustomerById(connectionString: string, id: string): Promise<CustomerRow | null> {
+	const res = await withClient(connectionString, (c) =>
+		c.query(CUSTOMER_SELECT + ' WHERE u.id = $1 GROUP BY u.id, p.user_id', [id]),
+	);
+	return (res.rows[0] as CustomerRow) ?? null;
+}
+
 // ---------------------------------------------------------------------------
 // Administrators (separate table — see the schema note in SCHEMA_SQL).
 // ---------------------------------------------------------------------------

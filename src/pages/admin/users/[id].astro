@@ -1,0 +1,354 @@
+---
+import BaseHead from '../../../components/BaseHead.astro';
+import AdminShell from '../../../components/AdminShell.astro';
+import { getDatabaseUrl, getEnv } from '../../../lib/env';
+import { adminGate } from '../../../lib/adminGate';
+import { adminConfigured } from '../../../lib/auth';
+import { getCustomerById, listOrdersForUser, type CustomerRow, type PaymentOrder } from '../../../lib/db';
+import { activePackages, getEffectiveSettings } from '../../../lib/settings';
+
+export const prerender = false;
+
+const gate = await adminGate(Astro);
+if (gate.redirect) return gate.redirect;
+const email = gate.email;
+const error = Astro.url.searchParams.get('error');
+const configured = adminConfigured(Astro);
+const id = Astro.params.id ?? '';
+const msg = Astro.url.searchParams.get('msg') ?? '';
+const notices: Record<string, string> = {
+	created: '✅ User created — the account is verified and ready. Assign a license below if needed.',
+	'license-added': '✅ License assigned — it is active from today. Add the bot login below so the customer can see it.',
+	done: '✅ License marked done — the customer can now see their bot username and password in their dashboard.',
+	saved: 'Bot login saved (not marked done yet — the customer cannot see it).',
+	creds: '⚠️ To mark a license done, both the bot username and password are required.',
+	reopened: 'License re-opened — the credentials are hidden from the customer again.',
+};
+const errorTexts: Record<string, string> = {
+	package: '⚠️ Please choose a valid package.',
+	server: '⚠️ Something went wrong — please try again.',
+};
+
+let customer: CustomerRow | null = null;
+let orders: PaymentOrder[] = [];
+let packages: ReturnType<typeof activePackages> = [];
+let dbError = '';
+if (email) {
+	const dbUrl = getDatabaseUrl(Astro);
+	if (!dbUrl) {
+		dbError = 'The database is not configured on the server yet (DATABASE_URL).';
+	} else {
+		try {
+			customer = await getCustomerById(dbUrl, id);
+			if (customer) {
+				orders = await listOrdersForUser(dbUrl, customer.id, customer.email);
+				const settings = await getEffectiveSettings(dbUrl, (k) => getEnv(Astro, k));
+				packages = activePackages(settings);
+				// Duration lookup for expiry computation, keyed by slug.
+				var durations = new Map(settings.packages.map((p) => [p.slug, p.durationDays]));
+			}
+		} catch {
+			dbError = 'Could not read this user from the database.';
+		}
+	}
+}
+
+const dateFmt = new Intl.DateTimeFormat('en-US', { dateStyle: 'medium' });
+const fmtDay = (iso: string) => dateFmt.format(new Date(iso));
+const now = Date.now();
+function licenseState(o: PaymentOrder): { label: string; cls: string; expires: string | null } {
+	if (o.status === 'pending') return { label: 'Pending payment', cls: 'waiting', expires: null };
+	if (o.status === 'rejected') return { label: 'Rejected', cls: 'no', expires: null };
+	const days = durations?.get(o.package_slug) ?? null;
+	if (days === null) return { label: 'Active — Lifetime', cls: 'done', expires: 'Never' };
+	const expiry = new Date(new Date(o.updated_at).getTime() + days * 24 * 3600 * 1000);
+	const left = Math.ceil((expiry.getTime() - now) / (24 * 3600 * 1000));
+	return left >= 0
+		? { label: `Active — ${left} day${left === 1 ? '' : 's'} left`, cls: 'done', expires: fmtDay(expiry.toISOString()) }
+		: { label: 'Expired', cls: 'no', expires: fmtDay(expiry.toISOString()) };
+}
+
+const title = customer ? `User — ${customer.full_name ?? customer.name} (Admin)` : 'User (Admin)';
+const description = 'Customer details, licenses and bot logins.';
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<BaseHead title={title} description={description} />
+		<style>
+			.card {
+				background: var(--surface);
+				border: 1px solid rgb(var(--gray-light));
+				border-radius: 14px;
+				padding: 1.4em 1.6em;
+				box-shadow: var(--box-shadow);
+				margin-bottom: 1.4em;
+			}
+			.card h2 {
+				margin-top: 0;
+				font-size: 1.25em;
+			}
+			.meta {
+				color: rgb(var(--gray-dark));
+				font-size: 0.93em;
+			}
+			.notice {
+				border-radius: 10px;
+				padding: 0.8em 1em;
+				font-weight: 600;
+				background: #ffedd5;
+				color: #9a3412;
+				border: 1px solid #fdba74;
+			}
+			.badge {
+				display: inline-block;
+				font-size: 0.78em;
+				font-weight: 700;
+				border-radius: 999px;
+				padding: 0.15em 0.8em;
+			}
+			.badge.done {
+				background: #dcfce7;
+				color: #166534;
+			}
+			.badge.waiting {
+				background: #fef3c7;
+				color: #92400e;
+			}
+			.badge.no {
+				background: #fee2e2;
+				color: #991b1b;
+			}
+			dl.details {
+				display: grid;
+				grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+				gap: 0.9em 1.6em;
+				margin: 0;
+			}
+			dl.details dt {
+				font-size: 0.8em;
+				font-weight: 700;
+				text-transform: uppercase;
+				letter-spacing: 0.04em;
+				color: rgb(var(--gray-dark));
+			}
+			dl.details dd {
+				margin: 0.2em 0 0;
+				font-weight: 600;
+				overflow-wrap: anywhere;
+			}
+			.lic {
+				border: 1px solid rgb(var(--gray-light));
+				border-radius: 12px;
+				padding: 1em 1.2em;
+				margin-top: 1em;
+			}
+			.lic-head {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 0.5em 1em;
+				align-items: center;
+				justify-content: space-between;
+			}
+			.grid {
+				display: grid;
+				grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+				gap: 0.9em;
+				margin: 1em 0;
+			}
+			.field label {
+				display: block;
+				font-weight: 600;
+				font-size: 0.9em;
+				margin-bottom: 0.3em;
+			}
+			.field input,
+			.field select {
+				width: 100%;
+				font: inherit;
+				font-size: 0.95em;
+				padding: 0.55em 0.7em;
+				border: 1px solid rgb(var(--gray-light));
+				border-radius: 9px;
+				background: var(--bg);
+				box-sizing: border-box;
+			}
+			.btn {
+				display: inline-block;
+				font: inherit;
+				font-weight: 700;
+				font-size: 0.92em;
+				padding: 0.5em 1.2em;
+				border-radius: 999px;
+				border: 1px solid var(--accent);
+				background: var(--accent);
+				color: #fff;
+				cursor: pointer;
+				text-decoration: none;
+			}
+			.btn.ghost {
+				background: transparent;
+				color: var(--accent);
+			}
+			.actions {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 0.6em;
+				margin-top: 0.4em;
+			}
+		</style>
+	</head>
+	<body>
+		<AdminShell title="User details" active="users" email={email} error={error} configured={configured}>
+			<p><a href="/admin/users">← All users</a></p>
+			{msg && notices[msg] && <p class="notice">{notices[msg]}</p>}
+			{error && errorTexts[error] && <p class="notice">{errorTexts[error]}</p>}
+			{dbError && <p class="notice">{dbError}</p>}
+			{email && !dbError && !customer && <p class="notice">⚠️ No user found with this id.</p>}
+
+			{customer && (
+				<>
+					<section class="card">
+						<h2>
+							{customer.full_name ?? customer.name}
+							{customer.email_verified ? (
+								<span class="badge done">Email verified</span>
+							) : (
+								<span class="badge waiting">Email not verified</span>
+							)}
+						</h2>
+						<dl class="details">
+							<div>
+								<dt>Username</dt>
+								<dd>@{customer.username ?? '—'}</dd>
+							</div>
+							<div>
+								<dt>Email</dt>
+								<dd>{customer.email}</dd>
+							</div>
+							<div>
+								<dt>WhatsApp</dt>
+								<dd>{customer.whatsapp ?? '—'}</dd>
+							</div>
+							<div>
+								<dt>Telegram</dt>
+								<dd>{customer.telegram ? '@' + customer.telegram : '—'}</dd>
+							</div>
+							<div>
+								<dt>Country / State / City</dt>
+								<dd>
+									{[customer.country, customer.state, customer.city].filter(Boolean).join(', ') || '—'}
+								</dd>
+							</div>
+							<div>
+								<dt>Address</dt>
+								<dd>{customer.address ?? '—'}</dd>
+							</div>
+							<div>
+								<dt>ZIP</dt>
+								<dd>{customer.zip ?? '—'}</dd>
+							</div>
+							<div>
+								<dt>Joined</dt>
+								<dd>{fmtDay(customer.created_at)}</dd>
+							</div>
+						</dl>
+					</section>
+
+					<section class="card">
+						<h2>Assign a license</h2>
+						<p class="meta">
+							Creates a confirmed license for this customer, starting today — no checkout or
+							payment proof. Afterwards add the bot login in the license below so the customer
+							can see it in their dashboard.
+						</p>
+						<form method="post" action="/api/admin/users/add-license">
+							<input type="hidden" name="user_id" value={customer.id} />
+							<div class="grid">
+								<div class="field">
+									<label for="lic-pkg">Package</label>
+									<select id="lic-pkg" name="package" required>
+										{packages.map((p) => (
+											<option value={p.slug}>
+												{p.duration} — {p.devices} devices — ${p.priceUsd}
+											</option>
+										))}
+									</select>
+								</div>
+							</div>
+							<button class="btn" type="submit">Assign license</button>
+						</form>
+					</section>
+
+					<section class="card">
+						<h2>Licenses & orders ({orders.length})</h2>
+						{orders.length === 0 && <p class="meta">This user has no orders or licenses yet.</p>}
+						{orders.map((o) => {
+							const st = licenseState(o);
+							return (
+								<div class="lic">
+									<div class="lic-head">
+										<strong>
+											{o.package_label} — ${o.amount_usd}
+										</strong>
+										<span class={`badge ${st.cls}`}>{st.label}</span>
+									</div>
+									<p class="meta">
+										Ordered {fmtDay(o.created_at)}
+										{o.status === 'confirmed' && <> · Activated {fmtDay(o.updated_at)}</>}
+										{st.expires && <> · Expires {st.expires}</>}
+										<br />
+										Order id: {o.id} · Paid with {o.crypto}
+										{o.note ? <> · {o.note}</> : null}
+									</p>
+									{o.status === 'confirmed' && (
+										<form method="post" action="/api/admin/license">
+											<input type="hidden" name="id" value={o.id} />
+											<input type="hidden" name="back" value={`/admin/users/${customer.id}`} />
+											<div class="grid">
+												<div class="field">
+													<label>Bot username</label>
+													<input name="bot_username" type="text" value={o.bot_username ?? ''} autocomplete="off" />
+												</div>
+												<div class="field">
+													<label>Bot password</label>
+													<input name="bot_password" type="text" value={o.bot_password ?? ''} autocomplete="off" />
+												</div>
+											</div>
+											<div class="actions">
+												<button class="btn ghost" type="submit">Save bot login</button>
+												<button
+													class="btn"
+													type="submit"
+													name="done"
+													value="1"
+													formaction="/api/admin/license"
+												>
+													Save & mark done
+												</button>
+												{o.fulfilled_at && (
+													<button class="btn ghost" type="submit" name="action" value="unfulfill">
+														Re-open (hide from customer)
+													</button>
+												)}
+											</div>
+											<p class="meta">
+												{o.fulfilled_at
+													? '✅ Done — the customer can see these credentials.'
+													: 'Not marked done — the customer cannot see the credentials yet.'}
+											</p>
+										</form>
+									)}
+									{o.status === 'pending' && (
+										<p class="meta">Waiting for payment confirmation — confirm or reject it from the Orders page.</p>
+									)}
+								</div>
+							);
+						})}
+					</section>
+				</>
+			)}
+		</AdminShell>
+	</body>
+</html>

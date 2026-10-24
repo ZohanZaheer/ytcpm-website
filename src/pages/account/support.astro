@@ -202,7 +202,7 @@ const fmt = (iso: string) =>
 	<body>
 		<Header />
 		<main>
-			<AccountTop name={user.name} email={user.email} hasActive={hasActive} />
+			<AccountTop name={profile?.full_name || user.name} email={user.email} hasActive={hasActive} />
 			<section class="body bleed">
 				<div class="wrap">
 					<div class="acct-grid">

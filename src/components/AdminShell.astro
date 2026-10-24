@@ -9,7 +9,7 @@ import AdminLogin from './AdminLogin.astro';
 
 interface Props {
 	title: string;
-	active: 'dashboard' | 'orders' | 'licenses' | 'requests' | 'packages' | 'settings' | 'messages';
+	active: 'dashboard' | 'orders' | 'licenses' | 'requests' | 'packages' | 'settings' | 'messages' | 'users';
 	email?: string | null;
 	error?: string | null;
 	configured: boolean;
@@ -24,6 +24,10 @@ const groups = [
 	{
 		label: 'Priority',
 		links: [{ id: 'requests', href: '/admin/requests', label: 'Support Requests', icon: '⚡' }],
+	},
+	{
+		label: 'Customers',
+		links: [{ id: 'users', href: '/admin/users', label: 'Users', icon: '👥' }],
 	},
 	{
 		label: 'Sales',

@@ -2,7 +2,7 @@ import type { APIRoute } from 'astro';
 import { getDatabaseUrl } from '../../../lib/env';
 import { baSessionUser } from '../../../lib/baSession';
 import { updateProfile, createProfile, getProfile, profileFieldTaken } from '../../../lib/db';
-import { validateProfileUpdate } from '../../../lib/profile';
+import { isReservedUsername, validateProfileUpdate } from '../../../lib/profile';
 
 export const prerender = false;
 
@@ -37,10 +37,13 @@ export const POST: APIRoute = async (ctx) => {
 		// their first save creates it (with a generated username).
 		const existing = await getProfile(dbUrl, user.id);
 		if (!existing) {
-			let username =
-				user.email.split('@')[0].toLowerCase().replace(/[^a-z0-9._-]/g, '').slice(0, 18) || 'customer';
-			if (await profileFieldTaken(dbUrl, 'username', username)) {
-				username = username.slice(0, 14) + Math.random().toString(36).slice(2, 6);
+			// Generated usernames obey the same rules as chosen ones:
+			// 8–15 chars, letters/digits, starts with a letter, not reserved.
+			const base = user.email.split('@')[0].toLowerCase().replace(/[^a-z0-9]/g, '');
+			let username = /^[a-z]/.test(base) ? base.slice(0, 15) : '';
+			while (username.length < 8) username += Math.random().toString(36).slice(2, 3);
+			if (isReservedUsername(username) || (await profileFieldTaken(dbUrl, 'username', username))) {
+				username = 'user' + Math.random().toString(36).slice(2, 10);
 			}
 			await createProfile(dbUrl, {
 				user_id: user.id,

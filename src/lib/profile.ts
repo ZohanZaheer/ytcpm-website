@@ -16,7 +16,43 @@ export interface RegistrationValues {
 	telegram: string | null;
 }
 
-const USERNAME_RE = /^[a-zA-Z0-9][a-zA-Z0-9._-]{2,23}$/;
+/* Username rules (owner-set): 8–15 characters, letters and digits
+ * only, and it must start with a letter. Reserved words (admin,
+ * owner, …) are blocked so nobody can impersonate the team. */
+const USERNAME_RE = /^[a-zA-Z][a-zA-Z0-9]{7,14}$/;
+export const RESERVED_USERNAMES = [
+	'admin',
+	'administrator',
+	'owner',
+	'root',
+	'support',
+	'staff',
+	'moderator',
+	'official',
+	'system',
+	'webmaster',
+	'ytcpm',
+	'billing',
+	'security',
+	'helpdesk',
+	'manager',
+];
+export function isReservedUsername(username: string): boolean {
+	const low = username.toLowerCase();
+	return RESERVED_USERNAMES.some((w) => low.includes(w));
+}
+
+/* Password rules (owner-set): at least 8 characters with at least
+ * one letter, one digit and one special character. */
+export function isStrongPassword(pw: string): boolean {
+	return (
+		pw.length >= 8 &&
+		pw.length <= 128 &&
+		/[a-zA-Z]/.test(pw) &&
+		/[0-9]/.test(pw) &&
+		/[^a-zA-Z0-9]/.test(pw)
+	);
+}
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 const PLACE_RE = /^[\p{L}][\p{L} .'-]{1,59}$/u;
 const ZIP_RE = /^[a-zA-Z0-9][a-zA-Z0-9 -]{2,11}$/;
@@ -54,8 +90,9 @@ export function validateRegistration(input: Record<string, string>): {
 		telegram: null,
 	};
 	if (!USERNAME_RE.test(v.username)) return { values: null, error: 'username' };
+	if (isReservedUsername(v.username)) return { values: null, error: 'username-reserved' };
 	if (!EMAIL_RE.test(v.email) || v.email.length > 160) return { values: null, error: 'email' };
-	if (v.password.length < 8 || v.password.length > 128) return { values: null, error: 'password' };
+	if (!isStrongPassword(v.password)) return { values: null, error: 'password' };
 	if (v.fullName.length < 2 || v.fullName.length > 80) return { values: null, error: 'fullname' };
 	if (!PLACE_RE.test(v.country)) return { values: null, error: 'country' };
 	if (!PLACE_RE.test(v.state)) return { values: null, error: 'state' };
@@ -81,9 +118,9 @@ export function validateProfileUpdate(input: Record<string, string>): {
 	error: string | null;
 } {
 	const merged: Record<string, string> = {
-		username: 'valid_name', // placeholders for the shared validator
+		username: 'validname1', // placeholders for the shared validator
 		email: 'valid@example.com',
-		password: 'valid-password',
+		password: 'Passw0rd!',
 		...input,
 	};
 	const { values, error } = validateRegistration(merged);

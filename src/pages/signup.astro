@@ -4,6 +4,7 @@ import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import { SITE_TITLE } from '../consts';
 import { baSessionUser } from '../lib/baSession';
+import { RESERVED_USERNAMES } from '../lib/profile';
 
 export const prerender = false;
 
@@ -13,7 +14,8 @@ if (user) return Astro.redirect('/account');
 const next = Astro.url.searchParams.get('next') ?? '';
 const errorCode = Astro.url.searchParams.get('error') ?? '';
 const errors: Record<string, string> = {
-	username: 'Please choose a username: 3–24 characters, letters, numbers, dot, dash or underscore.',
+	username: 'Please choose a username: 8–15 characters, letters and numbers only, starting with a letter.',
+	'username-reserved': 'This username contains a reserved word (like admin or owner) — please choose another one.',
 	'username-taken': 'This username is already taken — please choose another one.',
 	email: 'Please enter a valid email address.',
 	'email-taken': 'An account with this email already exists — sign in instead.',
@@ -27,7 +29,7 @@ const errors: Record<string, string> = {
 	'whatsapp-taken': 'This WhatsApp number is already registered — sign in instead, or use another number.',
 	telegram: 'Please enter a valid Telegram username (5–32 characters, letters, numbers or underscore).',
 	'telegram-taken': 'This Telegram username is already registered to another account.',
-	password: 'Please choose a password of at least 8 characters.',
+	password: 'Please choose a stronger password: at least 8 characters with a letter, a number and a special character (like ! @ # $).',
 	exists: 'An account with this email already exists — sign in instead.',
 	invalid: 'The sign-up could not be completed. Please check the details and try again.',
 	server: 'Accounts are having a problem right now. Please try again in a little while.',
@@ -95,6 +97,27 @@ const error = errors[errorCode] ?? '';
 				color: rgb(var(--gray));
 				margin-top: 0.3em;
 			}
+			/* Live requirement checklists under the username / password
+			   fields: each line ticks green as the rule is met. */
+			.rules {
+				list-style: none;
+				margin: 0.45em 0 0;
+				padding: 0;
+				font-size: 0.82em;
+				color: rgb(var(--gray));
+				display: grid;
+				gap: 0.15em;
+			}
+			.rules li::before {
+				content: '○ ';
+				font-weight: 700;
+			}
+			.rules li.done {
+				color: #15803d;
+			}
+			.rules li.done::before {
+				content: '✓ ';
+			}
 			@media (max-width: 640px) {
 				.grid2 {
 					grid-template-columns: 1fr;
@@ -158,7 +181,13 @@ const error = errors[errorCode] ?? '';
 					<div class="grid2">
 						<div class="field">
 							<label for="f-username">Username <span class="req">*</span></label>
-							<input id="f-username" name="username" type="text" required maxlength="24" autocomplete="username" />
+							<input id="f-username" name="username" type="text" required maxlength="15" autocomplete="username" />
+							<ul class="rules" id="u-rules">
+								<li data-u="len">8–15 characters</li>
+								<li data-u="start">Starts with a letter</li>
+								<li data-u="chars">Letters and numbers only</li>
+								<li data-u="free">Not a reserved word (admin, owner, …)</li>
+							</ul>
 						</div>
 						<div class="field">
 							<label for="f-fullname">Full name <span class="req">*</span></label>
@@ -173,7 +202,12 @@ const error = errors[errorCode] ?? '';
 						<div class="field">
 							<label for="f-password">Password <span class="req">*</span></label>
 							<input id="f-password" name="password" type="password" required minlength="8" maxlength="128" autocomplete="new-password" />
-							<p class="hint">At least 8 characters.</p>
+							<ul class="rules" id="p-rules">
+								<li data-p="len">At least 8 characters</li>
+								<li data-p="letter">Contains a letter</li>
+								<li data-p="digit">Contains a number</li>
+								<li data-p="special">Contains a special character (! @ # $ …)</li>
+							</ul>
 						</div>
 					</div>
 					<div class="grid2">
@@ -219,5 +253,29 @@ const error = errors[errorCode] ?? '';
 			</div>
 		</main>
 		<Footer />
+		<script define:vars={{ reservedWords: RESERVED_USERNAMES }}>
+			const setDone = (sel, ok) => {
+				const el = document.querySelector(sel);
+				if (el) el.classList.toggle('done', !!ok);
+			};
+			const uInput = document.getElementById('f-username');
+			const pInput = document.getElementById('f-password');
+			const checkU = () => {
+				const v = uInput.value;
+				setDone('[data-u="len"]', v.length >= 8 && v.length <= 15);
+				setDone('[data-u="start"]', /^[a-zA-Z]/.test(v));
+				setDone('[data-u="chars"]', v.length > 0 && /^[a-zA-Z0-9]+$/.test(v));
+				setDone('[data-u="free"]', v.length > 0 && !reservedWords.some((w) => v.toLowerCase().includes(w)));
+			};
+			const checkP = () => {
+				const v = pInput.value;
+				setDone('[data-p="len"]', v.length >= 8);
+				setDone('[data-p="letter"]', /[a-zA-Z]/.test(v));
+				setDone('[data-p="digit"]', /[0-9]/.test(v));
+				setDone('[data-p="special"]', /[^a-zA-Z0-9]/.test(v));
+			};
+			if (uInput) uInput.addEventListener('input', checkU);
+			if (pInput) pInput.addEventListener('input', checkP);
+		</script>
 	</body>
 </html>

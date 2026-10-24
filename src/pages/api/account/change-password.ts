@@ -1,5 +1,6 @@
 import type { APIRoute } from 'astro';
 import { authForRequest, baSessionUser, forwardCookies } from '../../../lib/baSession';
+import { isStrongPassword } from '../../../lib/profile';
 
 export const prerender = false;
 
@@ -19,7 +20,7 @@ export const POST: APIRoute = async (ctx) => {
 		const form = await ctx.request.formData().catch(() => null);
 		const currentPassword = String(form?.get('currentPassword') ?? '');
 		const newPassword = String(form?.get('newPassword') ?? '');
-		if (!currentPassword || newPassword.length < 8 || newPassword.length > 128) return backTo('invalid');
+		if (!currentPassword || !isStrongPassword(newPassword)) return backTo('invalid');
 		const auth = await authForRequest(ctx);
 		if (!auth) return backTo('error');
 		const res = await auth.api.changePassword({

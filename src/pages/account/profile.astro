@@ -41,7 +41,7 @@ const pw = Astro.url.searchParams.get('pw') ?? '';
 const pwMessages: Record<string, string> = {
 	done: 'Your password has been changed.',
 	wrong: 'The current password is not correct.',
-	invalid: 'Please enter your current password and a new password of at least 8 characters.',
+	invalid: 'Please enter your current password and a new password of at least 8 characters with a letter, a number and a special character (like ! @ # $).',
 	error: 'The password could not be changed — please try again.',
 };
 const pwMsg = pwMessages[pw] ?? '';
@@ -200,7 +200,7 @@ const pwMsg = pwMessages[pw] ?? '';
 	<body>
 		<Header />
 		<main>
-			<AccountTop name={user.name} email={user.email} hasActive={hasActive} />
+			<AccountTop name={profile?.full_name || user.name} email={user.email} hasActive={hasActive} />
 			<section class="body bleed">
 				<div class="wrap">
 					<div class="acct-grid">
@@ -291,7 +291,7 @@ const pwMsg = pwMessages[pw] ?? '';
 							<input id="pw-current" name="currentPassword" type="password" required autocomplete="current-password" />
 						</div>
 						<div class="field">
-							<label for="pw-new">New password (8+ characters)</label>
+							<label for="pw-new">New password (8+ characters, with a letter, a number and a special character)</label>
 							<input id="pw-new" name="newPassword" type="password" required minlength="8" maxlength="128" autocomplete="new-password" />
 						</div>
 						<button class="btn" type="submit">Change password</button>

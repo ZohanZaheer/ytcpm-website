@@ -7,7 +7,7 @@ import { baSessionUser, verificationEnforced } from '../lib/baSession';
 import AccountTop from '../components/AccountTop.astro';
 import AccountSide from '../components/AccountSide.astro';
 import { getEnv, getDatabaseUrl } from '../lib/env';
-import { listOrdersForUser, type PaymentOrder } from '../lib/db';
+import { getProfile, listOrdersForUser, type PaymentOrder } from '../lib/db';
 import { getEffectiveSettings, type LicensePackage } from '../lib/settings';
 import { formatUsd } from '../lib/packages';
 
@@ -32,6 +32,10 @@ interface LicenseView {
 let licenses: LicenseView[] = [];
 let dbError = '';
 const dbUrl = getDatabaseUrl(Astro);
+// The band greets the customer by the full name on their profile,
+// not the auth record's display name.
+const profileForBand = dbUrl ? await getProfile(dbUrl, user.id).catch(() => null) : null;
+const displayName = profileForBand?.full_name || user.name;
 if (!dbUrl) {
 	dbError = 'Your orders cannot be loaded right now (database not configured).';
 } else {
@@ -108,6 +112,8 @@ try {
 				padding: 0;
 			}
 			.btn {
+				display: inline-block;
+				text-align: center;
 				font: inherit;
 				font-weight: 700;
 				text-decoration: none;
@@ -213,6 +219,22 @@ try {
 			}
 			.creds .row-actions {
 				margin-top: 0.8em;
+			}
+			/* The license contact button: on narrow screens it becomes a
+			   full-width pill inside the credentials box instead of an
+			   inline link whose border breaks across two lines. The
+			   label stays on one line — its size follows the viewport
+			   on very small phones. */
+			@media (max-width: 860px) {
+				.creds .row-actions .btn {
+					display: block;
+					width: 100%;
+					box-sizing: border-box;
+					white-space: nowrap;
+					padding-left: 8px;
+					padding-right: 8px;
+					font-size: min(0.95em, 4.4vw);
+				}
 			}
 			.preparing {
 				margin-top: 1em;
@@ -349,7 +371,7 @@ try {
 	<body>
 		<Header />
 		<main>
-			<AccountTop name={user.name} email={user.email} hasActive={hasActive} />
+			<AccountTop name={displayName} email={user.email} hasActive={hasActive} />
 			<section class="body bleed">
 				<div class="wrap">
 					<h2>My licenses &amp; orders</h2>

@@ -11,10 +11,14 @@ export const prerender = false;
 export const POST: APIRoute = async (ctx) => {
 	if (!(await isAdminRequest(ctx))) return new Response('Unauthorized', { status: 401 });
 	const dbUrl = getDatabaseUrl(ctx);
-	const back = (code: string) =>
-		new Response(null, { status: 303, headers: { Location: '/admin/licenses?msg=' + code } });
-	if (!dbUrl) return back('error');
 	const form = await ctx.request.formData().catch(() => null);
+	// Forms may send the admin back to another admin page (e.g. the
+	// user detail page) instead of the licenses list.
+	const backRaw = String(form?.get('back') ?? '');
+	const backBase = backRaw.startsWith('/admin/') && !backRaw.includes('?') ? backRaw : '/admin/licenses';
+	const back = (code: string) =>
+		new Response(null, { status: 303, headers: { Location: backBase + '?msg=' + code } });
+	if (!dbUrl) return back('error');
 	const id = String(form?.get('id') ?? '');
 	const action = String(form?.get('action') ?? 'save');
 	const order = id ? await getOrder(dbUrl, id) : null;
