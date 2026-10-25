@@ -3,7 +3,7 @@
 // all pages through the use of the <BaseHead /> component.
 import '../styles/global.css';
 import StructuredData from './StructuredData.astro';
-import { SITE_NAME, SITE_ORGANIZATION, SITE_LOCALE, SITE_VERIFICATION, ADSENSE_CLIENT_ID } from '../config/site';
+import { SITE_NAME, SITE_ORGANIZATION, SITE_LOCALE, SITE_VERIFICATION, ADSENSE_CLIENT_ID, ADS_REQUIRE_CONSENT } from '../config/site';
 
 interface Props {
 	title: string;
@@ -96,17 +96,20 @@ const ogImageType = image.endsWith('.png') ? 'image/png' : 'image/jpeg';
      visitor accepts cookies in CookieConsent (see Footer). -->
 
 <!-- Google AdSense (public pages only, when a client ID is set).
-     Two gates keep the heavy ads library out of the page's way:
-     1. Consent — like Google Analytics, ads load only after the
-        visitor accepts cookies in the banner (CookieConsent.astro
-        broadcasts the choice as a 'ytcpm-consent' window event).
-     2. Timing — after consent, the script is injected once the page
-        has loaded and the browser is idle, or on the first
-        interaction, so it never competes with first paint / LCP.
-     Side benefit: because the library only ever runs with consent,
-     its own deprecated-API warnings stay out of the page's record. -->
+     The heavy ads library never loads with the page itself:
+     - Timing — the script is injected once the page has loaded and
+       the browser is idle, or on the visitor's first interaction,
+       so it never competes with first paint / LCP.
+     - Consent (only when ADS_REQUIRE_CONSENT is true in
+       src/config/site.ts) — like Google Analytics, ads then wait
+       until the visitor accepts cookies in the banner
+       (CookieConsent.astro broadcasts the choice as a
+       'ytcpm-consent' window event), which also keeps the ads
+       library's deprecated-API warnings out of PageSpeed runs.
+       While the switch is false, ads load for every visitor —
+       the right mode during the AdSense approval review. -->
 {!noindex && ADSENSE_CLIENT_ID && (
-	<script is:inline define:vars={{ adsClient: ADSENSE_CLIENT_ID }}>
+	<script is:inline define:vars={{ adsClient: ADSENSE_CLIENT_ID, adsRequireConsent: ADS_REQUIRE_CONSENT }}>
 		(() => {
 			let done = false;
 			const load = () => {
@@ -129,16 +132,20 @@ const ogImageType = image.endsWith('.png') ? 'image/png' : 'image/jpeg';
 					window.addEventListener(ev, load, { once: true, passive: true });
 				}
 			};
-			let choice = null;
-			try {
-				choice = localStorage.getItem('ytcpm-consent');
-			} catch (e) {}
-			if (choice === 'accepted') {
+			if (!adsRequireConsent) {
 				schedule();
 			} else {
-				window.addEventListener('ytcpm-consent', (e) => {
-					if (e.detail === 'accepted') schedule();
-				});
+				let choice = null;
+				try {
+					choice = localStorage.getItem('ytcpm-consent');
+				} catch (e) {}
+				if (choice === 'accepted') {
+					schedule();
+				} else {
+					window.addEventListener('ytcpm-consent', (e) => {
+						if (e.detail === 'accepted') schedule();
+					});
+				}
 			}
 		})();
 	</script>

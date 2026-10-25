@@ -36,6 +36,18 @@ export const ADS_TXT = `google.com, pub-1802003890783048, DIRECT, f08c47fec0942f
 // publisher number, or AdSense cannot verify the site.
 export const ADSENSE_CLIENT_ID = 'ca-pub-1802003890783048';
 
+// Consent gate for AdSense (the on/off switch):
+//   false → ads load for every visitor (deferred until the page has
+//           loaded, so speed is preserved). Use this while the
+//           AdSense application is under review, so Google's
+//           reviewer sees the ad code running.
+//   true  → ads load ONLY after the visitor accepts cookies in the
+//           consent banner (the same gate as Google Analytics).
+//           Keeps Google's ads library (and its deprecated-API
+//           warnings) out of PageSpeed runs. Flip this to true
+//           after the AdSense account is approved.
+export const ADS_REQUIRE_CONSENT = false;
+
 // ---------- Webmaster-tools verification ----------
 // Paste each code; empty = the meta tag is omitted.
 export const SITE_VERIFICATION = {

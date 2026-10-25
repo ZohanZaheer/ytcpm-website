@@ -222,3 +222,12 @@
   the homepage screenshots have 480w/688w variants with srcset
   (Hero + Showcase). Local Lighthouse after this round: A11Y/BP/SEO
   100, zero render-blocking and zero image-delivery findings.
+- 2026-10-24 (later): the AdSense consent gate is now a switch —
+  ADS_REQUIRE_CONSENT in src/config/site.ts (right under the client
+  ID). false = ads load for every visitor (still deferred past page
+  load); true = ads wait for cookie consent like GA. Currently
+  FALSE at the owner's direction so the AdSense review sees the ad
+  code running; he will flip it to true himself after approval.
+  The /privacy Advertising consent sentence renders only when the
+  switch is on, so the text always matches the behavior. Both
+  states verified locally in a real browser before shipping.
