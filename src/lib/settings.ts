@@ -18,6 +18,19 @@ export interface SiteSettings {
 		usdtNetwork: string;
 		btcAddress: string;
 		ethAddress: string;
+		/** Checkout visibility switches. A method is offered at
+		 * checkout only when it is enabled here AND its value is
+		 * filled in (see availableMethods). */
+		usdtEnabled: boolean;
+		btcEnabled: boolean;
+		ethEnabled: boolean;
+		paypalEnabled: boolean;
+		/** PayPal email the customer sends the payment to. */
+		paypalEmail: string;
+		stripeEnabled: boolean;
+		/** Stripe Payment Link URL (created in the Stripe dashboard);
+		 * the customer pays on Stripe's page, then submits proof here. */
+		stripeLink: string;
 	};
 	download: {
 		url: string;
@@ -47,6 +60,13 @@ export function defaultSettings(env: EnvGetter): SiteSettings {
 			usdtNetwork: env('PAYMENT_USDT_NETWORK') ?? 'TRC20',
 			btcAddress: env('PAYMENT_BTC_ADDRESS') ?? '',
 			ethAddress: env('PAYMENT_ETH_ADDRESS') ?? '',
+			usdtEnabled: (env('PAYMENT_USDT_ADDRESS') ?? '').trim() !== '',
+			btcEnabled: (env('PAYMENT_BTC_ADDRESS') ?? '').trim() !== '',
+			ethEnabled: (env('PAYMENT_ETH_ADDRESS') ?? '').trim() !== '',
+			paypalEnabled: (env('PAYMENT_PAYPAL_EMAIL') ?? '').trim() !== '',
+			paypalEmail: env('PAYMENT_PAYPAL_EMAIL') ?? '',
+			stripeEnabled: (env('PAYMENT_STRIPE_LINK') ?? '').trim() !== '',
+			stripeLink: env('PAYMENT_STRIPE_LINK') ?? '',
 		},
 		download: {
 			url: '/YoutubeCPM.zip',
@@ -87,6 +107,19 @@ export function mergeSettings(base: SiteSettings, stored: Partial<SiteSettings> 
 		if (nonEmpty(stored.payments.usdtNetwork)) out.payments.usdtNetwork = stored.payments.usdtNetwork;
 		if (typeof stored.payments.btcAddress === 'string') out.payments.btcAddress = stored.payments.btcAddress;
 		if (typeof stored.payments.ethAddress === 'string') out.payments.ethAddress = stored.payments.ethAddress;
+		// Visibility switches. Settings saved before the switches
+		// existed have no boolean stored: for crypto, derive it from
+		// whether an address is filled in, so the checkout keeps
+		// behaving exactly as it did (address present = shown).
+		const boolOr = (v: unknown, fallback: boolean): boolean =>
+			typeof v === 'boolean' ? v : fallback;
+		out.payments.usdtEnabled = boolOr(stored.payments.usdtEnabled, out.payments.usdtAddress.trim() !== '');
+		out.payments.btcEnabled = boolOr(stored.payments.btcEnabled, out.payments.btcAddress.trim() !== '');
+		out.payments.ethEnabled = boolOr(stored.payments.ethEnabled, out.payments.ethAddress.trim() !== '');
+		out.payments.paypalEnabled = boolOr(stored.payments.paypalEnabled, false);
+		if (typeof stored.payments.paypalEmail === 'string') out.payments.paypalEmail = stored.payments.paypalEmail;
+		out.payments.stripeEnabled = boolOr(stored.payments.stripeEnabled, false);
+		if (typeof stored.payments.stripeLink === 'string') out.payments.stripeLink = stored.payments.stripeLink;
 	}
 	if (stored.download) {
 		if (nonEmpty(stored.download.url)) out.download.url = stored.download.url;
@@ -273,6 +306,23 @@ export async function saveSiteSettings(
 ): Promise<void> {
 	await setSetting(dbUrl, 'site', settings);
 	cache = null;
+}
+
+/** Every payment method the checkout can offer. A method is
+ * available only when it is enabled in the dashboard AND its value
+ * is complete — a disabled or half-filled method never appears. */
+export type PaymentMethod = 'USDT' | 'BTC' | 'ETH' | 'PayPal' | 'Stripe';
+
+export function availableMethods(s: SiteSettings): PaymentMethod[] {
+	const p = s.payments;
+	const filled = (v: string) => v.trim() !== '';
+	const out: PaymentMethod[] = [];
+	if (p.usdtEnabled && filled(p.usdtAddress)) out.push('USDT');
+	if (p.btcEnabled && filled(p.btcAddress)) out.push('BTC');
+	if (p.ethEnabled && filled(p.ethAddress)) out.push('ETH');
+	if (p.paypalEnabled && filled(p.paypalEmail) && p.paypalEmail.includes('@')) out.push('PayPal');
+	if (p.stripeEnabled && filled(p.stripeLink) && p.stripeLink.startsWith('https://')) out.push('Stripe');
+	return out;
 }
 
 export function findPackage(settings: SiteSettings, slug: string): LicensePackage | undefined {

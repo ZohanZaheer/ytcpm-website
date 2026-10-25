@@ -114,9 +114,11 @@ const description = 'Check the confirmation status of your YTCPM Bot license pay
 										<p class="big">⏳ Waiting for confirmation…</p>
 										<p style="margin-bottom:0">
 											Your submission has been received and your payment is being confirmed.
-											Until the crypto transaction confirms, please wait — this page checks
-											automatically, so you can keep it open or come back to it later. Once
-											confirmed, this page will show it here.
+											{order.crypto === 'PayPal' || order.crypto === 'Stripe'
+												? 'These payments are verified manually by the admin, so this can take a little longer — '
+												: 'Until the crypto transaction confirms, please wait — '}
+											this page checks automatically, so you can keep it open or come back
+											to it later. Once confirmed, this page will show it here.
 										</p>
 									</>
 								)}

@@ -4,7 +4,7 @@ import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
 import { formatUsd, CRYPTOS, type CryptoCode } from '../../lib/packages';
 import { getEnv, getDatabaseUrl } from '../../lib/env';
-import { getEffectiveSettings, findPackage } from '../../lib/settings';
+import { getEffectiveSettings, findPackage, availableMethods, type PaymentMethod } from '../../lib/settings';
 import { baSessionUser, verificationEnforced } from '../../lib/baSession';
 import QRCode from 'qrcode';
 
@@ -31,7 +31,25 @@ const mustVerify = verificationEnforced(Astro) && !buyer.emailVerified;
 const verifyState = Astro.url.searchParams.get('verify') ?? '';
 
 const title = `Pay ${formatUsd(pkg.priceUsd)} — ${pkg.duration}, ${pkg.devices} Devices`;
-const description = `Pay for your YTCPM Bot license (${pkg.duration}, ${pkg.devices} devices) with USDT, BTC or ETH, then submit your payment screenshot for activation.`;
+const description = `Pay for your YTCPM Bot license (${pkg.duration}, ${pkg.devices} devices) with crypto, PayPal or card, then submit your payment proof for activation.`;
+
+// Only the methods the admin has enabled AND fully configured are
+// offered — a disabled or half-filled method never appears here.
+const methods = availableMethods(settings);
+const firstMethod = methods[0];
+const methodLabel: Record<PaymentMethod, string> = {
+	USDT: `USDT (${settings.payments.usdtNetwork})`,
+	BTC: 'BTC',
+	ETH: 'ETH',
+	PayPal: 'PayPal',
+	Stripe: 'Card (Stripe)',
+};
+const stripeHref = settings.payments.stripeLink
+	? settings.payments.stripeLink +
+		(settings.payments.stripeLink.includes('?') ? '&' : '?') +
+		'prefilled_email=' +
+		encodeURIComponent(buyer.email)
+	: '';
 
 const usdtNetwork = settings.payments.usdtNetwork;
 const addresses: Record<CryptoCode, string | undefined> = {
@@ -54,7 +72,7 @@ for (const code of CRYPTOS) {
 		qrSvg[code] = await QRCode.toString(addr, { type: 'svg', width: 240, margin: 1 });
 	}
 }
-const anyConfigured = CRYPTOS.some((c) => addresses[c]);
+const anyConfigured = methods.length > 0;
 const error = Astro.url.searchParams.get('error');
 
 const exchanges = [
@@ -256,9 +274,9 @@ const exchanges = [
 					<section>
 						<div class="warnbox">
 							<p style="margin:0">
-								<strong>Payment addresses are being configured.</strong> The crypto payment
-								addresses for this site have not been set up yet, so checkout is temporarily
-								unavailable. Please check back soon or contact support — do not send crypto
+								<strong>Payment methods are being configured.</strong> No payment
+								method is available yet, so checkout is temporarily unavailable.
+								Please check back soon or contact support — do not send a payment
 								to any address that is not shown on this page.
 							</p>
 						</div>
@@ -268,61 +286,92 @@ const exchanges = [
 						<input type="hidden" name="package" value={pkg.slug} />
 
 						<section aria-labelledby="coin-heading">
-							<h2 id="coin-heading">1. Choose your currency &amp; pay</h2>
+							<h2 id="coin-heading">1. Choose how to pay</h2>
 							<p>
-								Pick a currency — only the selected one is shown. Send exactly the USD
-								equivalent of <strong>{formatUsd(pkg.priceUsd)}</strong>
-								{pkg && ' '}to the address below (for USDT, that is
-								<strong> {formatUsd(pkg.priceUsd)} worth of USDT</strong> on the stated
-								network).
+								Pick a payment method — only the selected one is shown. The amount
+								to pay is <strong>{formatUsd(pkg.priceUsd)}</strong>.
 							</p>
-							<div class="coins" role="radiogroup" aria-label="Payment currency">
-								{CRYPTOS.map((code, i) => (
+							<div class="coins" role="radiogroup" aria-label="Payment method">
+								{methods.map((m, i) => (
 									<label>
-										<input type="radio" name="crypto" value={code} checked={i === 0} />
-										{code}
-										{code === 'USDT' ? ` (${usdtNetwork})` : ''}
+										<input type="radio" name="crypto" value={m} checked={i === 0} />
+										{methodLabel[m]}
 									</label>
 								))}
 							</div>
 
-							{CRYPTOS.map((code) => (
-								<div class="coin-panel" data-panel={code} hidden={code !== 'USDT'}>
-									{addresses[code] ? (
-										<>
-											<div class="qr" role="img" aria-label={`QR code for the ${code} payment address`} set:html={qrSvg[code]} />
-											<p style="margin:0.4em 0 0">
-												<strong>
-													{code} address ({networkLabel[code]})
-												</strong>
-											</p>
-											<code class="addr">{addresses[code]}</code>
-											<p style="margin:0">
-												<small>
-													Double-check the network before sending. Crypto payments
-													cannot be reversed.
-												</small>
-											</p>
-										</>
-									) : (
-										<p style="margin:0">
-											<strong>{code} payments are not available right now.</strong> Please
-											choose another currency above.
-										</p>
-									)}
+							{CRYPTOS.filter((code) => methods.includes(code)).map((code) => (
+								<div class="coin-panel" data-panel={code} hidden={code !== firstMethod}>
+									<div class="qr" role="img" aria-label={`QR code for the ${code} payment address`} set:html={qrSvg[code]} />
+									<p style="margin:0.4em 0 0">
+										<strong>
+											{code} address ({networkLabel[code]})
+										</strong>
+									</p>
+									<code class="addr">{addresses[code]}</code>
+									<p style="margin:0">
+										<small>
+											Send exactly the USD equivalent of {formatUsd(pkg.priceUsd)}
+											{code === 'USDT' ? ` — that is ${formatUsd(pkg.priceUsd)} worth of USDT` : ''} on
+											the stated network. Double-check the network before sending.
+											Crypto payments cannot be reversed.
+										</small>
+									</p>
 								</div>
 							))}
 
-							<p>
-								Need crypto first? You can buy it on a major exchange — these links open
-								in a new tab:
-							</p>
-							<div class="exchanges">
-								{exchanges.map((ex) => (
-									<a href={ex.url} target="_blank" rel="noopener noreferrer">
-										{ex.name} ↗
-									</a>
-								))}
+							{methods.includes('PayPal') && (
+								<div class="coin-panel" data-panel="PayPal" hidden={firstMethod !== 'PayPal'}>
+									<p style="margin:0 0 0.4em">
+										<strong>PayPal</strong> — send <strong>{formatUsd(pkg.priceUsd)}</strong> to
+										this PayPal email:
+									</p>
+									<code class="addr">{settings.payments.paypalEmail}</code>
+									<p style="margin:0">
+										<small>
+											In the PayPal note, write your account email ({buyer.email}) so we
+											can match your payment. Then enter your PayPal transaction ID and
+											attach a screenshot of the completed payment below — PayPal orders
+											are confirmed manually by the admin.
+										</small>
+									</p>
+								</div>
+							)}
+
+							{methods.includes('Stripe') && (
+								<div class="coin-panel" data-panel="Stripe" hidden={firstMethod !== 'Stripe'}>
+									<p style="margin:0 0 0.6em">
+										<strong>Card payment via Stripe</strong> — pay{' '}
+										<strong>{formatUsd(pkg.priceUsd)}</strong> on Stripe's secure
+										checkout page:
+									</p>
+									<p style="margin:0 0 0.6em">
+										<a class="btn" href={stripeHref} target="_blank" rel="noopener noreferrer">
+											Pay {formatUsd(pkg.priceUsd)} with card on Stripe ↗
+										</a>
+									</p>
+									<p style="margin:0">
+										<small>
+											Use the same email as your account ({buyer.email}) on the Stripe
+											page so we can match your payment. After paying, come back here
+											and attach a screenshot of your Stripe receipt below.
+										</small>
+									</p>
+								</div>
+							)}
+
+							<div data-crypto-note>
+								<p>
+									Need crypto first? You can buy it on a major exchange — these links open
+									in a new tab:
+								</p>
+								<div class="exchanges">
+									{exchanges.map((ex) => (
+										<a href={ex.url} target="_blank" rel="noopener noreferrer">
+											{ex.name} ↗
+										</a>
+									))}
+								</div>
 							</div>
 						</section>
 
@@ -331,7 +380,7 @@ const exchanges = [
 							<p>
 								After paying, <strong>take a screenshot of the successful payment</strong>{' '}
 								and attach it below with your details. Your order is then verified — while
-								the crypto transaction is confirming, your status page shows “waiting”;
+								your payment is being confirmed, your status page shows “waiting”;
 								once it confirms, you will see it there. After confirmation,{' '}
 								<strong>our admin will contact you within 24 hours</strong> with your
 								license.
@@ -342,8 +391,8 @@ const exchanges = [
 								(<strong>{buyer.email}</strong>) — the admin reaches you on those.
 							</p>
 							<label class="field">
-								Transaction hash / TXID (recommended — enables automatic confirmation)
-								<input type="text" name="tx_hash" placeholder="Paste the transaction hash from your wallet or exchange" />
+								<span id="tx-label">Transaction hash / TXID (recommended — enables automatic confirmation)</span>
+								<input id="tx-input" type="text" name="tx_hash" placeholder="Paste the transaction hash from your wallet or exchange" />
 							</label>
 							<label class="field">
 								Payment screenshot * (PNG, JPG or WebP, max 5 MB)
@@ -373,11 +422,28 @@ const exchanges = [
 		<script is:inline>
 			const radios = document.querySelectorAll('input[name="crypto"]');
 			const panels = document.querySelectorAll('[data-panel]');
+			const cryptoNote = document.querySelector('[data-crypto-note]');
+			const txLabel = document.getElementById('tx-label');
+			const txInput = document.getElementById('tx-input');
+			const txText = {
+				USDT: ['Transaction hash / TXID (recommended — enables automatic confirmation)', 'Paste the transaction hash from your wallet or exchange'],
+				BTC: ['Transaction hash / TXID (recommended — enables automatic confirmation)', 'Paste the transaction hash from your wallet or exchange'],
+				ETH: ['Transaction hash / TXID (recommended — enables automatic confirmation)', 'Paste the transaction hash from your wallet or exchange'],
+				PayPal: ['PayPal transaction ID (recommended)', 'Paste the transaction ID from your PayPal payment'],
+				Stripe: ['Stripe payment ID (optional)', 'Paste the payment ID from your Stripe receipt email'],
+			};
 			function sync() {
 				const selected = document.querySelector('input[name="crypto"]:checked')?.value;
 				panels.forEach((p) => {
 					p.hidden = p.getAttribute('data-panel') !== selected;
 				});
+				const isCrypto = selected === 'USDT' || selected === 'BTC' || selected === 'ETH';
+				if (cryptoNote) cryptoNote.hidden = !isCrypto;
+				const t = txText[selected];
+				if (t && txLabel && txInput) {
+					txLabel.textContent = t[0];
+					txInput.placeholder = t[1];
+				}
 			}
 			radios.forEach((r) => r.addEventListener('change', sync));
 			sync();

@@ -66,6 +66,16 @@ const description = 'Edit YTCPM payment addresses and download details.';
 				font-weight: 600;
 				font-size: 0.92em;
 			}
+			.grid label.check {
+				display: flex;
+				align-items: center;
+				gap: 0.5em;
+			}
+			.grid label.check input {
+				width: 1.1em;
+				height: 1.1em;
+				accent-color: var(--accent);
+			}
 			.grid input,
 			.grid select {
 				font: inherit;
@@ -114,11 +124,16 @@ const description = 'Edit YTCPM payment addresses and download details.';
 									)}
 									<form method="post" action="/api/admin/settings">
 										<div class="panel">
-											<h2>Payment addresses</h2>
+											<h2>Crypto payment addresses</h2>
 											<p class="warn">
 												⚠️ Double-check every address before saving — customers
 												will send real payments to exactly what is shown here.
 												Changes apply immediately.
+											</p>
+											<p class="hint">
+												A payment method appears at checkout only when its
+												switch is ON <strong>and</strong> its value is filled
+												in. A switched-off or empty method is never shown.
 											</p>
 											<div class="grid">
 												<label>
@@ -129,6 +144,14 @@ const description = 'Edit YTCPM payment addresses and download details.';
 														value={settings.payments.usdtAddress}
 														autocomplete="off"
 													/>
+												</label>
+												<label class="check">
+													<input
+														type="checkbox"
+														name="usdtEnabled"
+														checked={settings.payments.usdtEnabled}
+													/>
+													Show USDT at checkout
 												</label>
 												<label>
 													USDT network
@@ -148,7 +171,7 @@ const description = 'Edit YTCPM payment addresses and download details.';
 													</select>
 												</label>
 												<label>
-													BTC address (leave empty to hide Bitcoin at checkout)
+													BTC address
 													<input
 														type="text"
 														name="btcAddress"
@@ -156,14 +179,90 @@ const description = 'Edit YTCPM payment addresses and download details.';
 														autocomplete="off"
 													/>
 												</label>
+												<label class="check">
+													<input
+														type="checkbox"
+														name="btcEnabled"
+														checked={settings.payments.btcEnabled}
+													/>
+													Show BTC at checkout
+												</label>
 												<label>
-													ETH address (leave empty to hide Ethereum at checkout)
+													ETH address
 													<input
 														type="text"
 														name="ethAddress"
 														value={settings.payments.ethAddress}
 														autocomplete="off"
 													/>
+												</label>
+												<label class="check">
+													<input
+														type="checkbox"
+														name="ethEnabled"
+														checked={settings.payments.ethEnabled}
+													/>
+													Show ETH at checkout
+												</label>
+											</div>
+										</div>
+										<div class="panel">
+											<h2>PayPal</h2>
+											<p class="hint">
+												The customer sends the payment to your PayPal email,
+												then submits the PayPal transaction ID and a
+												screenshot here. You confirm PayPal orders manually
+												in Orders — there is no automatic confirmation.
+											</p>
+											<div class="grid">
+												<label>
+													PayPal email
+													<input
+														type="text"
+														name="paypalEmail"
+														value={settings.payments.paypalEmail}
+														autocomplete="off"
+														placeholder="you@example.com"
+													/>
+												</label>
+												<label class="check">
+													<input
+														type="checkbox"
+														name="paypalEnabled"
+														checked={settings.payments.paypalEnabled}
+													/>
+													Show PayPal at checkout
+												</label>
+											</div>
+										</div>
+										<div class="panel">
+											<h2>Stripe — card payments</h2>
+											<p class="hint">
+												Create a Payment Link in your Stripe dashboard
+												(Payment Links → New link) and paste it here — a
+												link that lets the customer enter the amount works
+												for every package. The customer pays on Stripe's
+												own page, then submits the receipt screenshot here
+												for activation. You confirm these orders in Orders.
+											</p>
+											<div class="grid">
+												<label>
+													Stripe Payment Link URL
+													<input
+														type="text"
+														name="stripeLink"
+														value={settings.payments.stripeLink}
+														autocomplete="off"
+														placeholder="https://buy.stripe.com/..."
+													/>
+												</label>
+												<label class="check">
+													<input
+														type="checkbox"
+														name="stripeEnabled"
+														checked={settings.payments.stripeEnabled}
+													/>
+													Show card payment (Stripe) at checkout
 												</label>
 											</div>
 										</div>

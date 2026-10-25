@@ -25,12 +25,20 @@ export const POST: APIRoute = async (ctx) => {
 		return v !== '' ? v : currentValue;
 	};
 
+	const on = (name: string) => form.get(name) === 'on';
 	const next = {
 		payments: {
 			usdtAddress: set(current.payments.usdtAddress, 'usdtAddress'),
 			usdtNetwork: get('usdtNetwork') === 'ERC20' ? 'ERC20' : 'TRC20',
 			btcAddress: get('btcAddress'),
 			ethAddress: get('ethAddress'),
+			usdtEnabled: on('usdtEnabled'),
+			btcEnabled: on('btcEnabled'),
+			ethEnabled: on('ethEnabled'),
+			paypalEnabled: on('paypalEnabled'),
+			paypalEmail: get('paypalEmail'),
+			stripeEnabled: on('stripeEnabled'),
+			stripeLink: get('stripeLink'),
 		},
 		download: {
 			url: set(current.download.url, 'downloadUrl'),

@@ -231,3 +231,21 @@
   The /privacy Advertising consent sentence renders only when the
   switch is on, so the text always matches the behavior. Both
   states verified locally in a real browser before shipping.
+- 2026-10-24 (later): PayPal + Stripe payment methods. Every
+  checkout method now follows one rule (availableMethods in
+  src/lib/settings.ts): it appears only when ENABLED in Admin →
+  Settings AND its value is complete. Crypto gained per-currency
+  switches (usdtEnabled/btcEnabled/ethEnabled; settings saved
+  before the switches derive them from whether an address is
+  filled in, so behavior did not change). PayPal = an email in
+  settings (customer sends there, submits the transaction ID +
+  screenshot; admin confirms manually). Stripe = a Payment Link
+  URL from the Stripe dashboard (customer pays on Stripe's page
+  with their email prefilled, then submits the receipt screenshot).
+  Orders store the method in the existing crypto column
+  ('PayPal'/'Stripe'); chain auto-confirm ignores them. The orders
+  API rejects any method the checkout does not currently offer.
+  Payment values live in the DATABASE (site_settings) — the
+  dashboard is authoritative; env vars are only the fallback.
+  E2E-verified locally end to end; prod settings restored
+  byte-for-byte and all test data deleted afterwards.

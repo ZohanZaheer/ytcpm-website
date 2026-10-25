@@ -1,9 +1,8 @@
 import type { APIRoute } from 'astro';
 import { getEnv, getDatabaseUrl } from '../../lib/env';
-import { CRYPTOS, type CryptoCode } from '../../lib/packages';
 import { validateScreenshot, storeImage } from '../../lib/storage';
 import { createOrder, getProfile, getFraudInfoById } from '../../lib/db';
-import { getEffectiveSettings, findPackage } from '../../lib/settings';
+import { getEffectiveSettings, findPackage, availableMethods } from '../../lib/settings';
 import { baSessionUser, verificationEnforced } from '../../lib/baSession';
 
 export const prerender = false;
@@ -34,8 +33,13 @@ export const POST: APIRoute = async (ctx) => {
 	const pkg = findPackage(settings, slug);
 	if (!pkg) return new Response('Unknown package.', { status: 400 });
 
-	const crypto = String(form.get('crypto') ?? '') as CryptoCode;
-	if (!CRYPTOS.includes(crypto)) return backToPay(slug, 'Please choose a payment currency (USDT, BTC or ETH).');
+	// The submitted method must be one the checkout actually offers:
+	// enabled in the dashboard AND fully configured. This stops
+	// orders for methods that are switched off or half-filled.
+	const method = String(form.get('crypto') ?? '');
+	if (!(availableMethods(settings) as string[]).includes(method)) {
+		return backToPay(slug, 'Please choose one of the payment methods shown on this page.');
+	}
 
 	// Identity comes from the signed-in account — the checkout no
 	// longer asks for name / email / contact (they are on the
@@ -101,13 +105,19 @@ export const POST: APIRoute = async (ctx) => {
 	try {
 		const stored = await storeImage(env, id, bytes, check.ext, check.type);
 		const network =
-			crypto === 'USDT' ? settings.payments.usdtNetwork : crypto === 'BTC' ? 'Bitcoin' : 'ERC20';
+			method === 'USDT'
+				? settings.payments.usdtNetwork
+				: method === 'BTC'
+					? 'Bitcoin'
+					: method === 'ETH'
+						? 'ERC20'
+						: method;
 		await createOrder(dbUrl, {
 			id,
 			package_slug: pkg.slug,
 			package_label: `${pkg.duration} — ${pkg.devices} devices`,
 			amount_usd: pkg.priceUsd,
-			crypto,
+			crypto: method,
 			network,
 			customer_name: name,
 			email,
