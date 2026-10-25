@@ -21,8 +21,7 @@ Set these environment variables (see `.env.example` for the full list):
 
 | Variable | Purpose |
 | --- | --- |
-| `PAYMENT_USDT_ADDRESS`, `PAYMENT_BTC_ADDRESS`, `PAYMENT_ETH_ADDRESS` | Your receiving addresses. Until at least one is set, checkout pages show a "being configured" notice instead of any address. |
-| `PAYMENT_USDT_NETWORK` | `TRC20` (default) or `ERC20` — shown next to USDT everywhere. |
+| Payment methods & addresses | **Not environment variables.** They are configured in the admin dashboard (`/admin/settings`) and stored in the database — the code never reads payment values from env or runtime secrets (owner's rule). Until at least one method is enabled there with a complete value, checkout pages show a "being configured" notice. |
 | `DATABASE_URL` | PostgreSQL connection string for orders (works on every platform, including Cloudflare). |
 | `ADMIN_SECRET` | Signs admin sessions; opening any `/admin` page once with `?key=<value>` also signs you in (bootstrap/recovery). |
 | `ADMIN_EMAIL` | Admin dashboard login email (set as a Secret). |
@@ -89,8 +88,7 @@ once the site is complete, screenshots will move to a separate
 Quick checklist to switch the live site on (Cloudflare dashboard):
 
 1. Workers & Pages → your Worker → Settings → Variables and Secrets: add
-   every variable from your `.env` file (`PAYMENT_USDT_ADDRESS`,
-   `PAYMENT_USDT_NETWORK`, `DATABASE_URL`, `ADMIN_SECRET`,
+   every variable from your `.env` file (`DATABASE_URL`, `ADMIN_SECRET`,
    `STORAGE_DRIVER=github`, `GITHUB_OWNER`, `GITHUB_REPO`,
    `GITHUB_BRANCH`, `GITHUB_UPLOAD_DIR`, `GITHUB_TOKEN`,
    `ETHERSCAN_API_KEY`). Keep `DATABASE_URL`, `ADMIN_SECRET` and

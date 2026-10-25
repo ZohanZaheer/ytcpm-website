@@ -1,7 +1,12 @@
 // Effective site settings: values saved from the admin dashboard
-// (Postgres `site_settings`, key "site") override the built-in defaults
-// and the environment variables. Public pages and APIs read settings
-// through here so dashboard edits take effect without a redeploy.
+// (Postgres `site_settings`, key "site") override the built-in
+// defaults. Public pages and APIs read settings through here so
+// dashboard edits take effect without a redeploy.
+//
+// Owner's rule for PAYMENT values (addresses, methods, PayPal email,
+// Stripe link): they come from the DATABASE only — never from the
+// environment or runtime secrets. Secrets and keys (DATABASE_URL,
+// ETHERSCAN_API_KEY, tokens) are the opposite: env/secrets only.
 
 import { LICENSE_PACKAGES, type LicensePackage } from './packages';
 import {
@@ -53,20 +58,24 @@ export interface SiteSettings {
 
 type EnvGetter = (key: string) => string | undefined;
 
-export function defaultSettings(env: EnvGetter): SiteSettings {
+export function defaultSettings(_env: EnvGetter): SiteSettings {
 	return {
+		// Payment values are intentionally NOT read from the
+		// environment (see the owner's rule at the top of this file):
+		// until the dashboard saves them, every method is empty/off
+		// and checkout shows its "being configured" notice.
 		payments: {
-			usdtAddress: env('PAYMENT_USDT_ADDRESS') ?? '',
-			usdtNetwork: env('PAYMENT_USDT_NETWORK') ?? 'TRC20',
-			btcAddress: env('PAYMENT_BTC_ADDRESS') ?? '',
-			ethAddress: env('PAYMENT_ETH_ADDRESS') ?? '',
-			usdtEnabled: (env('PAYMENT_USDT_ADDRESS') ?? '').trim() !== '',
-			btcEnabled: (env('PAYMENT_BTC_ADDRESS') ?? '').trim() !== '',
-			ethEnabled: (env('PAYMENT_ETH_ADDRESS') ?? '').trim() !== '',
-			paypalEnabled: (env('PAYMENT_PAYPAL_EMAIL') ?? '').trim() !== '',
-			paypalEmail: env('PAYMENT_PAYPAL_EMAIL') ?? '',
-			stripeEnabled: (env('PAYMENT_STRIPE_LINK') ?? '').trim() !== '',
-			stripeLink: env('PAYMENT_STRIPE_LINK') ?? '',
+			usdtAddress: '',
+			usdtNetwork: 'TRC20',
+			btcAddress: '',
+			ethAddress: '',
+			usdtEnabled: false,
+			btcEnabled: false,
+			ethEnabled: false,
+			paypalEnabled: false,
+			paypalEmail: '',
+			stripeEnabled: false,
+			stripeLink: '',
 		},
 		download: {
 			url: '/YoutubeCPM.zip',

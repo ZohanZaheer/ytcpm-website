@@ -249,3 +249,13 @@
   dashboard is authoritative; env vars are only the fallback.
   E2E-verified locally end to end; prod settings restored
   byte-for-byte and all test data deleted afterwards.
+- 2026-10-24 (later): owner's standing rule — payment VALUES come
+  from the database only, never from env or runtime secrets.
+  defaultSettings no longer reads any PAYMENT_* env var (a method
+  is empty/off until the dashboard saves it); the PAYMENT_* vars
+  were also removed from wrangler.json and from the PAYMENTS_SETUP
+  configuration table. Secrets/keys (DATABASE_URL, ADMIN_SECRET,
+  ETHERSCAN_API_KEY, tokens) stay in env/secrets as before — the
+  rule covers dashboard-managed values only. Verified by poisoning
+  the dev env with fake addresses: checkout still showed the
+  database values and only the database-enabled methods.
