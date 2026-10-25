@@ -269,3 +269,9 @@
   (packageForSlug in settings.ts). Tested end-to-end locally
   (add → rename → old-link redirect → duplicate rejected →
   cleanup; production left at exactly 10 packages, 0 test rows).
+- 2026-10-24 (later): blog post pages end with Previous/Next
+  article navigation (date order, same as the index) followed by a
+  "More from the blog" block of 3 article cards — the current post
+  and its two neighbours are excluded from the block, so nothing
+  on the page repeats. Implemented in the BlogPost layout; new
+  posts join the chain automatically.

@@ -1,14 +1,33 @@
 ---
 import type { CollectionEntry } from 'astro:content';
+import { getCollection } from 'astro:content';
 import BaseHead from '../components/BaseHead.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import FormattedDate from '../components/FormattedDate.astro';
 import { ORG_ID } from '../config/site';
 
-type Props = CollectionEntry<'blog'>['data'];
+type Props = CollectionEntry<'blog'>['data'] & { postId?: string };
 
-const { title, description, pubDate, updatedDate, heroImage } = Astro.props;
+const { title, description, pubDate, updatedDate, heroImage, postId } = Astro.props;
+
+// Previous / next navigation and the "more articles" block, in the
+// same newest-first order as the blog index. "Previous" is the older
+// post, "Next" the newer one. The 3-article block skips the current
+// post and the two neighbours so nothing on the page repeats.
+const allPosts = (await getCollection('blog')).sort(
+	(a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
+);
+const currentIdx = postId ? allPosts.findIndex((p) => p.id === postId) : -1;
+const nextPost = currentIdx > 0 ? allPosts[currentIdx - 1] : undefined;
+const prevPost =
+	currentIdx >= 0 && currentIdx < allPosts.length - 1 ? allPosts[currentIdx + 1] : undefined;
+const morePosts =
+	currentIdx >= 0
+		? allPosts
+				.filter((p) => p.id !== postId && p.id !== nextPost?.id && p.id !== prevPost?.id)
+				.slice(0, 3)
+		: [];
 
 // Canonical page URL for the schema nodes. Under the file build format
 // Astro.url.pathname can carry a trailing ".html"; the live URLs never
@@ -86,6 +105,107 @@ const breadcrumbSchema: Record<string, unknown> = {
 			.last-updated-on {
 				font-style: italic;
 			}
+			.post-nav {
+				display: grid;
+				grid-template-columns: 1fr 1fr;
+				gap: 1rem;
+				margin: 2.5em 0 0;
+			}
+			.post-nav-card {
+				display: flex;
+				flex-direction: column;
+				gap: 0.35em;
+				padding: 1em 1.1em;
+				border: 1px solid rgb(var(--gray-light));
+				border-radius: 12px;
+				text-decoration: none;
+				background: #fff;
+				transition: 0.2s ease;
+			}
+			.post-nav-card:hover {
+				border-color: var(--accent);
+				box-shadow: var(--box-shadow);
+			}
+			.post-nav-card.next {
+				text-align: right;
+			}
+			.post-nav-label {
+				font-size: 0.85em;
+				font-weight: 700;
+				letter-spacing: 0.04em;
+				text-transform: uppercase;
+				color: var(--accent);
+			}
+			.post-nav-title {
+				font-weight: 700;
+				font-size: 1.1em;
+				line-height: 1.3;
+				color: rgb(var(--black));
+			}
+			.post-nav-date {
+				font-size: 0.9em;
+				color: rgb(var(--gray));
+			}
+			.more-articles {
+				margin: 3em 0 1em;
+			}
+			.more-articles h2 {
+				margin-bottom: 0.8em;
+			}
+			.more-articles ul {
+				display: grid;
+				grid-template-columns: repeat(auto-fill, minmax(min(320px, 100%), 1fr));
+				gap: 2rem;
+				list-style-type: none;
+				margin: 0;
+				padding: 0;
+			}
+			.more-articles li * {
+				text-decoration: none;
+				transition: 0.2s ease;
+			}
+			.more-articles li a {
+				display: block;
+			}
+			.more-articles li img {
+				margin-bottom: 0.5rem;
+				border-radius: 12px;
+				width: 100%;
+				height: auto;
+				aspect-ratio: 2 / 1;
+				object-fit: cover;
+			}
+			.more-title {
+				font-size: 1.3em;
+				margin: 0;
+				color: rgb(var(--black));
+				line-height: 1.2;
+			}
+			.more-articles .date {
+				margin: 0;
+				color: rgb(var(--gray));
+			}
+			.more-articles li a:hover .more-title,
+			.more-articles li a:hover .date {
+				color: rgb(var(--accent));
+			}
+			.more-articles a:hover img {
+				box-shadow: var(--box-shadow);
+			}
+			@media (max-width: 720px) {
+				.post-nav {
+					grid-template-columns: 1fr;
+				}
+				.post-nav-card.next {
+					text-align: left;
+				}
+				.more-articles ul {
+					gap: 0.5em;
+				}
+				.more-articles li {
+					text-align: center;
+				}
+			}
 		</style>
 	</head>
 
@@ -120,6 +240,49 @@ const breadcrumbSchema: Record<string, unknown> = {
 					<slot />
 				</div>
 			</article>
+			{(prevPost || nextPost) && (
+				<nav class="post-nav" aria-label="Previous and next articles">
+					{prevPost ? (
+						<a class="post-nav-card prev" href={`/blog/${prevPost.id}`}>
+							<span class="post-nav-label">← Previous article</span>
+							<span class="post-nav-title">{prevPost.data.title}</span>
+							<span class="post-nav-date"><FormattedDate date={prevPost.data.pubDate} /></span>
+						</a>
+					) : (
+						<span />
+					)}
+					{nextPost ? (
+						<a class="post-nav-card next" href={`/blog/${nextPost.id}`}>
+							<span class="post-nav-label">Next article →</span>
+							<span class="post-nav-title">{nextPost.data.title}</span>
+							<span class="post-nav-date"><FormattedDate date={nextPost.data.pubDate} /></span>
+						</a>
+					) : (
+						<span />
+					)}
+				</nav>
+			)}
+			{morePosts.length > 0 && (
+				<section class="more-articles">
+					<h2>More from the blog</h2>
+					<ul>
+						{morePosts.map((post) => (
+							<li>
+								<a href={`/blog/${post.id}`}>
+									<picture>
+										<source type="image/webp" srcset={`${post.data.heroImage.replace('.jpg', '-720.webp')} 720w, ${post.data.heroImage.replace('.jpg', '.webp')} 1200w`} sizes="(max-width: 760px) 100vw, 380px" />
+										<img width={720} height={360} src={post.data.heroImage} alt={post.data.title} loading="lazy" />
+									</picture>
+									<h3 class="more-title">{post.data.title}</h3>
+									<p class="date">
+										<FormattedDate date={post.data.pubDate} />
+									</p>
+								</a>
+							</li>
+						))}
+					</ul>
+				</section>
+			)}
 			</div>
 		</main>
 		<Footer />
