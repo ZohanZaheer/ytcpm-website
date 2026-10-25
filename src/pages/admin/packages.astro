@@ -77,11 +77,10 @@ const description = 'Edit YTCPM license packages, devices and prices.';
 				background: #fff;
 				color: rgb(var(--black));
 			}
-			.slug {
+			.slug-input {
 				font-family: ui-monospace, monospace;
 				font-size: 0.85em;
-				color: rgb(var(--gray));
-				white-space: nowrap;
+				min-width: 140px;
 			}
 			.btn {
 				font: inherit;
@@ -121,9 +120,12 @@ const description = 'Edit YTCPM license packages, devices and prices.';
 									Edit any package below and press <strong>Save packages</strong>.
 									<strong>Active</strong> packages appear on the{' '}
 									<a href="/pricing">pricing page</a> and can be bought;
-									untick Active to hide one without deleting it. The{' '}
-									<strong>link name</strong> (slug) stays fixed so existing buy
-									links keep working — new packages get one automatically.
+									untick Active to hide one without deleting it. You can
+									also change a package's <strong>link name</strong> — the
+									old link keeps working and forwards to the new one
+									automatically, and orders placed under the old name
+									stay connected to the package. New packages may leave
+									the link name blank to get one automatically.
 								</p>
 								<form method="post" action="/api/admin/packages">
 									<div class="table-wrap">
@@ -144,11 +146,18 @@ const description = 'Edit YTCPM license packages, devices and prices.';
 											<tbody id="pkg-rows">
 												{packages.map((p, i) => (
 													<tr>
-														<td class="slug">
-															{p.slug}
+														<td>
+															<input
+																type="text"
+																class="slug-input"
+																name={`slug[${i}]`}
+																value={p.slug}
+																aria-label="Link name"
+																spellcheck="false"
+															/>
 															<input
 																type="hidden"
-																name={`slug[${i}]`}
+																name={`origSlug[${i}]`}
 																value={p.slug}
 															/>
 														</td>
@@ -226,7 +235,7 @@ const description = 'Edit YTCPM license packages, devices and prices.';
 								</form>
 								<template id="row-template">
 									<tr>
-										<td class="slug">(new)</td>
+										<td><input type="text" class="slug-input" data-f="slug" placeholder="(auto)" aria-label="Link name" spellcheck="false" /></td>
 										<td><input type="text" data-f="duration" required /></td>
 										<td><input type="number" data-f="days" min="1" placeholder="Lifetime" /></td>
 									<td><input type="number" data-f="devices" min="1" required /></td>

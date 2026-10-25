@@ -14,6 +14,7 @@ import {
 	setSetting,
 	listPackageRows,
 	replacePackageRows,
+	listSlugRedirects,
 	type PackageRow,
 } from './db';
 
@@ -54,6 +55,10 @@ export interface SiteSettings {
 		thirdDays: number;
 	};
 	packages: LicensePackage[];
+	/** Old → new package link names, recorded when a link is renamed
+	 * in the dashboard so old buy links and old orders keep working.
+	 * Loaded from its own table on every effective-settings read. */
+	slugRedirects: Record<string, string>;
 }
 
 type EnvGetter = (key: string) => string | undefined;
@@ -91,6 +96,7 @@ export function defaultSettings(_env: EnvGetter): SiteSettings {
 			thirdDays: 7,
 		},
 		packages: LICENSE_PACKAGES,
+		slugRedirects: {},
 	};
 }
 
@@ -105,6 +111,9 @@ export function mergeSettings(base: SiteSettings, stored: Partial<SiteSettings> 
 		download: { ...base.download },
 		lockout: { ...base.lockout },
 		packages: base.packages,
+		// Always (re)loaded from the redirects table by
+		// getEffectiveSettings; never taken from the settings JSON.
+		slugRedirects: {},
 	};
 	if (stored.payments) {
 		// Once settings have been saved from the dashboard, its payment
@@ -270,7 +279,7 @@ export async function userHasActiveLicense(
 		const now = Date.now();
 		return orders.some((o) => {
 			if (o.status !== 'confirmed') return false;
-			const pkg = settings.packages.find((p) => p.slug === o.package_slug);
+			const pkg = packageForSlug(settings, o.package_slug);
 			if (!pkg || pkg.durationDays == null) return true; // lifetime (or unknown package treated as lifetime legacy)
 			const expires = new Date(o.updated_at).getTime() + pkg.durationDays * 86400000;
 			return now <= expires;
@@ -294,6 +303,13 @@ export async function getEffectiveSettings(
 			merged.packages = await packagesFromTable(dbUrl, merged.packages);
 		} catch {
 			// Packages table unavailable — keep the JSON/default list.
+		}
+		try {
+			const map: Record<string, string> = {};
+			for (const r of await listSlugRedirects(dbUrl)) map[r.old_slug] = r.new_slug;
+			merged.slugRedirects = map;
+		} catch {
+			// Redirects table unavailable — old links simply 404.
 		}
 		cache = { at: Date.now(), value: merged };
 		return merged;
@@ -336,6 +352,29 @@ export function availableMethods(s: SiteSettings): PaymentMethod[] {
 
 export function findPackage(settings: SiteSettings, slug: string): LicensePackage | undefined {
 	return settings.packages.find((p) => p.slug === slug && p.active !== false);
+}
+
+/** Follow the link-rename map for a package slug (old name → current
+ * name), at most a few hops and never in a circle. Returns the input
+ * unchanged when the name was never renamed. */
+export function resolveSlug(settings: SiteSettings, slug: string): string {
+	let cur = slug;
+	const seen = new Set<string>([slug]);
+	for (let i = 0; i < 5; i++) {
+		const next = settings.slugRedirects?.[cur];
+		if (!next || seen.has(next)) break;
+		seen.add(next);
+		cur = next;
+	}
+	return cur;
+}
+
+/** The package an order/link slug refers to TODAY — resolves through
+ * renames, so an order placed under an old link name still finds its
+ * package (any state, active or not). */
+export function packageForSlug(settings: SiteSettings, slug: string): LicensePackage | undefined {
+	const resolved = resolveSlug(settings, slug);
+	return settings.packages.find((p) => p.slug === resolved);
 }
 
 export function activePackages(settings: SiteSettings): LicensePackage[] {

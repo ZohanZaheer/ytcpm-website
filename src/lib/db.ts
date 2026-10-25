@@ -85,6 +85,14 @@ const SCHEMA_SQL = `
 		sort INTEGER NOT NULL DEFAULT 0,
 		updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 	);
+	-- When a package's link name (slug) is renamed in the dashboard,
+	-- the old name is kept here so existing buy links forward to the
+	-- new one and old orders still resolve to their package.
+	CREATE TABLE IF NOT EXISTS package_slug_redirects (
+		old_slug TEXT PRIMARY KEY,
+		new_slug TEXT NOT NULL,
+		created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+	);
 	-- better-auth tables (email + password accounts for customers and
 	-- the admin; a user with role = 'admin' is the administrator).
 	CREATE TABLE IF NOT EXISTS "user" (
@@ -634,6 +642,49 @@ export async function replacePackageRows(connectionString: string, rows: Package
 					[r.slug, r.duration_label, r.duration_days, r.devices, r.price_usd, r.save_note, r.popular, r.active, r.sort],
 				);
 			}
+			await c.query('COMMIT');
+		} catch (err) {
+			await c.query('ROLLBACK');
+			throw err;
+		}
+	});
+}
+
+export interface SlugRedirectRow {
+	old_slug: string;
+	new_slug: string;
+}
+
+export async function listSlugRedirects(connectionString: string): Promise<SlugRedirectRow[]> {
+	const res = await withClient(connectionString, (c) =>
+		c.query('SELECT old_slug, new_slug FROM package_slug_redirects'),
+	);
+	return res.rows as SlugRedirectRow[];
+}
+
+/** Record a package link rename (old → new), keeping the map flat:
+ * any redirect that pointed at the old name now points at the new
+ * one, and a stale redirect whose source IS the new name is removed
+ * (the new name now belongs to a real package again). */
+export async function recordSlugRename(
+	connectionString: string,
+	oldSlug: string,
+	newSlug: string,
+): Promise<void> {
+	if (!oldSlug || !newSlug || oldSlug === newSlug) return;
+	await withClient(connectionString, async (c) => {
+		await c.query('BEGIN');
+		try {
+			await c.query('DELETE FROM package_slug_redirects WHERE old_slug = $1', [newSlug]);
+			await c.query('UPDATE package_slug_redirects SET new_slug = $1 WHERE new_slug = $2', [
+				newSlug,
+				oldSlug,
+			]);
+			await c.query(
+				`INSERT INTO package_slug_redirects (old_slug, new_slug) VALUES ($1, $2)
+				 ON CONFLICT (old_slug) DO UPDATE SET new_slug = EXCLUDED.new_slug`,
+				[oldSlug, newSlug],
+			);
 			await c.query('COMMIT');
 		} catch (err) {
 			await c.query('ROLLBACK');

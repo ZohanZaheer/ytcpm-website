@@ -8,7 +8,7 @@ import AccountTop from '../components/AccountTop.astro';
 import AccountSide from '../components/AccountSide.astro';
 import { getEnv, getDatabaseUrl } from '../lib/env';
 import { getProfile, listOrdersForUser, type PaymentOrder } from '../lib/db';
-import { getEffectiveSettings, type LicensePackage } from '../lib/settings';
+import { getEffectiveSettings, packageForSlug, type LicensePackage } from '../lib/settings';
 import { formatUsd } from '../lib/packages';
 
 export const prerender = false;
@@ -45,7 +45,7 @@ if (!dbUrl) {
 		const dateFmt = new Intl.DateTimeFormat('en-US', { dateStyle: 'medium' });
 		const now = Date.now();
 		licenses = orders.map((order) => {
-			const pkg = settings.packages.find((p) => p.slug === order.package_slug);
+			const pkg = packageForSlug(settings, order.package_slug);
 			const ordered = dateFmt.format(new Date(order.created_at));
 			if (order.status === 'pending') {
 				return { order, state: 'pending', stateLabel: 'Waiting for payment confirmation', ordered, activated: null, expires: null, daysLeft: null };

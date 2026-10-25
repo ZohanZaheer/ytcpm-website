@@ -4,18 +4,25 @@ import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
 import { formatUsd, CRYPTOS, type CryptoCode } from '../../lib/packages';
 import { getEnv, getDatabaseUrl } from '../../lib/env';
-import { getEffectiveSettings, findPackage, availableMethods, type PaymentMethod } from '../../lib/settings';
+import { getEffectiveSettings, findPackage, resolveSlug, availableMethods, type PaymentMethod } from '../../lib/settings';
 import { baSessionUser, verificationEnforced } from '../../lib/baSession';
 import QRCode from 'qrcode';
 
 export const prerender = false;
 
-// Package, price and payment addresses come from the effective site
-// settings (admin dashboard overrides the environment defaults), so
+// Package, price and payment values come from the effective site
+// settings (saved in the database from the admin dashboard), so
 // dashboard edits apply to checkout immediately.
 const settings = await getEffectiveSettings(getDatabaseUrl(Astro), (k) => getEnv(Astro, k));
-const pkg = findPackage(settings, Astro.params.slug ?? '');
+const requestedSlug = Astro.params.slug ?? '';
+const pkg = findPackage(settings, requestedSlug);
 if (!pkg) {
+	// The link name may have been renamed in the dashboard — forward
+	// the old link to the package's current name.
+	const target = resolveSlug(settings, requestedSlug);
+	if (target !== requestedSlug && findPackage(settings, target)) {
+		return Astro.redirect('/pay/' + target, 302);
+	}
 	return new Response('Package not found.', { status: 404 });
 }
 

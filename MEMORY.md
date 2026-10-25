@@ -259,3 +259,13 @@
   rule covers dashboard-managed values only. Verified by poisoning
   the dev env with fake addresses: checkout still showed the
   database values and only the database-enabled methods.
+- 2026-10-24 (later): package LINK NAMES are editable in
+  Admin → Packages (owner request). Renames are validated
+  (URL-safe, unique — duplicates are rejected with an error, never
+  silently changed), and a rename records old → new in the
+  package_slug_redirects table (chains kept flat): the old /pay
+  link 302-forwards to the new one, and orders placed under an old
+  name still resolve to their package for license expiry/support
+  (packageForSlug in settings.ts). Tested end-to-end locally
+  (add → rename → old-link redirect → duplicate rejected →
+  cleanup; production left at exactly 10 packages, 0 test rows).
